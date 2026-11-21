@@ -1,0 +1,22 @@
+[Unit]
+Description=UNSWEEP relayer (FastAPI) - testnet Base Sepolia
+After=network-online.target docker.service postgresql.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=simple
+User=tecnoclic
+WorkingDirectory=/opt/aire/workspace/projects/unsweep/relayer
+EnvironmentFile=/opt/aire/product.env
+Environment=UNSWEEP_CHAIN_ID=84532
+ExecStartPre=/bin/sh -c 'for i in $(seq 1 30); do ip -4 addr | grep -q "172.18.0.1/" && exit 0; sleep 2; done; exit 1'
+ExecStart=/opt/aire/workspace/projects/unsweep/.venv/bin/uvicorn service:app --host 172.18.0.1 --port 8787 --workers 1 --proxy-headers --forwarded-allow-ips 172.18.0.0/16 --no-server-header
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target

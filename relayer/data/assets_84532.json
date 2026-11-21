@@ -1,0 +1,27 @@
+{
+ "_note": "Base Sepolia mocks (deployments/base-sepolia.txt). Precios ficticios solo para testnet. NFT mock: ownerOf devuelve address(0) para ids 0-19, sin ids con propietario.",
+ "tokens": [
+  {
+   "address": "0x7E8Ea2A6220595980A334d922168Dc411f32C87f",
+   "symbol": "tUSDC",
+   "decimals": 6,
+   "price_usd": 1.0,
+   "testnet_price_estimate": true
+  },
+  {
+   "address": "0xBC8d360e40f2728b2eDB1AC3Ba4d1E310FE80E47",
+   "symbol": "tGOV",
+   "decimals": 18,
+   "price_usd": 1.0,
+   "testnet_price_estimate": true
+  }
+ ],
+ "nfts": [
+  {
+   "address": "0xA01B2D7352966494c95aDB724373C04d9aB8c483",
+   "symbol": "tNFT",
+   "ids": [],
+   "value_usd": 10.0
+  }
+ ]
+}

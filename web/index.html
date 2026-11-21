@@ -1,4 +1,28 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>UNSWEEP - coming soon</title><meta name="description" content="Self-service, non-custodial rescue of assets from compromised wallets (EIP-7702). Coming soon."><link rel="stylesheet" href="/assets/style.css"></head><body><main><h1>UNSWEEP</h1><p>Self-service, open-source, non-custodial rescue of tokens, NFTs and airdrop claims from wallets drained by sweeper bots.</p>
-<p>You sign in your own browser. We never ask for your private key.</p>
-<p>We will never DM you first.</p>
-<p><strong>Coming soon.</strong></p></main></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>UNSWEEP - rescue assets from a compromised wallet (testnet)</title><meta name="description" content="Self-service, non-custodial rescue of tokens from wallets drained by sweeper bots (EIP-7702). Testnet preview on Base Sepolia."><meta name="referrer" content="no-referrer"><link rel="stylesheet" href="/assets/style.css"></head><body><main>
+<h1>UNSWEEP</h1>
+<p class="warn"><strong>TESTNET PREVIEW (Base Sepolia).</strong> Do not use a mainnet wallet. We will never DM you first. We never ask for your seed phrase.</p>
+
+<section id="step1"><h2>Step 1 &middot; Scan (public address only)</h2>
+<p>Enter the <strong>public address</strong> of the compromised wallet. No key is needed to scan.</p>
+<input id="victim" type="text" placeholder="0x... compromised wallet address" autocomplete="off" spellcheck="false">
+<button id="btnScan">Scan</button>
+<div id="scanOut" class="out"></div></section>
+
+<section id="step2" hidden><h2>Step 2 &middot; Simulation: what you receive and the fee</h2>
+<p>Enter a <strong>new, safe</strong> wallet address that will receive the assets.</p>
+<input id="safe" type="text" placeholder="0x... safe wallet address" autocomplete="off" spellcheck="false">
+<button id="btnQuote">Simulate</button>
+<div id="quoteOut" class="out"></div></section>
+
+<section id="step3" hidden><h2>Step 3 &middot; Sign locally and rescue</h2>
+<ul class="small"><li>Your key is used <strong>only inside this browser tab</strong>, in memory, to sign. It is never sent, stored or logged. Only signatures go to our relayer.</li><li>Seed phrases (12/24 words) are <strong>rejected</strong>. Paste only the 64-hex private key of the <em>compromised</em> wallet.</li><li>Prefer offline signing? Open this page offline in a separate tab (option D, coming soon).</li></ul>
+<input id="pk" type="password" placeholder="private key of the COMPROMISED wallet (0x + 64 hex)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+<div id="ts"></div>
+<button id="btnRescue">Sign locally &amp; rescue</button>
+<div id="rescueOut" class="out"></div></section>
+
+<p class="small">Open source, non-custodial. The relayer pays the gas; the fee is taken in kind from the rescued tokens.</p>
+</main>
+<script src="/assets/ethers.min.js"></script>
+<script src="/assets/app.js"></script>
+</body></html>
