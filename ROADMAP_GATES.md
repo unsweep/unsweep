@@ -34,3 +34,6 @@ Fuente: memoria AIRE #621 [DECISION|vigente|2026-11-21], consenso Agente A/B, ap
 | M3: rotar ETHERSCAN_API_KEY | PENDIENTE | No hay registro de rotación. |
 
 GATE 2, 3 y 4: NO INICIADOS (requieren mainnet y la aprobación humana del GATE 1).
+
+## Actualización 2026-11-21 (M2c-2d)
+- GATE 1, sub-requisito 'E2E cerrada con hash en Base Sepolia': **HECHO**. Tx https://sepolia.basescan.org/tx/0x47fe95cfa08816b5d1a23903f3f115680be11fc1e4144dae2178b57ccbcf004d (status 0x1, bloque 61532746); reparto 85/15 verificado por saldos RPC; acta actas/M2c-2d.md. El resto de requisitos del GATE 1 sigue PENDIENTE según la tabla de arriba.
