@@ -1,0 +1,62 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Compromised crypto wallet checklist: what to do first | UNSWEEP</title><meta name="description" content="A step-by-step checklist for a compromised EVM wallet: contain the damage, check for EIP-7702 delegations and open approvals with read-only tools, avoid recovery scams and move to a fresh wallet."><meta name="referrer" content="no-referrer"><link rel="canonical" href="https://unsweep.com/guides/compromised-wallet-checklist/"><link rel="stylesheet" href="/assets/style.css"></head><body><main class="guide">
+<p class="small"><a href="/">UNSWEEP</a> &rsaquo; Guides</p>
+<h1>Compromised wallet checklist: what to do first</h1>
+<p class="warn">This checklist helps you limit further damage. It cannot undo transfers that already happened, and nobody can honestly promise to recover moved funds. We never ask for your private key in chat, email or DM, and we will never DM you first.</p>
+
+<h2>1. Assume the key is exposed</h2>
+<ul>
+<li>If funds left without your action, assume the private key or seed phrase is known to someone else. Every account derived from that seed phrase is at risk, on every network.</li>
+<li>Stop using the wallet for new deposits. Do not reuse the seed phrase anywhere.</li>
+</ul>
+
+<h2>2. Do not send gas to the compromised address</h2>
+<p>Many compromised wallets are watched by a sweeper: a bot or an EIP-7702 delegated contract that forwards any incoming coin within seconds. Sending a small amount to "pay for gas" usually just feeds the attacker.</p>
+
+<h2>3. Diagnose with read-only tools</h2>
+<p>You only need the public address. Nothing should ask you to sign or connect.</p>
+<ul>
+<li><strong>EIP-7702 delegation:</strong> does the account point to a contract you did not choose? See <a href="/guides/eip-7702-sweeper/">how to check for a sweeper delegation</a>.</li>
+<li><strong>Nonce:</strong> a nonce higher than the number of transactions you sent means someone else is signing.</li>
+<li><strong>Balances:</strong> which tokens remain, including on other networks that share the same address.</li>
+<li><strong>Open approvals:</strong> contracts that can still move your tokens without a new signature. See <a href="/guides/revoke-approvals/">how to find and revoke approvals</a>.</li>
+</ul>
+<p>The free <a href="/">read-only check</a> on this site covers delegation, nonce, balances and recent open approvals on Base and Ethereum mainnet.</p>
+
+<h2>4. Set up a clean wallet</h2>
+<ul>
+<li>Create a new wallet with a <strong>new</strong> seed phrase, preferably on a device you trust or a hardware wallet.</li>
+<li>Write the seed phrase offline. Never type it into a website, a form or a chat.</li>
+<li>Move future activity and any assets you still control on other wallets to the new one.</li>
+</ul>
+
+<h2>5. Find the cause</h2>
+<ul>
+<li>Recent signatures on unfamiliar sites, "claim" or "airdrop" pages, fake support chats.</li>
+<li>Downloaded software, browser extensions, cracked apps or files that could include malware.</li>
+<li>Seed phrase stored in a cloud note, screenshot, email or password manager that may be exposed.</li>
+<li>If malware is possible, clean or replace the device <em>before</em> creating the new wallet on it.</li>
+</ul>
+
+<h2>6. Protect against recovery scams</h2>
+<ul>
+<li>Victims are often targeted a second time by people offering to "recover" funds.</li>
+<li>Red flags: unsolicited messages, requests for your seed phrase or private key, upfront fees, guaranteed results, pressure to act fast.</li>
+<li>Legitimate tools let you check an address with the public address alone.</li>
+</ul>
+
+<h2>7. Document and report</h2>
+<ul>
+<li>Record the addresses involved, transaction hashes, dates and how you think the compromise happened.</li>
+<li>Report the theft to local law enforcement. If stolen funds reach a centralized exchange, that exchange's official support channel may be able to act on a police report.</li>
+</ul>
+
+<h2>Quick summary</h2>
+<ol>
+<li>Stop using the wallet and seed phrase.</li>
+<li>Do not send gas to it.</li>
+<li>Check delegation, nonce, balances and approvals read-only.</li>
+<li>Create a fresh wallet on a clean device.</li>
+<li>Ignore anyone offering recovery in private messages.</li>
+</ol>
+<p class="small">Last updated: 2026-11-21. Mainnet: read-only check. Rescue is testnet beta only.</p>
+</main></body></html>

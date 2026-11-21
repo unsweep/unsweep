@@ -22,8 +22,32 @@
   $('btnScan').addEventListener('click', async () => {
     const a = addr($('victim').value);
     if (!a) return show($('scanOut'), 'Invalid address.', 'err');
-    show($('scanOut'), 'Scanning Base Sepolia... (can take ~30 s)');
+    const chain = ($('chain') && $('chain').value) || 'testnet';
     $('step2').hidden = true; $('step3').hidden = true;
+    if (chain === 'base' || chain === 'ethereum') {
+      st.scan = null; // rescue is never enabled on mainnet
+      show($('scanOut'), 'Read-only check on ' + (chain === 'base' ? 'Base' : 'Ethereum') + ' mainnet...');
+      try {
+        const m = await api('scan', { address: a, chain: chain });
+        const d = m.delegation7702 || {};
+        const nat = m.native || {};
+        const out = ['Network: ' + chain + ' mainnet (read-only, nothing was signed)', 'Address: ' + a, 'Nonce: ' + m.nonce,
+          'EIP-7702 delegation: ' + (d.active ? ('ACTIVE -> ' + d.delegate + ' (verify this contract; an unknown delegate may be a sweeper)') : 'none'),
+          (nat.symbol || 'ETH') + ': ' + fmt(nat.balanceWei || '0', 18)];
+        const toks = m.tokens || [];
+        if (toks.length === 0) out.push('No ERC-20 balances found.');
+        for (const t of toks) out.push('Token ' + (t.symbol || t.contract || t.address || t.token) + ': ' + (t.balanceFmt || fmt(t.balance || t.balanceRaw || '0', t.decimals == null ? 18 : t.decimals)));
+        const aps = m.approvals || [];
+        if (aps.length === 0) out.push('No open ERC-20 approvals found from direct approve transactions in the last 90 days.');
+        for (const ap of aps) out.push('Open approval: ' + (ap.symbol || ap.token) + ' -> spender ' + ap.spender + (ap.unlimited ? ' (unlimited)' : '') + ' - see /guides/revoke-approvals/');
+        const am = m.approvalsMeta || {};
+        if (am.truncated || am.error) out.push('Note: approval history was only partially scanned (' + (am.txScanned || 0) + ' recent transactions checked). Some older approvals may not be listed.');
+        out.push('Mainnet: read-only check. Rescue is testnet beta only.');
+        show($('scanOut'), out, 'ok');
+      } catch (e) { show($('scanOut'), 'Scan failed: ' + e.message, 'err'); }
+      return;
+    }
+    show($('scanOut'), 'Scanning Base Sepolia... (can take ~30 s)');
     try {
       if (!st.cfg) st.cfg = await api('config');
       const s = await api('scan', { address: a });

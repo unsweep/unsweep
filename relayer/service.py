@@ -14,6 +14,8 @@ from relayer import PolicyError, RaceAbort, send_rescue
 from svc_core import (w3, abi, log, record, screen, turnstile_ok, rate_limited, ofac_set,
                       CHAIN_ID, DELEGATE, CONFIG, TURNSTILE_SECRET, TEST_SECRET, TURNSTILE_SITEKEY)
 from svc_scan import scan, quote
+from svc_mainnet import scan_mainnet, record_scan, ScanError, CHAINS as MAINNET_CHAINS
+from starlette.concurrency import run_in_threadpool
 
 SPONSOR_KEY = os.environ.get('OPS_PK')  # se carga desde product.env por systemd; nunca se registra
 delegate_c = w3.eth.contract(address=DELEGATE, abi=abi('UnsweepDelegate.sol', 'UnsweepDelegate'))
@@ -71,8 +73,19 @@ def cfg():
 
 @app.post('/api/scan')
 async def api_scan(req: Request):
-    _guard(req)
+    _guard(req)  # limitador activo tambien para mainnet (#552)
     b = await req.json()
+    chain = str(b.get('chain') or '').lower()
+    if chain in MAINNET_CHAINS:
+        # M2d: SOLO LECTURA en mainnet; nunca firma ni acepta claves
+        addr = _addr(b.get('address'))
+        try:
+            s = await run_in_threadpool(scan_mainnet, chain, addr)
+        except ScanError as e:
+            raise HTTPException(503, 'scan unavailable: %s' % e)
+        await run_in_threadpool(record_scan, chain, s, _ip(req),
+                                req.headers.get('user-agent', ''), req.headers.get('referer', ''))
+        return s
     s = scan(_addr(b.get('address')))
     record('scan', 'ok', n_tokens=len(s['tokens']), n_nfts=len(s['nfts']))
     return s

@@ -1,0 +1,52 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>How to find and revoke ERC-20 token approvals | UNSWEEP</title><meta name="description" content="What ERC-20 approvals (allowances) are, how to find open approvals for any address with read-only calls, how to revoke them with approve(spender, 0), and the limits when a wallet is already compromised."><meta name="referrer" content="no-referrer"><link rel="canonical" href="https://unsweep.com/guides/revoke-approvals/"><link rel="stylesheet" href="/assets/style.css"></head><body><main class="guide">
+<p class="small"><a href="/">UNSWEEP</a> &rsaquo; Guides</p>
+<h1>How to find and revoke ERC-20 token approvals</h1>
+<p class="warn">This guide is informational. Revoking an approval stops future spending; it does not bring back tokens already taken. We never ask for your private key in chat, email or DM, and we will never DM you first.</p>
+
+<h2>What an approval is</h2>
+<p>ERC-20 tokens let an owner authorize another address (the <em>spender</em>, usually a contract) to move up to a set amount of their tokens with <code>transferFrom</code>. The owner grants it with <code>approve(spender, amount)</code>. The authorization, called an <em>allowance</em>, stays in force until it is used up or changed. Many apps ask for an "unlimited" amount (2<sup>256</sup>-1), so one approval can expose the whole balance of that token, now and in the future.</p>
+<p>NFT collections (ERC-721 and ERC-1155) have a similar mechanism, <code>setApprovalForAll(operator, true)</code>, which gives an operator control over every item of that collection.</p>
+
+<h2>Why it matters</h2>
+<ul>
+<li>If a spender contract is malicious or later exploited, it can move approved tokens without asking you again.</li>
+<li>Phishing pages often ask for an approval instead of a transfer, because it looks harmless.</li>
+<li>Old approvals to apps you no longer use are unnecessary risk.</li>
+</ul>
+
+<h2>How to find open approvals (read-only)</h2>
+<ol>
+<li>List <code>Approval(owner, spender, value)</code> events where <code>owner</code> is your address, or list your past transactions that call <code>approve</code> (function selector <code>0x095ea7b3</code>).</li>
+<li>For each token and spender pair, call <code>allowance(owner, spender)</code> on the token contract. If the result is greater than 0, the approval is still open.</li>
+<li>Check who the spender is in a block explorer: verified source, known app, deployment date.</li>
+</ol>
+<p>Example of the read-only call (<code>allowance</code> selector is <code>0xdd62ed3e</code>):</p>
+<pre>curl -s -X POST &lt;RPC_URL&gt; -H 'content-type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"eth_call","params":[{"to":"0xTOKEN","data":"0xdd62ed3e&lt;owner padded to 32 bytes&gt;&lt;spender padded to 32 bytes&gt;"},"latest"]}'</pre>
+<p>The free <a href="/">read-only check</a> on this site lists ERC-20 approvals granted by direct transactions in the last 90 days that are still open, on Base and Ethereum mainnet.</p>
+<p><strong>Limit:</strong> approvals can also be granted by off-chain signatures (permit-style messages) that someone else submits on-chain. Those do not appear in your own transaction history, so also review <code>Approval</code> events for your address if you suspect a malicious signature.</p>
+
+<h2>How to revoke</h2>
+<ul>
+<li>From the <strong>owner</strong> wallet, call <code>approve(spender, 0)</code> on the token contract. This sets the allowance to zero.</li>
+<li>For NFT collections, call <code>setApprovalForAll(operator, false)</code>.</li>
+<li>Many wallets and block explorers have a built-in approvals page that builds these transactions for you. Use the official site or app, typed by hand, never a link from a message.</li>
+<li>Each revocation is an on-chain transaction and costs gas.</li>
+<li>After revoking, call <code>allowance</code> again to confirm it returns 0.</li>
+</ul>
+
+<h2>If the wallet is already compromised</h2>
+<ul>
+<li>Revoking needs a signature from the compromised key, and the attacker holds the same key: they can approve again at any time.</li>
+<li>If a sweeper (a bot or an <a href="/guides/eip-7702-sweeper/">EIP-7702 delegation</a>) is active, gas you send to pay for the revocation may be taken before you can use it.</li>
+<li>In that situation, revoking approvals is less important than stopping use of the wallet. See the <a href="/guides/compromised-wallet-checklist/">compromised wallet checklist</a>.</li>
+</ul>
+
+<h2>Good habits</h2>
+<ul>
+<li>Approve only the amount a transaction needs when the app allows it.</li>
+<li>Review approvals every few months and revoke the ones you no longer use.</li>
+<li>Read what a signature request asks for before signing; treat "approve" and "permit" requests from unknown sites as red flags.</li>
+</ul>
+<p class="small">Last updated: 2026-11-21. Mainnet: read-only check. Rescue is testnet beta only.</p>
+</main></body></html>

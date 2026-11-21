@@ -1,0 +1,52 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>EIP-7702 sweeper delegation: what it is and how to check for one | UNSWEEP</title><meta name="description" content="How an EIP-7702 delegation works, how sweeper bots abuse it, and how to check any address for a delegation with a read-only call. No keys, no signatures."><meta name="referrer" content="no-referrer"><link rel="canonical" href="https://unsweep.com/guides/eip-7702-sweeper/"><link rel="stylesheet" href="/assets/style.css"></head><body><main class="guide">
+<p class="small"><a href="/">UNSWEEP</a> &rsaquo; Guides</p>
+<h1>EIP-7702 sweeper delegation: what it is and how to check for one</h1>
+<p class="warn">This guide is informational. Funds already moved out of a wallet usually cannot be recovered. We never ask for your private key in chat, email or DM, and we will never DM you first.</p>
+
+<h2>What EIP-7702 changes</h2>
+<p>EIP-7702 (part of the Pectra upgrade) lets a normal externally owned account (EOA) point to a smart contract. The owner signs an <em>authorization</em>; once it is included in a transaction, the account's code becomes the 23-byte marker <code>0xef0100</code> followed by the 20-byte address of the delegate contract. From then on, calls to the account run the delegate's code in the context of the account, with the account's balance and tokens.</p>
+<p>Legitimate uses include batching several actions in one transaction or gas sponsorship. The same mechanism is dangerous if the delegate was chosen by an attacker.</p>
+
+<h2>How a sweeper uses it</h2>
+<ul>
+<li>An attacker who has the private key (leaked file, phishing page, malicious download) signs an authorization that delegates the account to a contract they control.</li>
+<li>That contract can forward any incoming native coin or token to the attacker automatically, often in the same block in which it arrives.</li>
+<li>Before EIP-7702, sweepers were off-chain bots racing to send a transfer after each deposit. With a delegation, the sweep logic can live on-chain, which makes it faster and harder to beat.</li>
+<li>The delegation stays until the account signs a new authorization (for example, delegating to the zero address to clear it). Because the attacker also holds the key, they can simply re-delegate.</li>
+</ul>
+
+<h2>How to check an address (read-only)</h2>
+<p>You only need the <strong>public address</strong>. Nothing has to be signed.</p>
+<ol>
+<li>Call <code>eth_getCode(address, "latest")</code> on any node of the network.</li>
+<li>If the result is <code>0x</code>, the account has no code and no delegation.</li>
+<li>If the result starts with <code>0xef0100</code> and is 23 bytes long, the account is delegated. The remaining 20 bytes are the delegate contract address.</li>
+<li>Look that delegate contract up in a block explorer. Check whether its source is verified, who deployed it and whether it was something you intentionally set up.</li>
+</ol>
+<p>Example with a command line JSON-RPC request:</p>
+<pre>curl -s -X POST &lt;RPC_URL&gt; -H 'content-type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"eth_getCode","params":["0xYOUR_ADDRESS","latest"]}'</pre>
+<p>Or use the free <a href="/">read-only check</a> on this site for Base and Ethereum mainnet. It reports the delegation target, nonce, balances and open approvals.</p>
+
+<h2>Signs that a delegation is malicious</h2>
+<ul>
+<li>You do not remember enabling any smart account feature, but the address is delegated.</li>
+<li>Deposits disappear within seconds, even small amounts sent to pay gas.</li>
+<li>The delegate contract is unverified or was deployed recently by an unknown address.</li>
+<li>The nonce increased with transactions you did not send.</li>
+</ul>
+
+<h2>What to do</h2>
+<ul>
+<li>Treat the private key and seed phrase as permanently exposed. Do not use that wallet for new funds.</li>
+<li><strong>Do not send gas money to the compromised address.</strong> A delegated sweeper will usually forward it immediately.</li>
+<li>Create a new wallet with a fresh seed phrase on a device you trust, and move future activity there.</li>
+<li>Review open token approvals: see <a href="/guides/revoke-approvals/">how to find and revoke approvals</a>.</li>
+<li>Follow the <a href="/guides/compromised-wallet-checklist/">compromised wallet checklist</a>.</li>
+<li>Be very careful with anyone offering recovery in private messages. Asking for your seed phrase or for an upfront payment is a common scam pattern.</li>
+</ul>
+
+<h2>Limits</h2>
+<p>Clearing or replacing a delegation requires a signature from the compromised key, and the attacker can do the same. Removing a delegation does not reverse transfers that already happened. Assets that are locked, staked or vesting in the account may sometimes be moved out in a single sponsored transaction, but there is no guarantee and timing matters.</p>
+<p class="small">Last updated: 2026-11-21. Mainnet: read-only check. Rescue is testnet beta only.</p>
+</main></body></html>
