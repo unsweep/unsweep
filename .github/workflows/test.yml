@@ -63,3 +63,6 @@ jobs:
       - name: Run pytest
         working-directory: relayer
         run: .venv/bin/python -m pytest -q -rs -p no:cacheprovider
+
+      - name: Run tools tests (#89 gen_env_min)
+        run: relayer/.venv/bin/python -m pytest -q -rs -p no:cacheprovider tools/test_gen_env_min.py

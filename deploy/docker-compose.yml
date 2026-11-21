@@ -6,7 +6,8 @@ services:
     container_name: unsweep-relayer
     restart: always
     user: "1000:1000"
-    env_file: /opt/aire/product.env
+    # #89: env MINIMO (TURNSTILE_*, OPS_PK, BASE_RPC_URL, ETH_RPC_URL) generado por tools/gen_env_min.py, 600, fuera del repo
+    env_file: /opt/aire/unsweep-relayer.env
     environment:
       UNSWEEP_CHAIN_ID: "8453"
       # deployments/mainnet.txt (blob 21863f98): contratos CREATE2 verificados en Basescan
@@ -14,7 +15,7 @@ services:
       UNSWEEP_CONFIG: "0x56a345661e3999F2b20f1E069aAC14097Fa0D118"
       # RPC publico oficial de Base (sin secretos en el repo)
       UNSWEEP_RPC: "https://mainnet.base.org"
-      # Turnstile: claves reales desde env_file (/opt/aire/product.env); sin overrides de TEST (svc_core las rechaza en mainnet)
+      # Turnstile: claves reales desde env_file minimo (/opt/aire/unsweep-relayer.env); sin overrides de TEST (svc_core las rechaza en mainnet)
       UNSWEEP_PG: "host=/var/run/postgresql dbname=unsweep user=tecnoclic"
     volumes:
       - ..:/app:ro
