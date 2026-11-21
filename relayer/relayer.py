@@ -62,10 +62,52 @@ def auth_nonce_still_valid(w3: Web3, victim: str, auth_nonce: int) -> bool:
     return w3.eth.get_transaction_count(Web3.to_checksum_address(victim), "pending") == auth_nonce
 
 
+_BAL_SEL = '0x70a08231'
+
+
+def _bal_call(token: str, who: str) -> dict:
+    return {"to": Web3.to_checksum_address(token),
+            "data": _BAL_SEL + "00" * 12 + Web3.to_checksum_address(who)[2:].lower()}
+
+
+def _auth_json(a) -> dict:
+    return {"chainId": hex(a.chain_id), "address": Web3.to_checksum_address(a.address), "nonce": hex(a.nonce),
+            "yParity": hex(a.y_parity), "r": hex(a.r), "s": hex(a.s)}
+
+
+def measure_split(w3: Web3, sender: str, tx: dict, tokens: list, safe: str, fee_to: str) -> dict:
+    """#927(c): resimulacion JUSTO antes de enviar. Una sola eth_simulateV1 con: balances previos de SAFE y
+    feeRecipient, la tx de rescate (con authorizationList) y balances posteriores. Devuelve
+    {token_lower: {'safe': delta, 'fee': delta}}. Cualquier fallo o respuesta incompleta -> PolicyError."""
+    pre = [c for t in tokens for c in (_bal_call(t, safe), _bal_call(t, fee_to))]
+    rescue = {"from": Web3.to_checksum_address(sender), "to": tx["to"], "data": Web3.to_hex(tx["data"]),
+              "gas": hex(int(tx["gas"])), "authorizationList": [_auth_json(a) for a in tx["authorizationList"]]}
+    calls = pre + [rescue] + pre
+    try:
+        res = w3.provider.make_request("eth_simulateV1",
+                                       [{"blockStateCalls": [{"calls": calls}], "validation": False}, "pending"])
+        out = res["result"][0]["calls"]
+    except Exception as e:  # noqa: BLE001
+        raise PolicyError(f"resimulacion no disponible: {type(e).__name__}") from None
+    n = len(pre)
+    if len(out) != 2 * n + 1 or any(int(str(c.get("status", "0x0")), 16) != 1 for c in out):
+        raise PolicyError("resimulacion fallida o incompleta")
+    def _u(x):
+        x = str(x or "0x")
+        return 0 if x in ("0x", "") else int(x, 16)
+    v = [0 if i == n else _u(c.get("returnData")) for i, c in enumerate(out)]
+    m = {}
+    for i, t in enumerate(tokens):
+        a, b = v[2 * i], v[2 * i + 1]
+        a2, b2 = v[n + 1 + 2 * i], v[n + 2 + 2 * i]
+        m[str(t).lower()] = {"safe": a2 - a, "fee": b2 - b}
+    return m
+
+
 def send_rescue(w3: Web3, sponsor_key, victim: str, signed_auth, calldata: bytes, q: Quote,
                 gas: int = 1_500_000, allow_mainnet: bool = False, cap_usd: float | None = None,
                 track: "P.TrackRecord | None" = None, exception_ref: str = "", rpc_url: str = "",
-                eth_usd: float | None = None):
+                eth_usd: float | None = None, split: dict | None = None):
     chain_id = w3.eth.chain_id
     if chain_id not in TESTNETS and chain_id not in ACTIVE_MAINNETS:
         raise PolicyError(f"chain {chain_id} no habilitada (mainnets activas: {sorted(ACTIVE_MAINNETS)})")
@@ -93,6 +135,12 @@ def send_rescue(w3: Web3, sponsor_key, victim: str, signed_auth, calldata: bytes
     # comprobacion de carrera JUSTO antes de enviar
     if not auth_nonce_still_valid(w3, victim, signed_auth.nonce):
         raise RaceAbort("el nonce de la EOA cambio: autorizacion invalida, no se envia")
+    if chain_id in P.MAINNETS and P.needs_extra_checks(q.rescued_usd):
+        # #927(c): resimulacion con reparto exacto SAFE/fee, justo antes de enviar; fail-closed
+        if not split:
+            raise PolicyError("rescate >10.000 USD sin datos de reparto para resimular")
+        P.check_split(split["lines"], measure_split(w3, sponsor.address, tx, [l["token"] for l in split["lines"]],
+                                                    split["safe"], split["fee_to"]))
     h = w3.eth.send_raw_transaction(raw)
     rc = w3.eth.wait_for_transaction_receipt(h, timeout=60)
     if rc["status"] == 0:

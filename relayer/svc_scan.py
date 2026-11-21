@@ -98,7 +98,7 @@ def scan(addr):
             continue
         bal = w3.eth.contract(address=Web3.to_checksum_address(t['address']), abi=ERC20).functions.balanceOf(addr).call()
         if bal > 0:
-            tokens.append({**t, 'balance': str(bal), 'price_usd': _token_px(a, t)})
+            tokens.append({**t, 'balance': str(bal), 'price_usd': _token_px(a, t), 'price_age_s': _token_age(a, t)})
     for n in a['nfts']:
         c = w3.eth.contract(address=Web3.to_checksum_address(n['address']), abi=ERC721)
         for i in n.get('ids', []):
@@ -113,6 +113,13 @@ def scan(addr):
             'delegation7702': deleg, 'delegatedToUnsweep': deleg == DELEGATE,
             'tokens': tokens, 'nfts': nfts, 'approvals': live_approvals(addr),
             'rescuable': bool(tokens or nfts)}
+
+
+def _token_age(a, t):
+    """#927(a): antiguedad del precio Chainlink; None si no hay feed (solo testnet) -> >10k se rechaza."""
+    if t.get('feed'):
+        return O.token_price_age_s(w3, a, t)
+    return None
 
 
 def quote(s, gas=1_500_000):
@@ -165,10 +172,19 @@ def quote(s, gas=1_500_000):
             check_policy(q)
         except PolicyError as e:
             ok, why = False, str(e)
+    if ok and CHAIN_ID in P.MAINNETS and P.needs_extra_checks(rescued_usd):
+        # #927(a)+(b): precio Chainlink < 1 h y lista de alto valor; si falla, no se ofrece el rescate
+        try:
+            P.check_high_value(rescued_usd, [{'symbol': t.get('symbol', ''), 'value_usd': u,
+                                             'price_age_s': t.get('price_age_s')} for (t, _b, _d, _p, u) in toks])
+        except PolicyError as e:
+            ok, why = False, str(e)
     has_min = any(l['minFee'] != '0' for l in lines)
     if not has_min:
         for l in lines: l.pop('minFee')
     # sin datos de gas en la respuesta al usuario (gas interno)
     fee_pct = round(fee_usd / rescued_usd * 100, 2) if rescued_usd > 0 else 0.0
     return {'feeBps': bps, 'maxFeeBps': bps, 'lines': lines, 'nfts': n_nft,
-            'rescued_usd': round(rescued_usd, 4), 'fee_usd': round(fee_usd, 4), 'fee_pct': fee_pct, 'policy_ok': ok, 'policy_reason': why}, q
+            'rescued_usd': round(rescued_usd, 4), 'fee_usd': round(fee_usd, 4), 'fee_pct': fee_pct, 'policy_ok': ok, 'policy_reason': why,
+            'extra_checks': P.needs_extra_checks(rescued_usd),
+            'breakdown': P.breakdown(lines, rescued_usd, fee_usd)}, q

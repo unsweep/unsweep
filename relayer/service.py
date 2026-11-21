@@ -17,7 +17,7 @@ import policy as P
 from svc_core import (ETH_USD, assets, w3, abi, log, record, screen, turnstile_ok, rate_limited, ofac_set,
                       CHAIN_ID, DELEGATE, CONFIG, TURNSTILE_SECRET, TEST_SECRET, TURNSTILE_SITEKEY)
 from relayer import ACTIVE_MAINNETS
-from svc_scan import scan, quote, _eth_usd
+from svc_scan import scan, quote, _eth_usd, config_c
 import oracle as O
 from fastapi.responses import JSONResponse
 from svc_mainnet import scan_mainnet, record_scan, ScanError, CHAINS as MAINNET_CHAINS
@@ -174,11 +174,23 @@ async def api_rescue(req: Request):
             raise PolicyError(qd['policy_reason'] or 'rechazado por politica')
         if rescue_t[4] > qd['maxFeeBps']:
             raise PolicyError('maxFeeBps firmado superior al cotizado')
-        rc = send_rescue(w3, SPONSOR_KEY, victim, auth, HexBytes(data), q,
-                         track=P.TrackRecord.load() if hasattr(P.TrackRecord, 'load') else None,
-                         exception_ref=str(b.get('exceptionRef', ''))[:64], rpc_url=RPC_URL_SEND, eth_usd=_eth_usd())
+        high = CHAIN_ID in P.MAINNETS and P.needs_extra_checks(q.rescued_usd)
+        split = None
+        if high:  # #927(c): datos para la resimulacion exacta SAFE/fee
+            split = {'lines': qd['lines'], 'safe': safe, 'fee_to': config_c.functions.feeRecipient().call()}
+        try:
+            rc = send_rescue(w3, SPONSOR_KEY, victim, auth, HexBytes(data), q,
+                             track=P.TrackRecord.load() if hasattr(P.TrackRecord, 'load') else None,
+                             exception_ref=str(b.get('exceptionRef', ''))[:64], rpc_url=RPC_URL_SEND,
+                             eth_usd=_eth_usd(), split=split)
+        except (PolicyError, RaceAbort) as e:
+            if high:
+                P.record_case(CHAIN_ID, q.rescued_usd, q.fee_usd, 'rechazado: ' + str(e)[:80])
+            raise
         txh = Web3.to_hex(rc['transactionHash'])
         ok = int(rc['status']) == 1
+        if high:  # #927(e)
+            P.record_case(CHAIN_ID, q.rescued_usd, q.fee_usd, 'ok' if ok else 'revert', txh)
         record('rescue', 'mined' if ok else 'reverted', None, len(rescue_t[2]), len(rescue_t[3]), txh)
         return {'txHash': txh, 'status': 'success' if ok else 'reverted', 'gasUsed': int(rc['gasUsed']),
                 'explorer': f'https://sepolia.basescan.org/tx/{txh}'}

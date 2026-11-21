@@ -97,6 +97,22 @@ def token_price_usd(w3, cfg, tok):
     return px
 
 
+def token_price_age_s(w3, cfg, tok, now=None):
+    """#927(a): antiguedad (s) del dato mas viejo usado para valorar tok (feed del token y, si cotiza en ETH,
+    tambien ETH/USD). Valida antes con token_price_usd (fail-closed) y lee el updatedAt cacheado."""
+    token_price_usd(w3, cfg, tok)
+    f = tok['feed']
+    feeds = [f['address']] + ([cfg['eth_usd_feed']['address']] if f.get('quote') == 'ETH' else [])
+    t = now if now is not None else _now(w3)
+    ages = []
+    for a in feeds:
+        hit = _cache.get(Web3.to_checksum_address(a))
+        if not hit:
+            raise OracleError('price feed age unavailable')
+        ages.append(int(t) - int(hit['upd']))
+    return max(ages)
+
+
 price_usd = token_price_usd
 
 

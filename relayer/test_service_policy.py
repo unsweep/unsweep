@@ -151,24 +151,18 @@ def test_other_mainnets_rejected(relay_env, chain_id):
     assert eth.sent == [] and eth.calls == []
 
 
-@pytest.mark.parametrize('ok', [0, 2])
-def test_base_cap_10k_below_3(relay_env, ok):
-    """3b: <3 rescates reales => 10.000 aceptado, >10.000 rechazado."""
-    P.check_cap(8453, 10_000, P.TrackRecord(ok))
+@pytest.mark.parametrize('ok', [0, 2, 3, 10])
+def test_base_cap_100k(relay_env, ok):
+    """#927: 100.000 aceptado, >100.000 rechazado."""
+    P.check_cap(8453, 100_000, P.TrackRecord(ok))
     with pytest.raises(P.PolicyError, match='limite'):
-        P.check_cap(8453, 10_001, P.TrackRecord(ok))
-
-
-def test_base_cap_50k_with_3(relay_env):
-    P.check_cap(8453, 50_000, P.TrackRecord(3))
-    with pytest.raises(P.PolicyError, match='limite'):
-        P.check_cap(8453, 50_001, P.TrackRecord(3))
+        P.check_cap(8453, 100_001, P.TrackRecord(ok))
 
 
 def test_base_send_over_cap_blocked(relay_env):
     _, _, _, _ = relay_env
-    q = R.Quote(rescued_usd=20_000.0, fee_usd=1_000.0, gas_cost_usd=0.01)
-    with pytest.raises(P.PolicyError):
+    q = R.Quote(rescued_usd=100_001.0, fee_usd=5_000.0, gas_cost_usd=0.01)
+    with pytest.raises(P.PolicyError, match='limite'):
         _send(8453, q)
 
 

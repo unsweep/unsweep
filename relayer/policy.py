@@ -17,14 +17,20 @@ import os
 import re
 import time
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 
 MAX_FEE_BPS = 1500  # igual que el techo inmutable del contrato
 ETH_MAINNET = 1
 MAINNETS = {1, 8453, 42161}
-CAP_INITIAL_USD = 10_000.0
-FIXED_CAP_USD = 10_000.0  # #827.2/3b: limite por rescate con <3 rescates reales
-CAP_RAISED_USD = 50_000.0
+CAP_INITIAL_USD = 100_000.0  # #927: tope automatico por rescate
+FIXED_CAP_USD = 10_000.0  # umbral de controles extra (#927) y tope de tokens fuera de HIGH_VALUE
+CAP_RAISED_USD = 100_000.0  # #927: sin tramos por historial; el tope automatico es 100k
+HIGH_VALUE_USD = 10_000.0
+MAX_PRICE_AGE_S = 3600  # #927(a): precio Chainlink < 1 h por encima de 10k
+HIGH_VALUE_SYMBOLS = frozenset({"USDC", "USDT", "DAI", "EURC", "WETH", "wstETH", "weETH", "cbETH", "cbBTC"})
+REPO_DIR = Path(__file__).resolve().parent.parent
+CASOS_MD = Path(os.environ.get("UNSWEEP_CASOS_MD", REPO_DIR / "docs" / "CASOS.md"))
 RAISE_AFTER_OK = 3
 UNCAP_AFTER_OK = 10
 GAS_LOST_ALERT_USD = 5.0
@@ -76,9 +82,9 @@ class TrackRecord:
 
 
 def cap_usd(tr: TrackRecord) -> float:
-    """#827.2/3b: 10.000 USD por rescate; 50.000 USD solo con >=3 rescates reales registrados.
-    No hay tramo sin limite (auditoria/10 ok no lo levantan)."""
-    return CAP_RAISED_USD if tr.mainnet_ok >= RAISE_AFTER_OK else CAP_INITIAL_USD
+    """#927: tope automatico 100.000 USD por rescate, independiente del historial.
+    Por encima de 10.000 USD se exigen los controles de check_high_value/check_split."""
+    return CAP_INITIAL_USD
 
 
 _EXC = re.compile(r"^\s*UNSWEEP-EXCEPCION\s+(\S+)\s+([0-9][0-9_.,]*)\s*USD\b", re.M)
@@ -107,6 +113,61 @@ def check_cap(chain_id: int, rescued_usd: float, tr: TrackRecord, ref: str = "",
     if rescued_usd <= cap:
         return
     raise PolicyError(f"supera el limite por rescate ({rescued_usd} > {cap} USD; {tr.mainnet_ok} rescates reales)")
+
+
+def needs_extra_checks(rescued_usd: float) -> bool:
+    return rescued_usd > HIGH_VALUE_USD
+
+
+def check_high_value(rescued_usd: float, items: list):
+    """#927 (a)+(b). items: [{'symbol','value_usd','price_age_s'}]. Solo aplica si rescued_usd > 10.000.
+    (a) toda valoracion debe venir de un feed Chainlink con antiguedad < 1 h, o se rechaza.
+    (b) los tokens fuera de HIGH_VALUE_SYMBOLS suman como maximo 10.000 USD."""
+    if not needs_extra_checks(rescued_usd):
+        return
+    other = 0.0
+    for it in items:
+        age = it.get("price_age_s")
+        if age is None or not (0 <= int(age) < MAX_PRICE_AGE_S):
+            raise PolicyError(f"precio de {it.get('symbol','?')} con mas de 1 h (>{MAX_PRICE_AGE_S}s) en rescate >10.000 USD")
+        if it.get("symbol") not in HIGH_VALUE_SYMBOLS:
+            other += float(it.get("value_usd", 0))
+    if other > HIGH_VALUE_USD:
+        raise PolicyError(f"tokens fuera de la lista de alto valor superan 10.000 USD ({other:.2f})")
+
+
+def check_split(expected: list, simulated: dict):
+    """#927 (c): reparto exacto. expected: lines de la cotizacion {'token','amount','fee','net'}.
+    simulated: {token_lower: {'safe': int, 'fee': int}} obtenido de la resimulacion justo antes de enviar."""
+    sim = {str(k).lower(): v for k, v in (simulated or {}).items()}
+    if len(sim) != len(expected):
+        raise PolicyError("resimulacion: numero de tokens distinto al cotizado")
+    for l in expected:
+        got = sim.get(str(l["token"]).lower())
+        if got is None:
+            raise PolicyError(f"resimulacion: falta {l['token']}")
+        if int(got.get("safe", -1)) != int(l["net"]) or int(got.get("fee", -1)) != int(l["fee"]):
+            raise PolicyError(f"resimulacion: reparto SAFE/fee distinto al cotizado en {l['token']}")
+
+
+def breakdown(lines: list, rescued_usd: float, fee_usd: float) -> list:
+    """#927 (d): desglose que se muestra antes de firmar."""
+    out = []
+    for l in lines:
+        dec = int(l.get("decimals", 18))
+        out.append({"symbol": l.get("symbol", ""), "to_safe": int(l["net"]) / 10**dec, "fee": int(l["fee"]) / 10**dec})
+    return [{"rescued_usd": round(rescued_usd, 2), "fee_usd": round(fee_usd, 2), "to_safe_usd": round(rescued_usd - fee_usd, 2)}] + out
+
+
+def record_case(chain_id: int, rescued_usd: float, fee_usd: float, result: str, txh: str = "", path: Path | None = None):
+    """#927 (e): registro de cada rescate >10.000 USD en docs/CASOS.md (sin direcciones de usuario)."""
+    p = path or CASOS_MD
+    p.parent.mkdir(parents=True, exist_ok=True)
+    new = not p.exists()
+    with p.open("a", encoding="utf-8") as f:
+        if new:
+            f.write("# Casos de rescate > 10.000 USD\n\n| fecha UTC | chain | rescatado USD | fee USD | resultado | tx |\n|---|---|---|---|---|---|\n")
+        f.write(f"| {datetime.now(timezone.utc).isoformat(timespec='seconds')} | {chain_id} | {rescued_usd:.2f} | {fee_usd:.2f} | {result} | {txh} |\n")
 
 
 def ops_status(balance_wei) -> str:

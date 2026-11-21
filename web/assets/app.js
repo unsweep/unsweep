@@ -49,12 +49,12 @@
         for (const ap of aps) out.push('Open approval: ' + (ap.symbol || ap.token) + ' -> spender ' + ap.spender + (ap.unlimited ? ' (unlimited)' : '') + ' - see /guides/revoke-approvals/');
         const am = m.approvalsMeta || {};
         if (!complete) out.push('Approvals listed above may be partial (' + (am.txScanned || 0) + ' recent transactions checked).');
-        out.push('Ethereum mainnet: read-only check. Rescue is available on Base mainnet.');
+        out.push('Ethereum mainnet: read-only check. Rescue is currently live on Base mainnet (16 ERC-20 tokens).');
         show($('scanOut'), out, complete ? 'ok' : 'err');
       } catch (e) { show($('scanOut'), 'Scan failed: ' + e.message, 'err'); }
       return;
     }
-    show($('scanOut'), 'Scanning ' + (chain === 'base' ? 'Base mainnet' : 'network') + '... (can take ~30 s)');
+    show($('scanOut'), 'Scanning Base mainnet... (can take ~30 s)');
     try {
       if (!st.cfg) st.cfg = await api('config');
       const s = await api('scan', { address: a });
