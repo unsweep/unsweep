@@ -1,11 +1,11 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>UNSWEEP - free read-only wallet check (EIP-7702 delegation, open approvals) on Base and Ethereum</title><meta name="description" content="Free read-only check of a public wallet address on Base and Ethereum mainnet: EIP-7702 delegation, nonce, balances and open ERC-20 approvals. No keys, no signatures. Rescue on mainnet is not enabled yet."><meta name="referrer" content="no-referrer"><link rel="canonical" href="https://unsweep.com/"><link rel="stylesheet" href="/assets/style.css"></head><body><main>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>UNSWEEP - free read-only wallet check (EIP-7702 delegation, open approvals) on Base and Ethereum</title><meta name="description" content="Free read-only check of a public wallet address on Base and Ethereum mainnet: EIP-7702 delegation, nonce, balances and open ERC-20 approvals. No keys, no signatures. Rescue is live on Base mainnet."><meta name="referrer" content="no-referrer"><link rel="canonical" href="https://unsweep.com/"><link rel="stylesheet" href="/assets/style.css"></head><body><main>
 <h1>UNSWEEP</h1>
 <p>Rescue tokens left in a hacked wallet — even if a bot drains your funds.</p>
-<p class="notice" id="mainnetNotice"><strong>Base mainnet: free read-only check. Rescue on mainnet is not enabled yet.</strong> Your compromised key never leaves your browser. We will never DM you first and never ask for your seed phrase.</p>
+<p class="notice" id="mainnetNotice"><strong>Base mainnet: rescue is live. Ethereum: free read-only check.</strong> Verified contracts on Base: delegate <code>0x38bcF425bC4d13624734e09376F2fafc799fA8c8</code>, config <code>0x56a345661e3999F2b20f1E069aAC14097Fa0D118</code>. Source: <a href="https://github.com/unsweep/unsweep" rel="noopener">github.com/unsweep/unsweep</a>. Your compromised key never leaves your browser. We will never DM you first and never ask for your seed phrase.</p>
 
 <nav class="tabs" aria-label="Mode">
 <button type="button" id="tabScan" class="tab active">Check (read-only)</button>
-<button type="button" id="tabRescueMainnet" class="tab" disabled aria-disabled="true" title="Rescue on mainnet is disabled">Rescue on mainnet: disabled</button>
+<button type="button" id="tabRescueMainnet" class="tab" title="Rescue on Base mainnet">Rescue on Base mainnet</button>
 </nav>
 
 <section id="step1"><h2>Step 1 &middot; Check your wallet</h2>
@@ -13,7 +13,7 @@
 <div class="form">
 <div class="field"><label for="chain">Network</label>
 <select id="chain">
-<option value="base" selected>Base mainnet (read-only check)</option>
+<option value="base" selected>Base mainnet (check + rescue)</option>
 <option value="ethereum">Ethereum mainnet (read-only check)</option>
 </select></div>
 <div class="field wide"><label for="victim">Public wallet address</label>

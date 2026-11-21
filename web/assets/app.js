@@ -24,7 +24,7 @@
     if (!a) return show($('scanOut'), 'Invalid address.', 'err');
     const chain = ($('chain') && $('chain').value) || 'testnet';
     $('step2').hidden = true; $('step3').hidden = true;
-    if (chain === 'base' || chain === 'ethereum') {
+    if (chain === 'ethereum') {
       st.scan = null; // rescue is never enabled on mainnet
       show($('scanOut'), 'Read-only check on ' + (chain === 'base' ? 'Base' : 'Ethereum') + ' mainnet...');
       try {
@@ -49,12 +49,12 @@
         for (const ap of aps) out.push('Open approval: ' + (ap.symbol || ap.token) + ' -> spender ' + ap.spender + (ap.unlimited ? ' (unlimited)' : '') + ' - see /guides/revoke-approvals/');
         const am = m.approvalsMeta || {};
         if (!complete) out.push('Approvals listed above may be partial (' + (am.txScanned || 0) + ' recent transactions checked).');
-        out.push('Base mainnet: read-only check. Rescue on mainnet is not enabled yet.');
+        out.push('Ethereum mainnet: read-only check. Rescue is available on Base mainnet.');
         show($('scanOut'), out, complete ? 'ok' : 'err');
       } catch (e) { show($('scanOut'), 'Scan failed: ' + e.message, 'err'); }
       return;
     }
-    show($('scanOut'), 'Scanning Base Sepolia... (can take ~30 s)');
+    show($('scanOut'), 'Scanning ' + (chain === 'base' ? 'Base mainnet' : 'network') + '... (can take ~30 s)');
     try {
       if (!st.cfg) st.cfg = await api('config');
       const s = await api('scan', { address: a });
