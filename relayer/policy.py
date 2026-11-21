@@ -2,8 +2,8 @@
 
 - Tramos: 15 % (<1.000 USD), 10 % (1.000-10.000), 5 % (>10.000).
 - Ethereum (chain 1): comision = max(tramo, gas estimado x 1.5).
-- Limite por rescate: FIJO 10.000 USD (FIXED_CAP_USD, #827.2). cap_usd() conserva la escalada
-  documentada (50.000 / sin limite) pero check_cap aplica min(cap_usd, 10.000).
+- Limite por rescate (#827.2/3b): 10.000 USD; 50.000 USD solo con >=3 rescates reales.
+  Sin excepciones por encima del limite.
 - Excepcion manual: linea escrita por el HUMANO en HUMANO.md:
     UNSWEEP-EXCEPCION <ref> <max_usd> USD
 - Simulacion eth_call obligatoria antes de enviar.
@@ -23,7 +23,7 @@ MAX_FEE_BPS = 1500  # igual que el techo inmutable del contrato
 ETH_MAINNET = 1
 MAINNETS = {1, 8453, 42161}
 CAP_INITIAL_USD = 10_000.0
-FIXED_CAP_USD = 10_000.0  # #827.2/3b: techo fijo por rescate en mainnet; la escalada 50k/sin limite queda inactiva
+FIXED_CAP_USD = 10_000.0  # #827.2/3b: limite por rescate con <3 rescates reales
 CAP_RAISED_USD = 50_000.0
 RAISE_AFTER_OK = 3
 UNCAP_AFTER_OK = 10
@@ -75,10 +75,9 @@ class TrackRecord:
     external_audit: bool = False
 
 
-def cap_usd(tr: TrackRecord):
-    """None = sin limite."""
-    if tr.external_audit or (tr.mainnet_ok >= UNCAP_AFTER_OK and tr.incidents == 0):
-        return None
+def cap_usd(tr: TrackRecord) -> float:
+    """#827.2/3b: 10.000 USD por rescate; 50.000 USD solo con >=3 rescates reales registrados.
+    No hay tramo sin limite (auditoria/10 ok no lo levantan)."""
     return CAP_RAISED_USD if tr.mainnet_ok >= RAISE_AFTER_OK else CAP_INITIAL_USD
 
 
@@ -100,16 +99,14 @@ def manual_exception_usd(ref: str, humano_md: Path | None = None):
 
 
 def check_cap(chain_id: int, rescued_usd: float, tr: TrackRecord, ref: str = "", humano_md: Path | None = None):
+    """#827.2/3b: limite duro. Ninguna excepcion manual ni configuracion lo supera;
+    una excepcion (p.ej. 25.000) tampoco reduce el limite: <=10.000 siempre se acepta."""
     if chain_id not in MAINNETS:
         return
-    c = cap_usd(tr)
-    cap = FIXED_CAP_USD if c is None else min(c, FIXED_CAP_USD)
+    cap = cap_usd(tr)
     if rescued_usd <= cap:
         return
-    exc = manual_exception_usd(ref, humano_md) if ref else None
-    if exc is not None and rescued_usd <= exc:
-        return
-    raise PolicyError(f"supera el limite por rescate ({rescued_usd} > {cap} USD) sin excepcion manual")
+    raise PolicyError(f"supera el limite por rescate ({rescued_usd} > {cap} USD; {tr.mainnet_ok} rescates reales)")
 
 
 def ops_status(balance_wei) -> str:

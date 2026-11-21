@@ -25,22 +25,38 @@ def test_ethereum_min_gas_x15():
 def test_caps():
     T = P.TrackRecord
     assert P.cap_usd(T(0)) == 10_000
+    assert P.cap_usd(T(2)) == 10_000
     assert P.cap_usd(T(3)) == 50_000
-    assert P.cap_usd(T(10)) is None
-    assert P.cap_usd(T(10, incidents=1)) == 50_000
-    assert P.cap_usd(T(0, external_audit=True)) is None
-    assert P.FIXED_CAP_USD == 10_000  # check_cap aplica min(cap_usd, 10k)
+    assert P.cap_usd(T(10)) == 50_000  # sin tramo ilimitado
+    assert P.cap_usd(T(0, external_audit=True)) == 10_000
 
 
-def test_manual_exception(tmp_path):
+def test_exception_25k_does_not_block_10k(tmp_path, monkeypatch):
+    """3b: una excepcion/config de 25.000 no impide aceptar 10.000."""
     h = tmp_path / "HUMANO.md"
     h.write_text("x\nUNSWEEP-EXCEPCION caso42 25_000 USD\n")
-    P.check_cap(8453, 9_000, P.TrackRecord(), humano_md=h)
-    P.check_cap(8453, 20_000, P.TrackRecord(), "caso42", humano_md=h)
+    monkeypatch.setenv("UNSWEEP_BETA_CAP_USD", "25000")
+    for ref in ("", "caso42", "otro"):
+        P.check_cap(8453, 10_000, P.TrackRecord(), ref, humano_md=h)
+
+
+@pytest.mark.parametrize("ok", [0, 1, 2])
+def test_over_10k_rejected_below_3_rescues(tmp_path, ok):
+    """3b: con <3 rescates reales se rechaza todo importe >10.000, haya o no excepcion."""
+    h = tmp_path / "HUMANO.md"
+    h.write_text("UNSWEEP-EXCEPCION caso42 25_000 USD\n")
+    for amt in (10_000.01, 20_000, 25_000):
+        for ref in ("", "caso42"):
+            with pytest.raises(P.PolicyError, match="limite"):
+                P.check_cap(8453, amt, P.TrackRecord(ok), ref, humano_md=h)
     with pytest.raises(P.PolicyError):
-        P.check_cap(8453, 20_000, P.TrackRecord(), "otro", humano_md=h)
+        P.check_cap(8453, 10_001, P.TrackRecord(ok, external_audit=True))
+
+
+def test_50k_only_with_3_rescues():
+    P.check_cap(8453, 50_000, P.TrackRecord(3))
     with pytest.raises(P.PolicyError):
-        P.check_cap(8453, 30_000, P.TrackRecord(), "caso42", humano_md=h)
+        P.check_cap(8453, 50_000.01, P.TrackRecord(10))
     P.check_cap(84532, 10**9, P.TrackRecord())  # testnet: sin limite M4
 
 

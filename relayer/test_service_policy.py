@@ -151,14 +151,18 @@ def test_other_mainnets_rejected(relay_env, chain_id):
     assert eth.sent == [] and eth.calls == []
 
 
-@pytest.mark.parametrize('ok', [0, 3, 10])
-def test_base_fixed_cap_10k(relay_env, ok):
-    """3b: limite fijo 10.000 USD por rescate aunque el historial permitiera escalar."""
+@pytest.mark.parametrize('ok', [0, 2])
+def test_base_cap_10k_below_3(relay_env, ok):
+    """3b: <3 rescates reales => 10.000 aceptado, >10.000 rechazado."""
     P.check_cap(8453, 10_000, P.TrackRecord(ok))
     with pytest.raises(P.PolicyError, match='limite'):
         P.check_cap(8453, 10_001, P.TrackRecord(ok))
+
+
+def test_base_cap_50k_with_3(relay_env):
+    P.check_cap(8453, 50_000, P.TrackRecord(3))
     with pytest.raises(P.PolicyError, match='limite'):
-        P.check_cap(8453, 10_001, P.TrackRecord(0, external_audit=True))
+        P.check_cap(8453, 50_001, P.TrackRecord(3))
 
 
 def test_base_send_over_cap_blocked(relay_env):
