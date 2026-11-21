@@ -1,0 +1,1 @@
+a1944eb M2 orden #552: cabeceras+CSP estricta en unsweep.com, web sin inline (CSS en /assets), línea DM, auditoría de puertos, check Etherscan V2 (no verificado), evidencias
