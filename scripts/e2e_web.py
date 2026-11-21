@@ -47,10 +47,12 @@ with sync_playwright() as p:
     try:
         page.goto('https://unsweep.com/', wait_until='load', timeout=60000)
         # paso 1
+        page.select_option('#chain', 'testnet')
         page.fill('#victim', VICTIM); page.click('#btnScan')
         t = wait_text(page, '#scanOut', r'Address:|failed|Invalid', 120)
         log('STEP1', t); result['stage'] = 'scan'
         if not t or 'Address:' not in t: raise SystemExit('scan_failed')
+        if 'Base Sepolia' not in t: raise SystemExit('scan_not_testnet')
         page.wait_for_selector('#step2', state='visible', timeout=10000)
         # paso 2
         page.fill('#safe', SAFE); page.click('#btnQuote')
