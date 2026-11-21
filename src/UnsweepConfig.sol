@@ -22,7 +22,7 @@ contract UnsweepConfig {
     error BadParam();
 
     constructor(address _feeRecipient, uint16 _feeBps, address _nftFeeToken, uint256 _nftFlatFee) {
-        if (_feeRecipient == address(0) || _nftFeeToken == address(0) || _feeBps > 3000) revert BadParam();
+        if (_feeRecipient == address(0) || _nftFeeToken == address(0) || _feeBps > 1500) revert BadParam();
         owner = msg.sender;
         feeRecipient = _feeRecipient;
         feeBps = _feeBps;

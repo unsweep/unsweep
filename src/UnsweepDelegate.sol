@@ -2,6 +2,7 @@
 pragma solidity ^0.8.24;
 
 import {UnsweepConfig} from "./UnsweepConfig.sol";
+import {IERC20, SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 interface IERC20Min {
     function balanceOf(address) external view returns (uint256);
@@ -22,6 +23,11 @@ interface IERC721Min {
 ///         misma tx; si el permit o el cobro fallan, revierte todo. Nonces sin orden (bitmap, aleatorios).
 /// @custom:storage-location erc7201:unsweep.storage.v1
 contract UnsweepDelegate {
+    using SafeERC20 for IERC20;
+
+    /// techo inmutable del 15 %: ninguna firma ni configuracion puede superarlo
+    uint16 public constant MAX_FEE_BPS = 1500;
+
     struct Call {
         address target;
         uint256 value;
@@ -39,6 +45,8 @@ contract UnsweepDelegate {
         address[] tokens;
         Nft[] nfts;
         uint256 maxNftFee;
+        uint16 maxFeeBps;
+        uint256[] minFees;
         uint256 nonce;
         uint256 deadline;
     }
@@ -57,7 +65,7 @@ contract UnsweepDelegate {
     }
 
     bytes32 public constant RESCUE_TYPEHASH = keccak256(
-        "Rescue(address safe,bytes32 callsHash,bytes32 tokensHash,bytes32 nftsHash,uint256 maxNftFee,uint256 nonce,uint256 deadline)"
+        "Rescue(address safe,bytes32 callsHash,bytes32 tokensHash,bytes32 nftsHash,uint256 maxNftFee,uint16 maxFeeBps,bytes32 minFeesHash,uint256 nonce,uint256 deadline)"
     );
     bytes32 private constant DOMAIN_TYPEHASH =
         keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
@@ -84,8 +92,13 @@ contract UnsweepDelegate {
     error NftFeeTooHigh();
     error NftFeeFailed();
     error NothingRescued();
+    error BadFeeRecipient();
+    error BadMinFees();
+    error FeeAboveSigned(address token);
+    error BadConfig();
 
     constructor(UnsweepConfig _config) {
+        if (address(_config) == address(0)) revert BadConfig();
         config = _config;
     }
 
@@ -124,6 +137,8 @@ contract UnsweepDelegate {
                 keccak256(abi.encode(r.tokens)),
                 keccak256(abi.encode(r.nfts)),
                 r.maxNftFee,
+                r.maxFeeBps,
+                keccak256(abi.encode(r.minFees)),
                 r.nonce,
                 r.deadline
             )
@@ -183,19 +198,42 @@ contract UnsweepDelegate {
         }
     }
 
+    function _effBps(uint16 signed) private view returns (uint256 b) {
+        b = config.feeBps();
+        if (signed < b) b = signed;
+        if (b > MAX_FEE_BPS) b = MAX_FEE_BPS;
+    }
+
     function _sweepTokens(Rescue calldata r) private returns (uint256 items) {
         address feeTo = config.feeRecipient();
-        uint256 bps = config.feeBps();
+        if (feeTo == address(0)) revert BadFeeRecipient();
+        if (r.minFees.length != 0 && r.minFees.length != r.tokens.length) revert BadMinFees();
+        uint256 bps = _effBps(r.maxFeeBps);
         for (uint256 j; j < r.tokens.length; ++j) {
-            address t = r.tokens[j];
-            uint256 bal = IERC20Min(t).balanceOf(address(this));
+            IERC20 t = IERC20(r.tokens[j]);
+            uint256 bal = t.balanceOf(address(this));
             if (bal == 0) continue;
+            uint256 minFee = r.minFees.length == 0 ? 0 : r.minFees[j];
             uint256 fee = bal * bps / 10_000;
+            if (fee < minFee) fee = minFee;
+            if (fee > bal) fee = bal;
+            uint256 fGot;
             if (fee != 0) {
-                _transfer(t, feeTo, fee);
-                emit FeePaid(t, feeTo, fee);
+                uint256 f0 = t.balanceOf(feeTo);
+                t.safeTransfer(feeTo, fee);
+                fGot = t.balanceOf(feeTo) - f0;
             }
-            _transfer(t, r.safe, bal - fee);
+            uint256 sGot;
+            uint256 rest = t.balanceOf(address(this));
+            if (rest != 0) {
+                uint256 s0 = t.balanceOf(r.safe);
+                t.safeTransfer(r.safe, rest);
+                sGot = t.balanceOf(r.safe) - s0;
+            }
+            // comision sobre lo realmente transferido: nunca mas que el % firmado del total recibido (+1 redondeo),
+            // salvo la tarifa minima firmada por la victima
+            if (fGot > minFee && fGot * 10_000 > (fGot + sGot) * bps + 10_000) revert FeeAboveSigned(address(t));
+            if (fGot != 0) emit FeePaid(address(t), feeTo, fGot);
             ++items;
         }
     }
@@ -210,8 +248,8 @@ contract UnsweepDelegate {
         address feeTo = config.feeRecipient();
         // el permit lo firma la WALLET SEGURA; spender = esta EOA delegada. Sin try/catch: si falla, revierte todo.
         IERC2612Min(ft).permit(r.safe, address(this), p.value, p.deadline, p.v, p.r, p.s);
-        (bool ok, bytes memory ret) = ft.call(abi.encodeWithSelector(0x23b872dd, r.safe, feeTo, fee));
-        if (!ok || (ret.length != 0 && !abi.decode(ret, (bool)))) revert NftFeeFailed();
+        if (feeTo == address(0)) revert BadFeeRecipient();
+        IERC20(ft).safeTransferFrom(r.safe, feeTo, fee);
         emit FeePaid(ft, feeTo, fee);
     }
 
@@ -219,10 +257,5 @@ contract UnsweepDelegate {
         uint256 n = r.nfts.length;
         for (uint256 i; i < n; ++i) IERC721Min(r.nfts[i].token).transferFrom(address(this), r.safe, r.nfts[i].id);
         return n;
-    }
-
-    function _transfer(address t, address to, uint256 a) private {
-        (bool ok, bytes memory ret) = t.call(abi.encodeWithSelector(0xa9059cbb, to, a));
-        if (!ok || (ret.length != 0 && !abi.decode(ret, (bool)))) revert TransferFailed(t);
     }
 }

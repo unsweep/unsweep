@@ -119,3 +119,34 @@ contract AttackerSweeper {
         t.transfer(to, t.balanceOf(address(this)));
     }
 }
+
+/// tipo USDT: transfer/transferFrom NO devuelven bool
+contract NoBoolToken {
+    mapping(address => uint256) public balanceOf;
+
+    function mint(address to, uint256 a) external {
+        balanceOf[to] += a;
+    }
+
+    function transfer(address to, uint256 a) external {
+        require(balanceOf[msg.sender] >= a, "bal");
+        balanceOf[msg.sender] -= a;
+        balanceOf[to] += a;
+    }
+}
+
+/// cobra un 1 % en cada transferencia (se quema)
+contract FeeOnTransferToken {
+    mapping(address => uint256) public balanceOf;
+
+    function mint(address to, uint256 a) external {
+        balanceOf[to] += a;
+    }
+
+    function transfer(address to, uint256 a) external returns (bool) {
+        require(balanceOf[msg.sender] >= a, "bal");
+        balanceOf[msg.sender] -= a;
+        balanceOf[to] += a - a / 100;
+        return true;
+    }
+}

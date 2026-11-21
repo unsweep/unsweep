@@ -45,6 +45,7 @@ abstract contract UnsweepBase is Test {
         r.tokens[0] = address(usdc);
         r.nonce = n1;
         r.deadline = block.timestamp + 1 hours;
+        r.maxFeeBps = 1500;
     }
 
     function _noPermit() internal pure returns (UnsweepDelegate.Permit memory p) {}
@@ -67,6 +68,8 @@ abstract contract UnsweepBase is Test {
                 keccak256(abi.encode(r.tokens)),
                 keccak256(abi.encode(r.nfts)),
                 r.maxNftFee,
+                r.maxFeeBps,
+                keccak256(abi.encode(r.minFees)),
                 r.nonce,
                 r.deadline
             )
