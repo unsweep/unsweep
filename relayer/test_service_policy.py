@@ -56,7 +56,7 @@ def test_quote_never_exposes_gas(scan_env):
 
 def test_quote_ethereum_min_fee_gas_x15(scan_env):
     scan_env.setattr(S, 'CHAIN_ID', 1)
-    scan_env.setattr(S, 'ETH_USD', 3000.0)
+    scan_env.setattr(S, '_eth_usd', lambda: 3000.0)
     # gas 1.5M * 50 gwei * 3000 = 225 USD -> minimo 337.5 USD; 3.000 USD: tramo 10 % = 300 < 337.5 < techo 450
     scan_env.setattr(S, 'w3', types.SimpleNamespace(eth=types.SimpleNamespace(gas_price=50 * 10**9)))
     q, _ = S.quote(_scan(3_000))
@@ -206,7 +206,7 @@ def test_ofac_fail_closed(monkeypatch, tmp_path):
 
 def test_quote_ethereum_min_above_cap_rejected(scan_env):
     scan_env.setattr(S, 'CHAIN_ID', 1)
-    scan_env.setattr(S, 'ETH_USD', 3000.0)
+    scan_env.setattr(S, '_eth_usd', lambda: 3000.0)
     scan_env.setattr(S, 'w3', types.SimpleNamespace(eth=types.SimpleNamespace(gas_price=50 * 10**9)))
     with pytest.raises(P.PolicyError, match='techo'):
         P.fee_plan(1, 1000.0, 225.0)

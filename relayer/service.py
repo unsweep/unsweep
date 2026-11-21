@@ -14,10 +14,12 @@ from web3 import Web3
 from relayer import PolicyError, RaceAbort, send_rescue
 import eip712 as X
 import policy as P
-from svc_core import (ETH_USD, w3, abi, log, record, screen, turnstile_ok, rate_limited, ofac_set,
+from svc_core import (ETH_USD, assets, w3, abi, log, record, screen, turnstile_ok, rate_limited, ofac_set,
                       CHAIN_ID, DELEGATE, CONFIG, TURNSTILE_SECRET, TEST_SECRET, TURNSTILE_SITEKEY)
 from relayer import ACTIVE_MAINNETS
-from svc_scan import scan, quote
+from svc_scan import scan, quote, _eth_usd
+import oracle as O
+from fastapi.responses import JSONResponse
 from svc_mainnet import scan_mainnet, record_scan, ScanError, CHAINS as MAINNET_CHAINS
 from starlette.concurrency import run_in_threadpool
 
@@ -25,6 +27,13 @@ SPONSOR_KEY = os.environ.get('OPS_PK')  # se carga desde product.env por systemd
 delegate_c = w3.eth.contract(address=DELEGATE, abi=abi('UnsweepDelegate.sol', 'UnsweepDelegate'))
 RPC_URL_SEND = os.environ.get("UNSWEEP_SEND_RPC", "")  # Ethereum: Flashbots Protect
 app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
+
+
+@app.exception_handler(O.OracleError)
+async def _oracle_fail_closed(req, e):
+    # FAIL-CLOSED: sin precio Chainlink valido no se cotiza ni se rescata
+    log.warning('oracle fail-closed: %s', e)
+    return JSONResponse(status_code=503, content={'detail': 'precio no disponible (oraculo): reintenta en unos minutos'})
 
 
 def _ip(req):
@@ -36,6 +45,26 @@ def _ip(req):
 def _guard(req):
     if rate_limited(_ip(req)):
         raise HTTPException(429, 'demasiadas peticiones')
+
+
+UNLISTED_MSG = ('token fuera de la lista soportada en esta red: %s. Puedes registrar tu caso en '
+                'https://github.com/unsweep/unsweep/blob/main/docs/CASOS.md (solo direcciones publicas; '
+                'NUNCA incluyas claves privadas ni frases semilla)')
+
+
+def check_allowlist(tokens):
+    """Rechaza (PolicyError) cualquier token que no este en assets_<chain>.json."""
+    allowed = O.allowlist(assets())
+    bad = []
+    for t in tokens or []:
+        try:
+            ok = Web3.to_checksum_address(str(t)) in allowed
+        except Exception:
+            ok = False
+        if not ok:
+            bad.append(str(t)[:42])
+    if bad:
+        raise PolicyError(UNLISTED_MSG % ', '.join(bad[:5]))
 
 
 def _addr(x):
@@ -125,6 +154,7 @@ async def api_rescue(req: Request):
     try:
         auth, victim = build_auth(b['auth'])
         r = b['rescue']
+        check_allowlist(r.get('tokens', []))
         safe = _addr(r['safe'])
         if safe == victim:
             raise PolicyError('la wallet segura debe ser distinta')
@@ -146,12 +176,14 @@ async def api_rescue(req: Request):
             raise PolicyError('maxFeeBps firmado superior al cotizado')
         rc = send_rescue(w3, SPONSOR_KEY, victim, auth, HexBytes(data), q,
                          track=P.TrackRecord.load() if hasattr(P.TrackRecord, 'load') else None,
-                         exception_ref=str(b.get('exceptionRef', ''))[:64], rpc_url=RPC_URL_SEND, eth_usd=ETH_USD)
+                         exception_ref=str(b.get('exceptionRef', ''))[:64], rpc_url=RPC_URL_SEND, eth_usd=_eth_usd())
         txh = Web3.to_hex(rc['transactionHash'])
         ok = int(rc['status']) == 1
         record('rescue', 'mined' if ok else 'reverted', None, len(rescue_t[2]), len(rescue_t[3]), txh)
         return {'txHash': txh, 'status': 'success' if ok else 'reverted', 'gasUsed': int(rc['gasUsed']),
                 'explorer': f'https://sepolia.basescan.org/tx/{txh}'}
+    except O.OracleError:
+        raise  # fail-closed -> 503 via exception_handler (antes que PolicyError: es subclase)
     except (PolicyError, RaceAbort) as e:
         record('rescue', 'rejected', str(e))
         raise HTTPException(400, str(e))

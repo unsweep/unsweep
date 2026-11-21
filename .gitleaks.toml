@@ -1,0 +1,11 @@
+title = "unsweep gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Copias verbatim de fuentes PUBLICAS de terceros (ver evidence/chainlink/*.source): bgd-labs/aave-address-book AaveV3Base.sol y tokens.uniswap.org tokenlist. Los 1902 hallazgos generic-api-key (commit e9dbffb) se clasificaron como direcciones EVM publicas de 40 hex (tokenAddress / address constant). No contienen secretos. Ambito: solo estas 2 rutas exactas."
+paths = [
+  '''^evidence/chainlink/AaveV3Base\.sol$''',
+  '''^evidence/chainlink/uniswap\.tokenlist\.json$''',
+]

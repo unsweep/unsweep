@@ -5,6 +5,26 @@ from web3 import Web3
 from relayer import Quote, PolicyError, check_policy
 import policy as P
 from svc_core import w3, abi, assets, log, CHAIN_ID, DELEGATE, CONFIG, ETH_USD
+import oracle as O
+from relayer import TESTNETS
+
+
+def _token_px(a, t):
+    """Precio USD por latestRoundData (fail-closed). price_usd fijo SOLO en testnet sin feed."""
+    if t.get('feed'):
+        return O.token_price_usd(w3, a, t)
+    if CHAIN_ID in TESTNETS and 'price_usd' in t:
+        return float(t['price_usd'])
+    raise O.OracleError('no price feed for %s' % t.get('symbol', t.get('address')))
+
+
+def _eth_usd():
+    a = assets()
+    if a.get('eth_usd_feed'):
+        return O.eth_usd(w3, a)
+    if CHAIN_ID in TESTNETS:
+        return ETH_USD  # ESTIMACION fija solo testnet
+    raise O.OracleError('no ETH/USD feed configured')
 
 APPROVAL_LOOKBACK = int(os.environ.get('UNSWEEP_APPROVAL_LOOKBACK', '9000'))
 LOG_CHUNK = 2000
@@ -71,11 +91,14 @@ def live_approvals(addr):
 def scan(addr):
     addr = Web3.to_checksum_address(addr)
     a = assets()
+    allowed = O.allowlist(a)  # misma allowlist que quote/rescate (assets_<chain>.json)
     tokens, nfts = [], []
     for t in a['tokens']:
+        if Web3.to_checksum_address(t['address']) not in allowed:
+            continue
         bal = w3.eth.contract(address=Web3.to_checksum_address(t['address']), abi=ERC20).functions.balanceOf(addr).call()
         if bal > 0:
-            tokens.append({**t, 'balance': str(bal)})
+            tokens.append({**t, 'balance': str(bal), 'price_usd': _token_px(a, t)})
     for n in a['nfts']:
         c = w3.eth.contract(address=Web3.to_checksum_address(n['address']), abi=ERC721)
         for i in n.get('ids', []):
@@ -95,11 +118,16 @@ def scan(addr):
 def quote(s, gas=1_500_000):
     """Cotizacion M4: tramos 15/10/5 %; en Ethereum minimo = gas x1.5 (va firmado como minFees)."""
     toks = []
+    allowed = O.allowlist(assets())  # misma allowlist que scan y check_allowlist (rescate)
+    bad = [str(t.get('address'))[:42] for t in s['tokens']
+           if not Web3.is_address(str(t.get('address'))) or Web3.to_checksum_address(t['address']) not in allowed]
+    if bad:
+        raise PolicyError('token fuera de la allowlist: %s' % ', '.join(bad[:5]))
     for t in s['tokens']:
         bal = int(t['balance']); dec = int(t.get('decimals', 18)); px = float(t.get('price_usd', 0))
         toks.append((t, bal, dec, px, bal / 10**dec * px))
     rescued_usd = sum(x[4] for x in toks) + sum(float(n.get('value_usd', 0)) for n in s['nfts'])
-    gas_cost_usd = gas * w3.eth.gas_price / 1e18 * ETH_USD
+    gas_cost_usd = gas * w3.eth.gas_price / 1e18 * _eth_usd()
     try:
         plan = P.fee_plan(CHAIN_ID, rescued_usd, gas_cost_usd); ok, why = True, None
     except PolicyError as e:
