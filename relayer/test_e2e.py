@@ -4,13 +4,14 @@ from eth_abi import encode
 from eth_account import Account
 from web3 import Web3
 import relayer as R
+import eip712 as X
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 PORT = 8546
 SPONSOR = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80'
 ATTACKER = '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d'
 FEE_TO = '0x0000000000000000000000000000000000000FEE'
-RT = Web3.keccak(text='Rescue(address safe,bytes32 callsHash,bytes32 tokensHash,bytes32 nftsHash,uint256 maxNftFee,uint256 nonce,uint256 deadline)')
+RT = X.RESCUE_TYPEHASH
 DT = Web3.keccak(text='EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)')
 GOOD = R.Quote(rescued_usd=400, fee_usd=60, gas_cost_usd=0.05)
 
@@ -59,13 +60,8 @@ def world(w3):
 def rescue_calldata(w3, impl, victim, safe, usdc):
     nonce = int.from_bytes(os.urandom(32), 'big')
     dl = w3.eth.get_block('latest').timestamp + 3600
-    sh = Web3.keccak(encode(['bytes32', 'address', 'bytes32', 'bytes32', 'bytes32', 'uint256', 'uint256', 'uint256'], [
-        RT, safe.address, Web3.keccak(encode(['(address,uint256,bytes)[]'], [[]])),
-        Web3.keccak(encode(['address[]'], [[usdc.address]])), Web3.keccak(encode(['(address,uint256)[]'], [[]])), 0, nonce, dl]))
-    ds = Web3.keccak(encode(['bytes32', 'bytes32', 'bytes32', 'uint256', 'address'], [
-        DT, Web3.keccak(text='Unsweep'), Web3.keccak(text='1'), w3.eth.chain_id, victim.address]))
-    sig = Account.unsafe_sign_hash(Web3.keccak(b'\x19\x01' + ds + sh), victim.key)
-    r = (safe.address, [], [usdc.address], [], 0, nonce, dl)
+    r = X.rescue_tuple(safe.address, [], [usdc.address], [], 0, 1500, [], nonce, dl)
+    sig = Account.unsafe_sign_hash(X.rescue_digest(r, w3.eth.chain_id, victim.address), victim.key)
     p = (0, 0, 0, b'\x00' * 32, b'\x00' * 32)
     return bytes.fromhex(impl.encode_abi('rescue', [r, p, sig.v, sig.r.to_bytes(32, 'big'), sig.s.to_bytes(32, 'big')])[2:])
 

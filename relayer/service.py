@@ -11,7 +11,9 @@ from fastapi import FastAPI, Request, HTTPException
 from web3 import Web3
 
 from relayer import PolicyError, RaceAbort, send_rescue
-from svc_core import (w3, abi, log, record, screen, turnstile_ok, rate_limited, ofac_set,
+import eip712 as X
+import policy as P
+from svc_core import (ETH_USD, w3, abi, log, record, screen, turnstile_ok, rate_limited, ofac_set,
                       CHAIN_ID, DELEGATE, CONFIG, TURNSTILE_SECRET, TEST_SECRET, TURNSTILE_SITEKEY)
 from svc_scan import scan, quote
 from svc_mainnet import scan_mainnet, record_scan, ScanError, CHAINS as MAINNET_CHAINS
@@ -19,6 +21,7 @@ from starlette.concurrency import run_in_threadpool
 
 SPONSOR_KEY = os.environ.get('OPS_PK')  # se carga desde product.env por systemd; nunca se registra
 delegate_c = w3.eth.contract(address=DELEGATE, abi=abi('UnsweepDelegate.sol', 'UnsweepDelegate'))
+RPC_URL_SEND = os.environ.get("UNSWEEP_SEND_RPC", "")  # Ethereum: Flashbots Protect
 app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 
 
@@ -122,14 +125,24 @@ async def api_rescue(req: Request):
         screen(safe, victim)
         s = scan(victim)
         _, q = quote(s)
-        rescue_t = (safe, [(_addr(c['target']), int(c['value']), HexBytes(c['data'])) for c in r.get('calls', [])],
-                    [_addr(t) for t in r.get('tokens', [])],
-                    [(_addr(n['token']), int(n['id'])) for n in r.get('nfts', [])],
-                    int(r['maxNftFee']), int(r['nonce']), int(r['deadline']))
+        try:
+            rescue_t = X.rescue_tuple(
+                safe, [(c['target'], int(c['value']), HexBytes(c['data'])) for c in r.get('calls', [])],
+                r.get('tokens', []), [(n['token'], int(n['id'])) for n in r.get('nfts', [])],
+                int(r.get('maxNftFee', 0)), int(r['maxFeeBps']), r.get('minFees', []), int(r['nonce']), int(r['deadline']))
+        except ValueError as e:
+            raise PolicyError(str(e))
         p = b['permit']
         permit_t = (int(p['value']), int(p['deadline']), int(p['v']), HexBytes(p['r']), HexBytes(p['s']))
         data = delegate_c.encode_abi('rescue', args=[rescue_t, permit_t, int(b['v']), HexBytes(b['r']), HexBytes(b['s'])])
-        rc = send_rescue(w3, SPONSOR_KEY, victim, auth, HexBytes(data), q)
+        qd, _ = quote(s)
+        if not qd['policy_ok']:
+            raise PolicyError(qd['policy_reason'] or 'rechazado por politica')
+        if rescue_t[5] > qd['maxFeeBps']:
+            raise PolicyError('maxFeeBps firmado superior al cotizado')
+        rc = send_rescue(w3, SPONSOR_KEY, victim, auth, HexBytes(data), q,
+                         track=P.TrackRecord.load() if hasattr(P.TrackRecord, 'load') else None,
+                         exception_ref=str(b.get('exceptionRef', ''))[:64], rpc_url=RPC_URL_SEND, eth_usd=ETH_USD)
         txh = Web3.to_hex(rc['transactionHash'])
         ok = int(rc['status']) == 1
         record('rescue', 'mined' if ok else 'reverted', None, len(rescue_t[2]), len(rescue_t[3]), txh)

@@ -3,6 +3,7 @@ import os
 from web3 import Web3
 
 from relayer import Quote, PolicyError, check_policy
+import policy as P
 from svc_core import w3, abi, assets, log, CHAIN_ID, DELEGATE, CONFIG, ETH_USD
 
 APPROVAL_LOOKBACK = int(os.environ.get('UNSWEEP_APPROVAL_LOOKBACK', '9000'))
@@ -92,26 +93,44 @@ def scan(addr):
 
 
 def quote(s, gas=1_500_000):
-    fee_bps = config_c.functions.feeBps().call()
-    nft_fee = config_c.functions.nftFlatFee().call()
+    """Cotizacion M4: tramos 15/10/5 %; en Ethereum minimo = gas x1.5 (va firmado como minFees)."""
+    nft_fee = config_c.functions.nftFlatFee().call()  # #66: maxNftFee configurable, no bloquea
     nft_tok = config_c.functions.nftFeeToken().call()
-    lines, rescued_usd, fee_usd = [], 0.0, 0.0
+    toks = []
     for t in s['tokens']:
-        bal = int(t['balance']); fee = bal * fee_bps // 10000
-        dec = int(t.get('decimals', 18)); px = float(t.get('price_usd', 0))
-        rescued_usd += bal / 10**dec * px; fee_usd += fee / 10**dec * px
-        lines.append({'token': t['address'], 'symbol': t.get('symbol', ''), 'decimals': dec,
-                      'amount': str(bal), 'fee': str(fee), 'net': str(bal - fee)})
+        bal = int(t['balance']); dec = int(t.get('decimals', 18)); px = float(t.get('price_usd', 0))
+        toks.append((t, bal, dec, px, bal / 10**dec * px))
+    rescued_usd = sum(x[4] for x in toks) + sum(float(n.get('value_usd', 0)) for n in s['nfts'])
+    gas_cost_usd = gas * w3.eth.gas_price / 1e18 * ETH_USD
+    try:
+        plan = P.fee_plan(CHAIN_ID, rescued_usd, gas_cost_usd); ok, why = True, None
+    except PolicyError as e:
+        plan, ok, why = None, False, str(e)
+    bps = plan.max_fee_bps if plan else 0
+    # minimo de Ethereum: se asigna al token de mayor valor (resto 0), acotado a su saldo
+    big = max(range(len(toks)), key=lambda k: toks[k][4]) if toks else -1
+    lines, fee_usd = [], 0.0
+    for k, (t, bal, dec, px, _) in enumerate(toks):
+        mn = 0
+        if plan and plan.min_fee_usd > 0 and k == big and px > 0:
+            mn = min(bal, int(plan.min_fee_usd / px * 10**dec) + 1)
+        fee = max(bal * bps // 10000, mn)
+        fee_usd += fee / 10**dec * px
+        lines.append({'token': t['address'], 'symbol': t.get('symbol', ''), 'decimals': dec, 'amount': str(bal),
+                      'fee': str(fee), 'minFee': str(mn), 'net': str(bal - fee)})
     n_nft = len(s['nfts']); nft_total = nft_fee * n_nft
     tok_meta = next((t for t in assets()['tokens'] if t['address'].lower() == nft_tok.lower()), {})
     fee_usd += nft_total / 10**int(tok_meta.get('decimals', 6)) * float(tok_meta.get('price_usd', 0))
-    rescued_usd += sum(float(n.get('value_usd', 0)) for n in s['nfts'])
-    gas_cost_usd = gas * w3.eth.gas_price / 1e18 * ETH_USD
     q = Quote(rescued_usd=rescued_usd, fee_usd=fee_usd, gas_cost_usd=gas_cost_usd)
-    try:
-        check_policy(q); ok, why = True, None
-    except PolicyError as e:
-        ok, why = False, str(e)
-    return {'feeBps': fee_bps, 'lines': lines, 'nfts': n_nft, 'nftFeeEach': str(nft_fee), 'nftFeeToken': nft_tok,
-            'nftFeeTotal': str(nft_total), 'rescued_usd': round(rescued_usd, 4), 'fee_usd': round(fee_usd, 4),
-            'gas_cost_usd_paid_by_unsweep': round(gas_cost_usd, 6), 'policy_ok': ok, 'policy_reason': why}, q
+    if ok and CHAIN_ID not in P.MAINNETS:
+        try:
+            check_policy(q)
+        except PolicyError as e:
+            ok, why = False, str(e)
+    has_min = any(l['minFee'] != '0' for l in lines)
+    if not has_min:
+        for l in lines: l.pop('minFee')
+    # sin datos de gas en la respuesta al usuario (gas interno)
+    return {'feeBps': bps, 'maxFeeBps': bps, 'lines': lines, 'nfts': n_nft, 'nftFeeEach': str(nft_fee),
+            'maxNftFee': str(nft_fee), 'nftFeeToken': nft_tok, 'nftFeeTotal': str(nft_total),
+            'rescued_usd': round(rescued_usd, 4), 'fee_usd': round(fee_usd, 4), 'policy_ok': ok, 'policy_reason': why}, q

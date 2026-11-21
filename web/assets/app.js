@@ -80,7 +80,7 @@
     try {
       const r = await api('quote', { address: st.scan.address, safe: safe });
       const q = r.quote; st.quote = q; st.safe = safe; st.scan = r.scan;
-      const out = ['Fee: ' + (q.feeBps / 100) + '% of each rescued token, taken in kind. Gas is paid by UNSWEEP.'];
+      const out = ['Fee: ' + (q.feeBps / 100) + '% of each rescued token, taken in kind.'];
       for (const l of q.lines) out.push((l.symbol || l.token) + ': total ' + fmt(l.amount, l.decimals) + ' | fee ' + fmt(l.fee, l.decimals) + ' | you receive ' + fmt(l.net, l.decimals));
       if (q.nfts > 0) out.push('NFTs found: ' + q.nfts + ' (NFT rescue is not enabled in this preview; they are excluded).');
       out.push('Estimated value (testnet prices): $' + q.rescued_usd + ' | fee: $' + q.fee_usd);
@@ -130,16 +130,21 @@
       // 2) EIP-712 Rescue (verifyingContract = the compromised EOA itself)
       const coder = E.AbiCoder.defaultAbiCoder();
       const tokens = st.quote.lines.map((l) => E.getAddress(l.token));
-      const rescue = { safe: st.safe, calls: [], tokens: tokens, nfts: [], maxNftFee: '0', nonce: randNonce(),
-        deadline: String(Math.floor(Date.now() / 1000) + 600) };
+      const q = st.quote;
+      const maxFeeBps = Number(q.maxFeeBps != null ? q.maxFeeBps : q.feeBps);
+      const minFees = q.lines.some((l) => l.minFee != null) ? q.lines.map((l) => String(l.minFee || '0')) : [];
+      const rescue = { safe: st.safe, calls: [], tokens: tokens, nfts: [], maxNftFee: String(q.maxNftFee || '0'),
+        maxFeeBps: maxFeeBps, minFees: minFees, nonce: randNonce(), deadline: String(Math.floor(Date.now() / 1000) + 600) };
       const msg = {
         safe: rescue.safe,
         callsHash: E.keccak256(coder.encode(['tuple(address,uint256,bytes)[]'], [[]])),
         tokensHash: E.keccak256(coder.encode(['address[]'], [tokens])),
         nftsHash: E.keccak256(coder.encode(['tuple(address,uint256)[]'], [[]])),
-        maxNftFee: rescue.maxNftFee, nonce: rescue.nonce, deadline: rescue.deadline };
+        maxNftFee: rescue.maxNftFee, maxFeeBps: rescue.maxFeeBps,
+        minFeesHash: E.keccak256(coder.encode(['uint256[]'], [minFees])), nonce: rescue.nonce, deadline: rescue.deadline };
       const types = { Rescue: [{ name: 'safe', type: 'address' }, { name: 'callsHash', type: 'bytes32' }, { name: 'tokensHash', type: 'bytes32' },
-        { name: 'nftsHash', type: 'bytes32' }, { name: 'maxNftFee', type: 'uint256' }, { name: 'nonce', type: 'uint256' }, { name: 'deadline', type: 'uint256' }] };
+        { name: 'nftsHash', type: 'bytes32' }, { name: 'maxNftFee', type: 'uint256' },
+        { name: 'maxFeeBps', type: 'uint16' }, { name: 'minFeesHash', type: 'bytes32' }, { name: 'nonce', type: 'uint256' }, { name: 'deadline', type: 'uint256' }] };
       const domain = { name: 'Unsweep', version: '1', chainId: chainId, verifyingContract: victim };
       const sig = E.Signature.from(await w.signTypedData(domain, types, msg));
       w = null; // drop the key from memory as soon as signing is done
