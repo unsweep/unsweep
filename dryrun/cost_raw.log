@@ -1,0 +1,10 @@
+feed_desc="ETH / USD" feed_dec=8
+ethusd_raw=156789870000 [1.567e11]
+== chain 8453 real_gasPrice_wei=8139100 real_basefee_wei=7139100
+tx0 bytes=1638 estimateGas_real=281638
+tx0 base_l1Fee_wei=26699523511 [2.669e10] base_l1FeeUpperBound_wei=42996632576 [4.299e10]
+tx1 bytes=6289 estimateGas_real=1391575
+tx1 base_l1Fee_wei=109594830315 [1.095e11] base_l1FeeUpperBound_wei=158059001588 [1.58e11]
+== chain 42161 real_gasPrice_wei=20074000 real_basefee_wei=20310000
+tx0 bytes=1638 estimateGas_real=281638
+tx1 bytes=6289 estimateGas_real=1391575

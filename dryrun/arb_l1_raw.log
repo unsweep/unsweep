@@ -1,0 +1,5 @@
+arb tx0 gasEstimateL1Component=0 20254000 [2.025e7] 0 
+arb tx0 gasEstimateComponents=Error: server returned an error response: error code -32000: execution reverted 
+arb tx1 gasEstimateL1Component=0 20066000 [2.006e7] 0 
+arb tx1 gasEstimateComponents=Error: server returned an error response: error code -32000: execution reverted 
+feed_updatedAt=1795241935 now=1795241998 age_s=63
