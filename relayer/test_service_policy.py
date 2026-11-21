@@ -71,9 +71,12 @@ def test_policy_error_single_class():
 
 
 class _Eth:
-    def __init__(self, sim_fail=False, status=1):
+    def __init__(self, sim_fail=False, status=1, balance=4 * 10**15):
         self.chain_id = 84532; self.gas_price = 10**9; self.sim_fail = sim_fail; self.status = status
-        self.sent = []; self.calls = []
+        self.sent = []; self.calls = []; self.balance = balance
+    def get_balance(self, a, b='latest'):
+        if self.balance is None: raise ConnectionError('rpc caido')
+        return self.balance
     def get_transaction_count(self, a, b='latest'): return 0
     def call(self, tx, block='latest'):
         self.calls.append(tx)
@@ -122,12 +125,79 @@ def test_revert_records_gas_lost_and_alerts(relay_env):
     assert 'Gas perdido' in (tmp / 'HUMANO.md').read_text()
 
 
-def test_mainnet_disabled_by_default(relay_env):
-    auth, victim, q, _ = relay_env
-    eth = _Eth(); eth.chain_id = 8453
+def _send(chain_id, q, balance=4 * 10**15):
+    eth = _Eth(balance=balance); eth.chain_id = chain_id
+    auth = R.sign_auth(VICTIM_KEY, chain_id, IMPL, 0)
+    victim = Account.from_key(VICTIM_KEY).address
+    rc = R.send_rescue(types.SimpleNamespace(eth=eth), SPONSOR_KEY, victim, auth, b'\x00', q)
+    return eth, rc
+
+
+def test_mainnet_only_base_enabled(relay_env):
+    """#81=B: 8453 aceptada; 1, 42161 y cualquier otra mainnet siguen rechazadas."""
+    _, _, q, _ = relay_env
+    eth, rc = _send(8453, q)
+    assert rc['status'] == 1 and len(eth.sent) == 1
+    assert R.ACTIVE_MAINNETS == {8453}
+
+
+@pytest.mark.parametrize('chain_id', [1, 42161, 10, 137, 56])
+def test_other_mainnets_rejected(relay_env, chain_id):
+    _, _, q, _ = relay_env
+    eth = _Eth(); eth.chain_id = chain_id
+    auth = R.sign_auth(VICTIM_KEY, chain_id, IMPL, 0)
+    with pytest.raises(P.PolicyError, match='no habilitada'):
+        R.send_rescue(types.SimpleNamespace(eth=eth), SPONSOR_KEY, Account.from_key(VICTIM_KEY).address, auth, b'\x00', q)
+    assert eth.sent == [] and eth.calls == []
+
+
+@pytest.mark.parametrize('ok', [0, 3, 10])
+def test_base_fixed_cap_10k(relay_env, ok):
+    """3b: limite fijo 10.000 USD por rescate aunque el historial permitiera escalar."""
+    P.check_cap(8453, 10_000, P.TrackRecord(ok))
+    with pytest.raises(P.PolicyError, match='limite'):
+        P.check_cap(8453, 10_001, P.TrackRecord(ok))
+    with pytest.raises(P.PolicyError, match='limite'):
+        P.check_cap(8453, 10_001, P.TrackRecord(0, external_audit=True))
+
+
+def test_base_send_over_cap_blocked(relay_env):
+    _, _, _, _ = relay_env
+    q = R.Quote(rescued_usd=20_000.0, fee_usd=1_000.0, gas_cost_usd=0.01)
     with pytest.raises(P.PolicyError):
-        R.send_rescue(types.SimpleNamespace(eth=eth), SPONSOR_KEY, victim, auth, b'\x00', q)
+        _send(8453, q)
+
+
+@pytest.mark.parametrize('bal', [5 * 10**15 + 1, None])
+def test_base_ops_guard_fail_closed(relay_env, bal):
+    """3d: OPS por encima de 0.005 ETH o saldo ilegible => no se patrocina."""
+    _, _, q, _ = relay_env
+    eth = _Eth(balance=bal); eth.chain_id = 8453
+    auth = R.sign_auth(VICTIM_KEY, 8453, IMPL, 0)
+    with pytest.raises((P.PolicyError, ConnectionError)):
+        R.send_rescue(types.SimpleNamespace(eth=eth), SPONSOR_KEY, Account.from_key(VICTIM_KEY).address, auth, b'\x00', q)
     assert eth.sent == []
+
+
+def test_ops_low_alerts_once(relay_env):
+    _, _, _, tmp = relay_env
+    assert P.ops_guard(10**15) == 'low' and P.ops_guard(10**15) == 'low'
+    assert (tmp / 'HUMANO.md').read_text().count('Saldo OPS bajo') == 1
+    assert P.ops_guard(15 * 10**14) == 'ok' and P.ops_guard(5 * 10**15) == 'ok'
+    assert P.ops_status(None) == 'unknown'
+
+
+def test_ofac_fail_closed(monkeypatch, tmp_path):
+    """3c: lista OFAC ausente/vacia/caducada => excepcion (screen no deja pasar)."""
+    import json, svc_core as C
+    monkeypatch.setattr(C, 'OFAC_FILE', str(tmp_path / 'no_existe.json'))
+    with pytest.raises(P.PolicyError, match='OFAC'):
+        C.ofac_set()
+    f = tmp_path / 'o.json'
+    f.write_text(json.dumps({'fetched_at': '2020-01-01T00:00:00+00:00', 'addresses': ['0x' + '1' * 40]}))
+    monkeypatch.setattr(C, 'OFAC_FILE', str(f))
+    with pytest.raises(P.PolicyError, match='OFAC'):
+        C.ofac_set()
 
 
 def test_quote_ethereum_min_above_cap_rejected(scan_env):

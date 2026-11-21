@@ -6,7 +6,7 @@ from datetime import datetime
 import requests, psycopg
 from web3 import Web3
 
-from relayer import PolicyError, TESTNETS
+from relayer import PolicyError, TESTNETS, ACTIVE_MAINNETS
 
 log = logging.getLogger('unsweep')
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
@@ -24,12 +24,14 @@ OFAC_MAX_AGE_S = 7 * 86400
 TEST_SECRET = '1x0000000000000000000000000000000AA'
 TEST_SITEKEY = '1x00000000000000000000AA'
 TURNSTILE_SECRET = os.environ.get('TURNSTILE_SECRET') or (TEST_SECRET if CHAIN_ID in TESTNETS else '')
-TURNSTILE_SITEKEY = os.environ.get('TURNSTILE_SITEKEY') or TEST_SITEKEY
+TURNSTILE_SITEKEY = os.environ.get('TURNSTILE_SITEKEY') or (TEST_SITEKEY if CHAIN_ID in TESTNETS else '')
 RATE = int(os.environ.get('UNSWEEP_RATE_PER_MIN', '20'))
 PG_DSN = os.environ.get('UNSWEEP_PG', 'dbname=unsweep')
 
-if CHAIN_ID not in TESTNETS:
-    raise SystemExit('mainnet desactivada en M2b')
+if CHAIN_ID not in TESTNETS and CHAIN_ID not in ACTIVE_MAINNETS:
+    raise SystemExit(f'cadena {CHAIN_ID} no habilitada')
+if CHAIN_ID in ACTIVE_MAINNETS and (not TURNSTILE_SECRET or TURNSTILE_SECRET == TEST_SECRET or not TURNSTILE_SITEKEY):
+    raise SystemExit('mainnet exige Turnstile de produccion')
 
 w3 = Web3(Web3.HTTPProvider(RPC, request_kwargs={'timeout': 20}))
 

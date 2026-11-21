@@ -4,6 +4,7 @@ Solo recibe direcciones publicas y FIRMAS; nunca claves privadas ni seeds. Mainn
 import os
 import rlp
 from eth_account.datastructures import SignedSetCodeAuthorization
+from eth_account import Account
 from eth_keys.datatypes import Signature
 from eth_utils import keccak
 from hexbytes import HexBytes
@@ -15,6 +16,7 @@ import eip712 as X
 import policy as P
 from svc_core import (ETH_USD, w3, abi, log, record, screen, turnstile_ok, rate_limited, ofac_set,
                       CHAIN_ID, DELEGATE, CONFIG, TURNSTILE_SECRET, TEST_SECRET, TURNSTILE_SITEKEY)
+from relayer import ACTIVE_MAINNETS
 from svc_scan import scan, quote
 from svc_mainnet import scan_mainnet, record_scan, ScanError, CHAINS as MAINNET_CHAINS
 from starlette.concurrency import run_in_threadpool
@@ -65,7 +67,11 @@ def health():
         o = len(ofac_set())
     except Exception:
         o = 0
-    return {'ok': True, 'chainId': CHAIN_ID, 'mainnet': False, 'delegate': DELEGATE, 'ofac_entries': o,
+    try:
+        ops = P.ops_status(w3.eth.get_balance(Account.from_key(SPONSOR_KEY).address)) if SPONSOR_KEY else 'none'
+    except Exception:
+        ops = 'unknown'
+    return {'ok': True, 'chainId': CHAIN_ID, 'mainnet': CHAIN_ID in ACTIVE_MAINNETS, 'delegate': DELEGATE, 'ofac_entries': o, 'ops': ops,
             'turnstile': 'test' if TURNSTILE_SECRET == TEST_SECRET else ('prod' if TURNSTILE_SECRET else 'off')}
 
 

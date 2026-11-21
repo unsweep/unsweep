@@ -19,6 +19,7 @@ except ImportError:
     import policy as P  # noqa
 
 TESTNETS = {31337, 84532, 421614, 11155111}
+ACTIVE_MAINNETS = {8453}  # #81=B: solo Base; 1 (Ethereum) y 42161 (Arbitrum) siguen bloqueadas
 
 
 PolicyError = P.PolicyError  # una sola clase para relayer y policy
@@ -66,8 +67,8 @@ def send_rescue(w3: Web3, sponsor_key, victim: str, signed_auth, calldata: bytes
                 track: "P.TrackRecord | None" = None, exception_ref: str = "", rpc_url: str = "",
                 eth_usd: float | None = None):
     chain_id = w3.eth.chain_id
-    if chain_id not in TESTNETS and not allow_mainnet:
-        raise PolicyError(f"chain {chain_id} no es testnet; mainnet desactivado en M1.1")
+    if chain_id not in TESTNETS and chain_id not in ACTIVE_MAINNETS:
+        raise PolicyError(f"chain {chain_id} no habilitada (mainnets activas: {sorted(ACTIVE_MAINNETS)})")
     if signed_auth.chain_id != chain_id or signed_auth.chain_id == 0:
         raise PolicyError("la autorizacion no es para esta cadena")
     if chain_id in P.MAINNETS:
@@ -78,6 +79,8 @@ def send_rescue(w3: Web3, sponsor_key, victim: str, signed_auth, calldata: bytes
     else:
         check_policy(q, cap_usd)
     sponsor = Account.from_key(sponsor_key)
+    if chain_id in ACTIVE_MAINNETS:
+        P.ops_guard(w3.eth.get_balance(sponsor.address))  # #84: tope 0.005 ETH, fail-closed
     tx = {
         "type": 4, "chainId": chain_id, "to": Web3.to_checksum_address(victim), "value": 0,
         "data": calldata, "gas": gas,

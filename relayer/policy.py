@@ -2,8 +2,8 @@
 
 - Tramos: 15 % (<1.000 USD), 10 % (1.000-10.000), 5 % (>10.000).
 - Ethereum (chain 1): comision = max(tramo, gas estimado x 1.5).
-- Limite por rescate: 10.000 USD hasta 3 rescates mainnet exitosos; despues 50.000;
-  sin limite tras 10 rescates sin incidentes o auditoria externa.
+- Limite por rescate: FIJO 10.000 USD (FIXED_CAP_USD, #827.2). cap_usd() conserva la escalada
+  documentada (50.000 / sin limite) pero check_cap aplica min(cap_usd, 10.000).
 - Excepcion manual: linea escrita por el HUMANO en HUMANO.md:
     UNSWEEP-EXCEPCION <ref> <max_usd> USD
 - Simulacion eth_call obligatoria antes de enviar.
@@ -23,10 +23,13 @@ MAX_FEE_BPS = 1500  # igual que el techo inmutable del contrato
 ETH_MAINNET = 1
 MAINNETS = {1, 8453, 42161}
 CAP_INITIAL_USD = 10_000.0
+FIXED_CAP_USD = 10_000.0  # #827.2/3b: techo fijo por rescate en mainnet; la escalada 50k/sin limite queda inactiva
 CAP_RAISED_USD = 50_000.0
 RAISE_AFTER_OK = 3
 UNCAP_AFTER_OK = 10
 GAS_LOST_ALERT_USD = 5.0
+OPS_CAP_WEI = 5 * 10**15   # #84: tope 0.005 ETH en la wallet OPS
+OPS_LOW_WEI = 15 * 10**14  # 30 % del tope: aviso en HUMANO.md
 ETH_GAS_MULT = 1.5
 
 DATA_DIR = Path(os.environ.get("UNSWEEP_DATA_DIR", Path(__file__).parent / "data"))
@@ -99,13 +102,39 @@ def manual_exception_usd(ref: str, humano_md: Path | None = None):
 def check_cap(chain_id: int, rescued_usd: float, tr: TrackRecord, ref: str = "", humano_md: Path | None = None):
     if chain_id not in MAINNETS:
         return
-    cap = cap_usd(tr)
-    if cap is None or rescued_usd <= cap:
+    c = cap_usd(tr)
+    cap = FIXED_CAP_USD if c is None else min(c, FIXED_CAP_USD)
+    if rescued_usd <= cap:
         return
     exc = manual_exception_usd(ref, humano_md) if ref else None
     if exc is not None and rescued_usd <= exc:
         return
     raise PolicyError(f"supera el limite por rescate ({rescued_usd} > {cap} USD) sin excepcion manual")
+
+
+def ops_status(balance_wei) -> str:
+    if balance_wei is None or int(balance_wei) < 0:
+        return "unknown"
+    b = int(balance_wei)
+    return "over" if b > OPS_CAP_WEI else ("low" if b < OPS_LOW_WEI else "ok")
+
+
+def ops_guard(balance_wei, humano_md: Path | None = None) -> str:
+    """Fail-closed: saldo ilegible o por encima del tope => no se patrocina. Bajo 30 % => aviso unico."""
+    st = ops_status(balance_wei)
+    if st in ("unknown", "over"):
+        raise PolicyError(f"wallet OPS fuera de politica ({st}); tope {OPS_CAP_WEI / 1e18} ETH")
+    if st == "low":
+        flag = DATA_DIR / "ops_low_alerted"
+        try:
+            if not flag.exists():
+                with (humano_md or HUMANO_MD).open("a", encoding="utf-8") as h:
+                    h.write(f"\n- [UNSWEEP] Saldo OPS bajo: {int(balance_wei) / 1e18:.6f} ETH (< {OPS_LOW_WEI / 1e18} ETH). "
+                            f"Recargar hasta como maximo {OPS_CAP_WEI / 1e18} ETH.\n")
+                flag.write_text(str(int(time.time())))
+        except OSError:
+            pass  # contenedor read-only: el aviso lo publica /api/health (ops=low)
+    return st
 
 
 def check_ethereum_route(chain_id: int, rpc_url: str):

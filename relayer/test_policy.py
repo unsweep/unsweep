@@ -29,6 +29,7 @@ def test_caps():
     assert P.cap_usd(T(10)) is None
     assert P.cap_usd(T(10, incidents=1)) == 50_000
     assert P.cap_usd(T(0, external_audit=True)) is None
+    assert P.FIXED_CAP_USD == 10_000  # check_cap aplica min(cap_usd, 10k)
 
 
 def test_manual_exception(tmp_path):
