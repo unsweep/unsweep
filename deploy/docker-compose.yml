@@ -9,6 +9,9 @@ services:
     env_file: /opt/aire/product.env
     environment:
       UNSWEEP_CHAIN_ID: "84532"
+      # M4c (deployments/base-sepolia.txt): fija contratos; evita defaults desfasados
+      UNSWEEP_DELEGATE: "0xBe5a2F788fa56DeCc7b13a20F45429d167a8080e"
+      UNSWEEP_CONFIG: "0x2421aa3a6c473fD7ccA6be9bF4024E92CE80176d"
       # M2c-2c: claves de TEST publicas de Cloudflare (siempre pasan), SOLO testnet; prevalecen sobre env_file
       TURNSTILE_SECRET: "1x0000000000000000000000000000000AA"
       TURNSTILE_SITEKEY: "1x00000000000000000000AA"
