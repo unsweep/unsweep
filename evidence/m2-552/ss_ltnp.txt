@@ -1,0 +1,11 @@
+State  Recv-Q Send-Q Local Address:Port  Peer Address:PortProcess                                                 
+LISTEN 0      4096         0.0.0.0:443        0.0.0.0:*    users:(("docker-proxy",pid=1826,fd=7))                 
+LISTEN 0      4096       127.0.0.1:34445      0.0.0.0:*    users:(("containerd",pid=834,fd=13))                   
+LISTEN 0      4096   127.0.0.53%lo:53         0.0.0.0:*    users:(("systemd-resolve",pid=646,fd=15))              
+LISTEN 0      4096         0.0.0.0:22         0.0.0.0:*    users:(("sshd",pid=3367,fd=3),("systemd",pid=1,fd=226))
+LISTEN 0      4096         0.0.0.0:80         0.0.0.0:*    users:(("docker-proxy",pid=1793,fd=7))                 
+LISTEN 0      200        127.0.0.1:5432       0.0.0.0:*    users:(("postgres",pid=1041,fd=6))                     
+LISTEN 0      4096      127.0.0.54:53         0.0.0.0:*    users:(("systemd-resolve",pid=646,fd=17))              
+LISTEN 0      4096            [::]:443           [::]:*    users:(("docker-proxy",pid=1834,fd=7))                 
+LISTEN 0      4096            [::]:22            [::]:*    users:(("sshd",pid=3367,fd=4),("systemd",pid=1,fd=227))
+LISTEN 0      4096            [::]:80            [::]:*    users:(("docker-proxy",pid=1801,fd=7))                 

@@ -1,0 +1,5 @@
+gas-fees-gas-1 8000/tcp
+web-read-webread-1 8000/tcp
+payto-activity-payto-1 8000/tcp
+x402-netcheck-api-1 8000/tcp
+x402-netcheck-caddy-1 0.0.0.0:80->80/tcp, [::]:80->80/tcp, 0.0.0.0:443->443/tcp, [::]:443->443/tcp, 443/udp, 2019/tcp

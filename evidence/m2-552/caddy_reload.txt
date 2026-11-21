@@ -1,0 +1,2 @@
+{"level":"info","ts":1795221942.5495706,"msg":"using config from file","file":"/etc/caddy/Caddyfile"}
+{"level":"info","ts":1795221942.5547252,"msg":"adapted config to JSON","adapter":"caddyfile"}

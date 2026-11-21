@@ -1,0 +1,31 @@
+--- /opt/aire/workspace/projects/unsweep/evidence/m2-552/Caddyfile.before	2026-11-20 23:54:48.746476868 +0000
++++ /opt/aire/workspace/projects/unsweep/evidence/m2-552/Caddyfile.after	2026-11-21 00:45:32.159402731 +0000
+@@ -162,10 +162,28 @@
+ 
+ unsweep.com {
+ 	encode gzip
++	header {
++		Strict-Transport-Security "max-age=31536000; includeSubDomains"
++		X-Content-Type-Options "nosniff"
++		X-Frame-Options "DENY"
++		Referrer-Policy "no-referrer"
++		Permissions-Policy "camera=(), microphone=(), geolocation=()"
++		Content-Security-Policy "default-src 'self'; script-src 'self' https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; connect-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'"
++		-Server
++	}
+ 	root * /srv/x402/unsweep
+ 	file_server
+ }
+ 
+ www.unsweep.com {
++	header {
++		Strict-Transport-Security "max-age=31536000; includeSubDomains"
++		X-Content-Type-Options "nosniff"
++		X-Frame-Options "DENY"
++		Referrer-Policy "no-referrer"
++		Permissions-Policy "camera=(), microphone=(), geolocation=()"
++		Content-Security-Policy "default-src 'self'; script-src 'self' https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; connect-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'"
++		-Server
++	}
+ 	redir https://unsweep.com{uri} permanent
+ }

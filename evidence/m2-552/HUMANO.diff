@@ -1,0 +1,7 @@
+--- /opt/aire/workspace/projects/unsweep/evidence/m2-552/HUMANO.before.md	2026-11-21 00:43:48.161160039 +0000
++++ /opt/aire/HUMANO.md	2026-11-21 00:46:36.416043391 +0000
+@@ -63,3 +63,4 @@
+ - Leer las opciones A (pegar la clave en el navegador: riesgo de patrón phishing), B (pausar UNSWEEP y rotar de nicho), C (otra vía) y D (firma 7702 offline con cast y pegar solo la firma; cumple la regla actual)
+ - Responder solo con la letra. Si eliges A o D, añadir la clave de sitio y la secreta de Cloudflare Turnstile en /opt/aire/product.env como TURNSTILE_SITEKEY y TURNSTILE_SECRET (cuenta gratuita en dash.cloudflare.com > Turnstile > Add site > unsweep.com)
+ _Por qué:_ Las wallets de navegador no dejan a una dapp firmar la autorización EIP-7702 hacia nuestro contrato. Sin esa firma, el rescate desde la web solo es posible pidiendo la clave (prohibido salvo orden explícita) o con firma offline de usuarios técnicos (D).
++- [2026-11-21 orden #552] Nota única (el bloque #53 ya no existe en este fichero): Etherscan V2 getsourcecode (chainid 84532, 1 consulta por contrato, sin reintentos) muestra UnsweepConfig 0xbe0E049F17836736772206E6BA3C3EfF21C2E0bC y UnsweepDelegate 0xc69D4aF59BaD315180db5961fb7196D31b33E331 SIN código verificado en sepolia.basescan.org (sí en Sourcify). Si verify_basesep.sh se ejecutó con las direcciones antiguas (DEPRECATED 0x2a49.../0x17b3...), re-ejecutarlo con las de deployments/base-sepolia.txt. Evidencia: projects/unsweep/evidence/m2-552/etherscan_v2_check.txt

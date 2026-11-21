@@ -1,0 +1,189 @@
+40-75-139-128.sslip.io {
+	encode gzip
+	handle /openapi.json {
+		reverse_proxy webread:8000 payto:8000 api:8000 {
+			lb_policy first
+			lb_try_duration 5s
+			fail_duration 30s
+		}
+	}
+	handle /.well-known/x402 {
+		root * /srv/x402
+		header Content-Type application/json
+		file_server
+	}
+	handle /llms.txt {
+		root * /srv/x402
+		header Content-Type "text/plain; charset=utf-8"
+		file_server
+	}
+	handle /x402/* {
+		root * /srv/x402
+		file_server
+	}
+	handle /v1/payto-activity/* {
+		reverse_proxy payto:8000
+	}
+	handle /gas {
+		reverse_proxy gas:8000
+	}
+	handle /gas/* {
+		reverse_proxy gas:8000
+	}
+	handle /v1/web-read/* {
+		reverse_proxy webread:8000
+	}
+	handle /1e6eea703c1228b6ce47bfb111e92b1a.txt {
+		root * /srv/x402
+		header Content-Type "text/plain; charset=utf-8"
+		file_server
+	}
+	@siteverify path_regexp siteverify ^/(google[0-9a-f]+\.html|BingSiteAuth\.xml)$
+	handle @siteverify {
+		root * /srv/x402/verify
+		file_server
+	}
+	handle /robots.txt {
+		root * /srv/x402
+		file_server
+	}
+	handle /hosting {
+		redir * /hosting/ 301
+	}
+	handle /hosting/* {
+		root * /srv/x402
+		file_server
+	}
+	handle /go/hostinger {
+		header X-Robots-Tag "noindex, nofollow"
+		redir https://www.hostinger.com/vps-hosting 302
+	}
+	handle /go/vultr {
+		header X-Robots-Tag "noindex, nofollow"
+		redir https://www.vultr.com/pricing/ 302
+	}
+	handle /wordpress {
+		redir * /wordpress/ 301
+	}
+	handle /wordpress/* {
+		root * /srv/x402
+		file_server
+	}
+	handle /page-builders {
+		redir * /page-builders/ 301
+	}
+	handle /page-builders/* {
+		root * /srv/x402
+		file_server
+	}
+	handle /go/elementor {
+		redir https://elementor.com/pricing/ 302
+	}
+	handle /go/divi {
+		redir https://www.elegantthemes.com/join/ 302
+	}
+	handle /go/beaver {
+		redir https://www.wpbeaverbuilder.com/pricing/ 302
+	}
+	handle /go/thrive {
+		redir https://thrivethemes.com/architect/ 302
+	}
+	handle /go/brizy {
+		redir https://brizy.io/pricing/ 302
+	}
+	handle /tts {
+		redir * /tts/ 301
+	}
+	handle /tts/* {
+		root * /srv/x402
+		file_server
+	}
+	handle /go/elevenlabs {
+		header X-Robots-Tag "noindex, nofollow"
+		redir https://elevenlabs.io/ 302
+	}
+	handle /go/fishaudio {
+		header X-Robots-Tag "noindex, nofollow"
+		redir https://fish.audio/ 302
+	}
+	handle /go/polly {
+		header X-Robots-Tag "noindex, nofollow"
+		redir https://aws.amazon.com/polly/ 302
+	}
+	handle /go/gcloudtts {
+		header X-Robots-Tag "noindex, nofollow"
+		redir https://cloud.google.com/text-to-speech 302
+	}
+	handle /go/speechify {
+		header X-Robots-Tag "noindex, nofollow"
+		redir https://speechify.com/ 302
+	}
+	handle /proxies {
+		redir * /proxies/ 301
+	}
+	handle /proxies/* {
+		root * /srv/x402
+		file_server
+	}
+	handle /go/webshare {
+		redir https://www.webshare.io/residential-proxy 302
+	}
+	handle /go/iproyal {
+		redir https://iproyal.com/pricing/residential-proxies/ 302
+	}
+	handle /go/brightdata {
+		redir https://brightdata.com/pricing/proxy-network/residential-proxies 302
+	}
+	handle /go/oxylabs {
+		redir https://oxylabs.io/pricing/residential-proxy-pool 302
+	}
+	handle /go/* {
+		redir * /hosting/ 302
+	}
+	handle /guia {
+		redir * /guia/ 301
+	}
+	handle /guia/* {
+		root * /srv/x402
+		file_server
+	}
+	handle {
+		reverse_proxy api:8000
+	}
+	log {
+		output file /logs/caddy_access.log {
+			mode 0644
+			roll_size 50mb
+			roll_keep 10
+		}
+		format json
+	}
+}
+
+unsweep.com {
+	encode gzip
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		Content-Security-Policy "default-src 'self'; script-src 'self' https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; connect-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'"
+		-Server
+	}
+	root * /srv/x402/unsweep
+	file_server
+}
+
+www.unsweep.com {
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		Content-Security-Policy "default-src 'self'; script-src 'self' https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; connect-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'"
+		-Server
+	}
+	redir https://unsweep.com{uri} permanent
+}
