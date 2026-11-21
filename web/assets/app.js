@@ -102,7 +102,7 @@
       for (const l of q.lines) out.push((l.symbol || l.token) + ': total ' + fmt(l.amount, l.decimals) + ' | fee ' + fmt(l.fee, l.decimals) + ' | you receive ' + fmt(l.net, l.decimals));
       if (q.nfts > 0) out.push('NFTs found: ' + q.nfts + ' (NFT rescue is not enabled in this preview; they are excluded).');
       const netUsd = Math.max(0, Number(q.rescued_usd) - Number(q.fee_usd));
-      out.push('Estimated value (testnet prices): $' + q.rescued_usd);
+      out.push('Estimated value: $' + q.rescued_usd);
       out.push('Fee: $' + q.fee_usd + ' (' + q.fee_pct + '% of the rescued value; tier ' + (tierBps / 100) + '%)');
       out.push('Your safe wallet receives: ~$' + netUsd.toFixed(2) + ' (per token amounts above).');
       if (!q.policy_ok) { out.push('Not eligible: ' + q.policy_reason); return show($('quoteOut'), out, 'err'); }
