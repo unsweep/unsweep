@@ -1,12 +1,19 @@
 #!/usr/bin/env python3
-"""Genera el aviso de portada de web/index.html desde la fuente de verdad (#927).
+"""Genera los bloques de web/index.html que dependen de fuentes de verdad.
 
-Cifras: CAP_INITIAL_USD y HIGH_VALUE_USD de relayer/policy.py; numero de
-tokens de assets_8453.json. Nunca se editan a mano en el HTML.
+Bloques (entre <!--gen:X--> y <!--/gen:X-->):
+  cap    -> tope 'up to $X per rescue' (CAP_INITIAL_USD) y linea gris de controles
+            extra por encima de HIGH_VALUE_USD (relayer/policy.py). Sin asterisco.
+  tokens -> lista plegable de tokens de Base (relayer/data/assets_8453.json).
+  faqld  -> JSON-LD FAQPage derivado de los <details class="faq"> del propio HTML
+            (una sola fuente de texto; type application/ld+json = bloque de datos,
+            no ejecutable, compatible con la CSP actual).
+Nunca se editan a mano.
 
 Uso:  python3 tools/gen_portada.py          # reescribe web/index.html
       python3 tools/gen_portada.py --check  # exit 1 si el HTML no coincide (CI)
 """
+import html as htmlmod
 import json
 import re
 import sys
@@ -16,11 +23,10 @@ ROOT = Path(__file__).resolve().parent.parent
 INDEX = ROOT / "web" / "index.html"
 POLICY = ROOT / "relayer" / "policy.py"
 
-# Literal #927 (nota humano id 927): 'Rescues above 10,000 USD get automatic
-# extra safety checks (a few seconds more)', con simbolo de dolar en el HTML.
-NOTE_TMPL = "*Rescues above {hv} get automatic extra safety checks (a few seconds more)."
-STRONG_TMPL = ("<strong>Base mainnet: rescue is live ({n} ERC-20 tokens, up to {cap}* per rescue). "
-               "Ethereum: free read-only check.</strong>")
+CAP_TMPL = ('<p class="cap" id="capLine">Base mainnet: rescue is live for {n} ERC-20 tokens, '
+            'up to {cap} per rescue. Ethereum mainnet: free read-only check.</p>\n'
+            '<p class="small muted" id="capNote">Rescues above {hv} get automatic extra safety '
+            'checks (a few seconds more).</p>')
 
 
 def _const(name: str) -> float:
@@ -30,49 +36,65 @@ def _const(name: str) -> float:
     return float(m.group(1).replace("_", ""))
 
 
-def _assets_count() -> int:
+def _assets():
     cands = [p for p in ROOT.glob("**/assets_8453.json")
              if ".venv" not in p.parts and "node_modules" not in p.parts and ".git" not in p.parts]
     if len(cands) != 1:
         raise SystemExit(f"gen_portada: se esperaba 1 assets_8453.json, hay {len(cands)}")
     doc = json.loads(cands[0].read_text())
     toks = doc.get("tokens", doc) if isinstance(doc, dict) else doc
-    return len(toks)
+    return toks
 
 
 def usd(x: float) -> str:
     return "${:,.0f}".format(x)
 
 
+def _strip(s: str) -> str:
+    return htmlmod.unescape(re.sub(r"<[^>]+>", "", s)).strip()
+
+
+def faq_pairs(html: str):
+    pairs = re.findall(r'<details class="faq"><summary>(.*?)</summary>(.*?)</details>', html, re.S)
+    return [(_strip(q), _strip(a)) for q, a in pairs]
+
+
+def _replace(html: str, key: str, body: str) -> str:
+    pat = re.compile(rf"<!--gen:{key}-->.*?<!--/gen:{key}-->", re.S)
+    if len(pat.findall(html)) != 1:
+        raise SystemExit(f"gen_portada: marcador gen:{key} ausente o duplicado")
+    return pat.sub(lambda _m: f"<!--gen:{key}-->{body}<!--/gen:{key}-->", html)
+
+
 def render(html: str) -> str:
-    cap, hv, n = _const("CAP_INITIAL_USD"), _const("HIGH_VALUE_USD"), _assets_count()
-    strong = STRONG_TMPL.format(n=n, cap=usd(cap))
-    note = f'<p class="small" id="capNote">{NOTE_TMPL.format(hv=usd(hv))}</p>'
-    # 1) <strong> del aviso mainnetNotice (exactamente una vez)
-    pat = re.compile(r'(<p class="notice" id="mainnetNotice">)<strong>.*?</strong>', re.S)
-    out, k = pat.subn(lambda m: m.group(1) + strong, html)
-    if k != 1:
-        raise SystemExit(f"gen_portada: mainnetNotice encontrado {k} veces")
-    # 2) nota capNote justo despues del cierre del aviso (idempotente)
-    out = re.sub(r'<p class="small" id="capNote">.*?</p>', "", out, flags=re.S)
-    pat2 = re.compile(r'(<p class="notice" id="mainnetNotice">.*?</p>)', re.S)
-    out, k = pat2.subn(lambda m: m.group(1) + note, out, count=1)
-    if k != 1:
-        raise SystemExit("gen_portada: no se pudo insertar capNote")
-    return out
+    cap, hv = _const("CAP_INITIAL_USD"), _const("HIGH_VALUE_USD")
+    toks = _assets()
+    html = _replace(html, "cap", "\n" + CAP_TMPL.format(n=len(toks), cap=usd(cap), hv=usd(hv)) + "\n")
+    syms = ", ".join(htmlmod.escape(t["symbol"]) for t in toks)
+    html = _replace(html, "tokens", (f'\n<details class="info" id="tokens"><summary>Supported tokens on Base '
+                                     f'({len(toks)})</summary><p class="small">{syms}</p></details>\n'))
+    pairs = faq_pairs(html)
+    if len(pairs) != 10:
+        raise SystemExit(f"gen_portada: se esperaban 10 preguntas FAQ, hay {len(pairs)}")
+    ld = {"@context": "https://schema.org", "@type": "FAQPage",
+          "mainEntity": [{"@type": "Question", "name": q,
+                          "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in pairs]}
+    js = json.dumps(ld, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+    html = _replace(html, "faqld", f'<script type="application/ld+json" id="faqSchema">{js}</script>')
+    return html
 
 
 def main() -> int:
-    html = INDEX.read_text()
-    new = render(html)
+    cur = INDEX.read_text()
+    new = render(cur)
     if "--check" in sys.argv:
-        if new != html:
-            print("gen_portada: web/index.html desactualizado; ejecutar tools/gen_portada.py")
+        if new != cur:
+            print("gen_portada: web/index.html no coincide con la fuente; ejecuta tools/gen_portada.py")
             return 1
         print("gen_portada: OK")
         return 0
     INDEX.write_text(new)
-    print("gen_portada: escrito" if new != html else "gen_portada: sin cambios")
+    print("gen_portada: escrito", INDEX)
     return 0
 
 
