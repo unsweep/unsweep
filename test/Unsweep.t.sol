@@ -145,7 +145,12 @@ contract UnsweepTest is UnsweepBase {
         UnsweepDelegate.Rescue memory r = _base();
         r.calls = new UnsweepDelegate.Call[](1);
         r.calls[0] = UnsweepDelegate.Call(address(ev), 0, abi.encodeCall(EvilClaim.claim, ()));
-        _expectRescueRevert(r, victimPk, abi.encodeWithSelector(UnsweepDelegate.CallFailed.selector, 0,
-            abi.encodeWithSelector(UnsweepDelegate.Reentrant.selector)));
+        _expectRescueRevert(
+            r,
+            victimPk,
+            abi.encodeWithSelector(
+                UnsweepDelegate.CallFailed.selector, 0, abi.encodeWithSelector(UnsweepDelegate.Reentrant.selector)
+            )
+        );
     }
 }

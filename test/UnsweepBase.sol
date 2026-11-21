@@ -50,11 +50,27 @@ abstract contract UnsweepBase is Test {
     function _noPermit() internal pure returns (UnsweepDelegate.Permit memory p) {}
 
     function _digest(UnsweepDelegate.Rescue memory r) internal view returns (bytes32) {
-        bytes32 ds = keccak256(abi.encode(
-            keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-            keccak256("Unsweep"), keccak256("1"), block.chainid, victim));
-        bytes32 sh = keccak256(abi.encode(impl.RESCUE_TYPEHASH(), r.safe, keccak256(abi.encode(r.calls)),
-            keccak256(abi.encode(r.tokens)), keccak256(abi.encode(r.nfts)), r.maxNftFee, r.nonce, r.deadline));
+        bytes32 ds = keccak256(
+            abi.encode(
+                keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
+                keccak256("Unsweep"),
+                keccak256("1"),
+                block.chainid,
+                victim
+            )
+        );
+        bytes32 sh = keccak256(
+            abi.encode(
+                impl.RESCUE_TYPEHASH(),
+                r.safe,
+                keccak256(abi.encode(r.calls)),
+                keccak256(abi.encode(r.tokens)),
+                keccak256(abi.encode(r.nfts)),
+                r.maxNftFee,
+                r.nonce,
+                r.deadline
+            )
+        );
         return keccak256(abi.encodePacked("\x19\x01", ds, sh));
     }
 
@@ -73,8 +89,13 @@ abstract contract UnsweepBase is Test {
         address o = vm.addr(pk);
         p.value = value;
         p.deadline = block.timestamp + 1 hours;
-        bytes32 d = keccak256(abi.encodePacked("\x19\x01", usdc.DOMAIN_SEPARATOR(),
-            keccak256(abi.encode(usdc.PERMIT_TYPEHASH(), o, victim, value, usdc.nonces(o), p.deadline))));
+        bytes32 d = keccak256(
+            abi.encodePacked(
+                "\x19\x01",
+                usdc.DOMAIN_SEPARATOR(),
+                keccak256(abi.encode(usdc.PERMIT_TYPEHASH(), o, victim, value, usdc.nonces(o), p.deadline))
+            )
+        );
         (p.v, p.r, p.s) = vm.sign(pk, d);
     }
 

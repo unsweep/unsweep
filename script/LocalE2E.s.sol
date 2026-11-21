@@ -8,9 +8,15 @@ import {UnsweepDelegate} from "../src/UnsweepDelegate.sol";
 contract E2EToken {
     mapping(address => uint256) public balanceOf;
     uint8 public constant decimals = 6;
-    function mint(address to, uint256 a) external { balanceOf[to] += a; }
+
+    function mint(address to, uint256 a) external {
+        balanceOf[to] += a;
+    }
+
     function transfer(address to, uint256 a) external returns (bool) {
-        balanceOf[msg.sender] -= a; balanceOf[to] += a; return true;
+        balanceOf[msg.sender] -= a;
+        balanceOf[to] += a;
+        return true;
     }
 }
 
@@ -55,8 +61,18 @@ contract LocalE2E is Script {
         r.deadline = block.timestamp + 1 hours;
 
         bytes32 ds = keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256("Unsweep"), keccak256("1"), block.chainid, victim));
-        bytes32 sh = keccak256(abi.encode(RESCUE_TYPEHASH, r.safe, keccak256(abi.encode(r.calls)),
-            keccak256(abi.encode(r.tokens)), keccak256(abi.encode(r.nfts)), r.maxNftFee, r.nonce, r.deadline));
+        bytes32 sh = keccak256(
+            abi.encode(
+                RESCUE_TYPEHASH,
+                r.safe,
+                keccak256(abi.encode(r.calls)),
+                keccak256(abi.encode(r.tokens)),
+                keccak256(abi.encode(r.nfts)),
+                r.maxNftFee,
+                r.nonce,
+                r.deadline
+            )
+        );
         (uint8 v, bytes32 rr, bytes32 ss) = vm.sign(victimPk, keccak256(abi.encodePacked("\x19\x01", ds, sh)));
 
         vm.startBroadcast(sponsorPk);

@@ -8,7 +8,8 @@ interface IERC20Min {
 }
 
 interface IERC2612Min {
-    function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external;
+    function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s)
+        external;
 }
 
 interface IERC721Min {
@@ -21,8 +22,17 @@ interface IERC721Min {
 ///         misma tx; si el permit o el cobro fallan, revierte todo. Nonces sin orden (bitmap, aleatorios).
 /// @custom:storage-location erc7201:unsweep.storage.v1
 contract UnsweepDelegate {
-    struct Call { address target; uint256 value; bytes data; }
-    struct Nft { address token; uint256 id; }
+    struct Call {
+        address target;
+        uint256 value;
+        bytes data;
+    }
+
+    struct Nft {
+        address token;
+        uint256 id;
+    }
+
     struct Rescue {
         address safe;
         Call[] calls;
@@ -32,10 +42,19 @@ contract UnsweepDelegate {
         uint256 nonce;
         uint256 deadline;
     }
-    struct Permit { uint256 value; uint256 deadline; uint8 v; bytes32 r; bytes32 s; }
+
+    struct Permit {
+        uint256 value;
+        uint256 deadline;
+        uint8 v;
+        bytes32 r;
+        bytes32 s;
+    }
 
     /// @custom:storage-location erc7201:unsweep.storage.v1
-    struct Store { mapping(uint256 => uint256) nonceBitmap; }
+    struct Store {
+        mapping(uint256 => uint256) nonceBitmap;
+    }
 
     bytes32 public constant RESCUE_TYPEHASH = keccak256(
         "Rescue(address safe,bytes32 callsHash,bytes32 tokensHash,bytes32 nftsHash,uint256 maxNftFee,uint256 nonce,uint256 deadline)"
@@ -66,7 +85,9 @@ contract UnsweepDelegate {
     error NftFeeFailed();
     error NothingRescued();
 
-    constructor(UnsweepConfig _config) { config = _config; }
+    constructor(UnsweepConfig _config) {
+        config = _config;
+    }
 
     receive() external payable {}
 
@@ -90,12 +111,23 @@ contract UnsweepDelegate {
     }
 
     function domainSeparator() public view returns (bytes32) {
-        return keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256("Unsweep"), keccak256("1"), block.chainid, address(this)));
+        return
+            keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256("Unsweep"), keccak256("1"), block.chainid, address(this)));
     }
 
     function rescueDigest(Rescue calldata r) public view returns (bytes32) {
-        bytes32 sh = keccak256(abi.encode(RESCUE_TYPEHASH, r.safe, keccak256(abi.encode(r.calls)),
-            keccak256(abi.encode(r.tokens)), keccak256(abi.encode(r.nfts)), r.maxNftFee, r.nonce, r.deadline));
+        bytes32 sh = keccak256(
+            abi.encode(
+                RESCUE_TYPEHASH,
+                r.safe,
+                keccak256(abi.encode(r.calls)),
+                keccak256(abi.encode(r.tokens)),
+                keccak256(abi.encode(r.nfts)),
+                r.maxNftFee,
+                r.nonce,
+                r.deadline
+            )
+        );
         return keccak256(abi.encodePacked("\x19\x01", domainSeparator(), sh));
     }
 
