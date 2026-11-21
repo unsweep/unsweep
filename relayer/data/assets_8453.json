@@ -1,0 +1,13 @@
+{
+ "_note": "Base mainnet (8453). #85=A: solo USDC nativo de Circle. Verificado 2026-11-21 en developers.circle.com/stablecoins/usdc-contract-addresses y on-chain (eth_call symbol=USDC, decimals=6) en Alchemy y Chainstack. ETH nativo NO incluido: UnsweepDelegate desplegado (0x38bc...a8c8) solo barre ERC-20/ERC-721 (_sweepTokens/_sweepNfts), no tiene ruta para ETH nativo.",
+ "tokens": [
+  {
+   "address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+   "symbol": "USDC",
+   "decimals": 6,
+   "price_usd": 1.0,
+   "fee_on_transfer": false
+  }
+ ],
+ "nfts": []
+}

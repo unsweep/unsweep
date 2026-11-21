@@ -1,7 +1,7 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>UNSWEEP - free read-only wallet check (EIP-7702 delegation, open approvals) on Base and Ethereum</title><meta name="description" content="Free read-only check of a public wallet address on Base and Ethereum mainnet: EIP-7702 delegation, nonce, balances and open ERC-20 approvals. No keys, no signatures. Rescue is a testnet beta only."><meta name="referrer" content="no-referrer"><link rel="canonical" href="https://unsweep.com/"><link rel="stylesheet" href="/assets/style.css"></head><body><main>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>UNSWEEP - free read-only wallet check (EIP-7702 delegation, open approvals) on Base and Ethereum</title><meta name="description" content="Free read-only check of a public wallet address on Base and Ethereum mainnet: EIP-7702 delegation, nonce, balances and open ERC-20 approvals. No keys, no signatures. Rescue on mainnet is not enabled yet."><meta name="referrer" content="no-referrer"><link rel="canonical" href="https://unsweep.com/"><link rel="stylesheet" href="/assets/style.css"></head><body><main>
 <h1>UNSWEEP</h1>
 <p>Rescue tokens left in a hacked wallet — even if a bot drains your funds.</p>
-<p class="notice" id="mainnetNotice"><strong>Mainnet: read-only check; rescue is testnet beta only.</strong> Your compromised key never leaves your browser. We will never DM you first and never ask for your seed phrase.</p>
+<p class="notice" id="mainnetNotice"><strong>Base mainnet: free read-only check. Rescue on mainnet is not enabled yet.</strong> Your compromised key never leaves your browser. We will never DM you first and never ask for your seed phrase.</p>
 
 <nav class="tabs" aria-label="Mode">
 <button type="button" id="tabScan" class="tab active">Check (read-only)</button>
@@ -15,7 +15,6 @@
 <select id="chain">
 <option value="base" selected>Base mainnet (read-only check)</option>
 <option value="ethereum">Ethereum mainnet (read-only check)</option>
-<option value="testnet">Base Sepolia testnet (rescue beta)</option>
 </select></div>
 <div class="field wide"><label for="victim">Public wallet address</label>
 <input id="victim" type="text" placeholder="0x... your wallet address" autocomplete="off" spellcheck="false"></div>
@@ -25,7 +24,7 @@
 <details class="info"><summary>What does this check?</summary>
 <p class="small">The mainnet check shows: EIP-7702 delegation and its target contract, nonce, native balance, main ERC-20 balances and ERC-20 approvals granted by direct transactions in the last 90 days that are still open. It cannot see approvals granted by off-chain signatures (permits). Results are cached for 10 minutes.</p></details></section>
 
-<section id="step2" hidden><h2>Step 2 &middot; Simulation: what you receive and the fee (testnet only)</h2>
+<section id="step2" hidden><h2>Step 2 &middot; Simulation: what you receive and the fee</h2>
 <p>Enter the <strong>safe wallet</strong> that will receive the assets.</p>
 <div class="form">
 <div class="field"><label for="safe">Safe wallet address</label>
@@ -34,11 +33,11 @@
 </div>
 <div id="quoteOut" class="out"></div></section>
 
-<section id="step3" hidden><h2>Step 3 &middot; Sign locally and rescue (testnet beta only)</h2>
-<ul class="small list"><li>Your key is used <strong>only inside this browser tab</strong>, in memory, to sign. It is never sent, stored or logged. Only signatures go to our relayer.</li><li>Seed phrases (12/24 words) are <strong>rejected</strong>. Paste only the 64-hex private key of the <em>compromised</em> testnet wallet.</li><li>Prefer offline signing? Open this page offline in a separate tab (option D, coming soon).</li></ul>
+<section id="step3" hidden><h2>Step 3 &middot; Sign locally and rescue</h2>
+<ul class="small list"><li>Your key is used <strong>only inside this browser tab</strong>, in memory, to sign. It is never sent, stored or logged. Only signatures go to our relayer.</li><li>Seed phrases (12/24 words) are <strong>rejected</strong>. Paste only the 64-hex private key of the <em>compromised</em> wallet.</li><li>Prefer offline signing? Open this page offline in a separate tab (option D, coming soon).</li></ul>
 <div class="form">
-<div class="field"><label for="pk">Compromised testnet private key</label>
-<input id="pk" type="password" placeholder="private key of the COMPROMISED testnet wallet (0x + 64 hex)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
+<div class="field"><label for="pk">Compromised wallet private key</label>
+<input id="pk" type="password" placeholder="private key of the COMPROMISED wallet (0x + 64 hex)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
 <div id="ts"></div>
 <button id="btnRescue" class="primary">Sign locally &amp; rescue</button>
 </div>
@@ -53,7 +52,7 @@
 
 <footer>
 <p class="small">Open source, non-custodial. Nothing on this page can recover funds that have already been moved.</p>
-<p class="small">Testnet beta contracts on Base Sepolia: <a href="https://sepolia.basescan.org/address/0xbe0E049F17836736772206E6BA3C3EfF21C2E0bC" rel="noopener noreferrer">0xbe0E…E0bC</a> · <a href="https://sepolia.basescan.org/address/0xc69D4aF59BaD315180db5961fb7196D31b33E331" rel="noopener noreferrer">UnsweepDelegate 0xc69D…E331</a>. Source code verification and public repository: pending.</p>
+<p class="small">Base mainnet contracts (verified source on Basescan): <a href="https://basescan.org/address/0x56a345661e3999F2b20f1E069aAC14097Fa0D118#code" rel="noopener noreferrer">UnsweepConfig 0x56a345661e3999F2b20f1E069aAC14097Fa0D118</a> · <a href="https://basescan.org/address/0x38bcF425bC4d13624734e09376F2fafc799fA8c8#code" rel="noopener noreferrer">UnsweepDelegate 0x38bcF425bC4d13624734e09376F2fafc799fA8c8</a>. Supported token: <a href="https://basescan.org/token/0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" rel="noopener noreferrer">USDC 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913</a>. Public repository: <a href="https://github.com/unsweep/unsweep" rel="noopener noreferrer">github.com/unsweep/unsweep</a>.</p>
 </footer>
 </main>
 <script src="/assets/ethers.min.js"></script>

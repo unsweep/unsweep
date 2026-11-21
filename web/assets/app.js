@@ -49,7 +49,7 @@
         for (const ap of aps) out.push('Open approval: ' + (ap.symbol || ap.token) + ' -> spender ' + ap.spender + (ap.unlimited ? ' (unlimited)' : '') + ' - see /guides/revoke-approvals/');
         const am = m.approvalsMeta || {};
         if (!complete) out.push('Approvals listed above may be partial (' + (am.txScanned || 0) + ' recent transactions checked).');
-        out.push('Mainnet: read-only check. Rescue is testnet beta only.');
+        out.push('Base mainnet: read-only check. Rescue on mainnet is not enabled yet.');
         show($('scanOut'), out, complete ? 'ok' : 'err');
       } catch (e) { show($('scanOut'), 'Scan failed: ' + e.message, 'err'); }
       return;
