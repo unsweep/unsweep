@@ -7,3 +7,4 @@ broadcast/
 cache/
 out/
 web-src/node_modules/
+.e2e/
