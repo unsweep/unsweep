@@ -1,33 +1,35 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-/// @title UNSWEEP M1 - configuracion (comision inmutable, limite y precios permitidos)
+/// @title UNSWEEP M1.1 - configuracion on-chain minima (sin oraculo, sin precios, sin limite en USD)
+/// @notice La comision ERC-20 se cobra en especie (feeBps de cada token rescatado). El limite de beta
+///         (500 USD por defecto) y el filtro "comision >= gas x3" viven en el relayer, fuera de cadena.
+///         NFTs/ENS (ERC-721): tarifa fija por item en nftFeeToken (USDC con EIP-2612) pagada por la
+///         WALLET SEGURA via permit dentro de la misma transaccion.
 contract UnsweepConfig {
     address public owner;
     address public immutable feeRecipient;
     uint16 public immutable feeBps; // 1500 = 15 %
-    uint256 public capUsd8; // limite por rescate en USD con 8 decimales (500e8)
-    mapping(address => uint256) public tokenPriceUsd8; // USD (8 dec) por 1 token entero; 0 = no permitido
-    mapping(address => uint256) public nftValueUsd8; // USD (8 dec) por NFT; 0 = no permitido
+    address public immutable nftFeeToken; // USDC (EIP-2612)
+    uint256 public nftFlatFee; // unidades de nftFeeToken por NFT/ENS; la victima firma un maximo
     mapping(address => bool) public claimTarget; // contratos de reclamo (airdrop) permitidos en r.calls
 
     event OwnerChanged(address indexed owner);
-    event CapChanged(uint256 capUsd8);
-    event TokenPriceSet(address indexed token, uint256 priceUsd8);
-    event NftValueSet(address indexed collection, uint256 valueUsd8);
+    event NftFlatFeeChanged(uint256 fee);
     event ClaimTargetSet(address indexed target, bool allowed);
 
     error NotOwner();
     error BadParam();
 
-    constructor(address _feeRecipient, uint16 _feeBps, uint256 _capUsd8) {
-        if (_feeRecipient == address(0) || _feeBps > 3000) revert BadParam();
+    constructor(address _feeRecipient, uint16 _feeBps, address _nftFeeToken, uint256 _nftFlatFee) {
+        if (_feeRecipient == address(0) || _nftFeeToken == address(0) || _feeBps > 3000) revert BadParam();
         owner = msg.sender;
         feeRecipient = _feeRecipient;
         feeBps = _feeBps;
-        capUsd8 = _capUsd8;
+        nftFeeToken = _nftFeeToken;
+        nftFlatFee = _nftFlatFee;
         emit OwnerChanged(msg.sender);
-        emit CapChanged(_capUsd8);
+        emit NftFlatFeeChanged(_nftFlatFee);
     }
 
     modifier onlyOwner() {
@@ -35,23 +37,13 @@ contract UnsweepConfig {
         _;
     }
 
-    function setCap(uint256 c) external onlyOwner {
-        capUsd8 = c;
-        emit CapChanged(c);
-    }
-
-    function setTokenPrice(address token, uint256 priceUsd8) external onlyOwner {
-        tokenPriceUsd8[token] = priceUsd8;
-        emit TokenPriceSet(token, priceUsd8);
-    }
-
-    function setNftValue(address collection, uint256 valueUsd8) external onlyOwner {
-        nftValueUsd8[collection] = valueUsd8;
-        emit NftValueSet(collection, valueUsd8);
+    function setNftFlatFee(uint256 fee) external onlyOwner {
+        nftFlatFee = fee;
+        emit NftFlatFeeChanged(fee);
     }
 
     function setClaimTarget(address target, bool allowed) external onlyOwner {
-        if (tokenPriceUsd8[target] != 0 || nftValueUsd8[target] != 0) revert BadParam();
+        if (target == address(0) || target == nftFeeToken) revert BadParam();
         claimTarget[target] = allowed;
         emit ClaimTargetSet(target, allowed);
     }

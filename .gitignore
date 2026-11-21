@@ -1,6 +1,8 @@
-out/
-cache/
-broadcast/
-.env
 *.key
+.env
+.pytest_cache/
 .venv/
+__pycache__/
+broadcast/
+cache/
+out/

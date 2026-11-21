@@ -1,0 +1,143 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
+import {UnsweepBase} from "./UnsweepBase.sol";
+import {UnsweepDelegate} from "../src/UnsweepDelegate.sol";
+import {GarbageWriter, AttackerSweeper} from "./Mocks.sol";
+
+/// Tests nuevos M1.1
+contract HardeningTest is UnsweepBase {
+    function _try(UnsweepDelegate.Rescue memory r, UnsweepDelegate.Permit memory p, bytes memory err) internal {
+        (uint8 v, bytes32 a, bytes32 b) = _prep(r, victimPk);
+        vm.prank(sponsor);
+        vm.expectRevert(err);
+        UnsweepDelegate(payable(victim)).rescue(r, p, v, a, b);
+    }
+
+    // ---- 2) NFT/ENS: tarifa fija en USDC pagada por la wallet segura via permit ----
+    function test_nft_fee_paid_by_safe_via_permit() public {
+        UnsweepDelegate.Rescue memory r = _nftRescue(2);
+        usdc.mint(safe, 2 * NFT_FEE);
+        _rescue(r, _permit(2 * NFT_FEE, safePk));
+        assertEq(nft.ownerOf(100), safe);
+        assertEq(nft.ownerOf(101), safe);
+        assertEq(usdc.balanceOf(feeTo), 2 * NFT_FEE);
+        assertEq(usdc.balanceOf(safe), 0);
+    }
+
+    function test_nft_permit_bad_signer_reverts_all() public {
+        UnsweepDelegate.Rescue memory r = _nftRescue(1);
+        usdc.mint(safe, NFT_FEE);
+        _try(r, _permit(NFT_FEE, attackerPk), bytes("bad permit"));
+        assertEq(nft.ownerOf(100), victim);
+        assertEq(usdc.balanceOf(feeTo), 0);
+    }
+
+    function test_nft_no_permit_reverts_all() public {
+        UnsweepDelegate.Rescue memory r = _nftRescue(1);
+        usdc.mint(safe, NFT_FEE);
+        (uint8 v, bytes32 a, bytes32 b) = _prep(r, victimPk);
+        vm.prank(sponsor);
+        vm.expectRevert();
+        UnsweepDelegate(payable(victim)).rescue(r, _noPermit(), v, a, b);
+        assertEq(nft.ownerOf(100), victim);
+    }
+
+    function test_nft_safe_without_balance_reverts_all() public {
+        UnsweepDelegate.Rescue memory r = _nftRescue(1);
+        usdc.mint(victim, 100e6); // ERC-20 en la cesta: tampoco debe moverse
+        r.tokens = new address[](1);
+        r.tokens[0] = address(usdc);
+        (uint8 v, bytes32 a, bytes32 b) = _prep(r, victimPk);
+        UnsweepDelegate.Permit memory p = _permit(NFT_FEE, safePk);
+        vm.prank(sponsor);
+        vm.expectRevert();
+        UnsweepDelegate(payable(victim)).rescue(r, p, v, a, b);
+        assertEq(nft.ownerOf(100), victim);
+        assertEq(usdc.balanceOf(victim), 100e6);
+        assertEq(usdc.balanceOf(safe), 0);
+    }
+
+    function test_nft_fee_above_signed_max_reverts() public {
+        UnsweepDelegate.Rescue memory r = _nftRescue(1);
+        r.maxNftFee = NFT_FEE - 1;
+        usdc.mint(safe, NFT_FEE);
+        _try(r, _permit(NFT_FEE, safePk), abi.encodeWithSelector(UnsweepDelegate.NftFeeTooHigh.selector));
+    }
+
+    // ---- 3) ERC-7201 + nonces bitmap: basura del atacante y nonces marcados ----
+    function test_garbage_storage_and_marked_nonces_do_not_block() public {
+        usdc.mint(victim, 400e6);
+        GarbageWriter g = new GarbageWriter();
+        bytes32 ns = impl.STORE_SLOT();
+        bytes32[] memory slots = new bytes32[](6);
+        slots[0] = bytes32(0);
+        slots[1] = bytes32(uint256(1));
+        slots[2] = ns;
+        slots[3] = keccak256(abi.encode(n1 >> 8, ns)); // palabra del bitmap de n1
+        slots[4] = bytes32(uint256(keccak256("unsweep.lock.v1"))); // mismo indice que el lock transitorio
+        slots[5] = keccak256(abi.encode(uint256(0), ns)); // palabra 0 del bitmap (nonces 0..255)
+        vm.signAndAttachDelegation(address(g), victimPk);
+        vm.prank(victim);
+        GarbageWriter(victim).scribble(slots, bytes32(type(uint256).max));
+
+        // el nonce marcado por el atacante queda inutilizable...
+        _try(_base(), _noPermit(), abi.encodeWithSelector(UnsweepDelegate.NonceUsed.selector));
+        assertTrue(UnsweepDelegate(payable(victim)).nonceUsed(n1)); // la basura marco n1 (leido ya con impl delegado)
+        // ...pero un nonce aleatorio nuevo funciona (el atacante no puede marcar 2^256)
+        UnsweepDelegate.Rescue memory r = _base();
+        r.nonce = uint256(keccak256("fresh-random-nonce"));
+        _rescue(r, _noPermit());
+        assertEq(usdc.balanceOf(safe), 340e6);
+        assertEq(usdc.balanceOf(feeTo), 60e6);
+    }
+
+    function test_unordered_nonces() public {
+        UnsweepDelegate.Rescue memory r = _base();
+        r.nonce = 999;
+        usdc.mint(victim, 100e6);
+        _rescue(r, _noPermit());
+        r.nonce = 3; // menor que el anterior: valido
+        usdc.mint(victim, 100e6);
+        _rescue(r, _noPermit());
+        assertTrue(UnsweepDelegate(payable(victim)).nonceUsed(999));
+        assertTrue(UnsweepDelegate(payable(victim)).nonceUsed(3));
+        assertFalse(UnsweepDelegate(payable(victim)).nonceUsed(4));
+    }
+
+    function test_invalidate_nonce_only_self() public {
+        _prep(_base(), victimPk);
+        vm.prank(attacker);
+        vm.expectRevert(UnsweepDelegate.NotSelf.selector);
+        UnsweepDelegate(payable(victim)).invalidateNonce(n1);
+        vm.prank(victim);
+        UnsweepDelegate(payable(victim)).invalidateNonce(n1);
+        assertTrue(UnsweepDelegate(payable(victim)).nonceUsed(n1));
+    }
+
+    // ---- 4) rescate de valor 0 revierte ----
+    function test_rescue_zero_reverts() public {
+        _try(_base(), _noPermit(), abi.encodeWithSelector(UnsweepDelegate.NothingRescued.selector));
+        UnsweepDelegate.Rescue memory r = _base();
+        r.tokens = new address[](0);
+        _try(r, _noPermit(), abi.encodeWithSelector(UnsweepDelegate.NothingRescued.selector));
+    }
+
+    // ---- 7) re-delegacion: la EOA estaba delegada al sweeper del atacante ----
+    function test_redelegation_from_attacker_sweeper() public {
+        AttackerSweeper sw = new AttackerSweeper();
+        vm.signAndAttachDelegation(address(sw), victimPk);
+        usdc.mint(victim, 50e6);
+        AttackerSweeper(victim).sweep(usdc, attacker); // el sweeper funciona mientras esta delegado
+        assertEq(usdc.balanceOf(attacker), 50e6);
+        usdc.mint(victim, 400e6);
+        _rescue(_base(), _noPermit()); // nueva delegacion + rescate en la misma llamada
+        assertEq(usdc.balanceOf(safe), 340e6);
+        assertEq(usdc.balanceOf(victim), 0);
+        bytes memory code = victim.code;
+        assertEq(code.length, 23);
+        address delegated;
+        assembly { delegated := shr(96, mload(add(code, 35))) }
+        assertEq(delegated, address(impl));
+    }
+}
