@@ -21,8 +21,7 @@ class _Fn:
 
 class _Cfg:
     class functions:  # noqa: N801
-        nftFlatFee = staticmethod(lambda: _Fn(0))
-        nftFeeToken = staticmethod(lambda: _Fn(USDC))
+        pass
 
 
 @pytest.fixture

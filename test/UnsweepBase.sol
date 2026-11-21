@@ -22,7 +22,8 @@ abstract contract UnsweepBase is Test {
     address attacker;
     address feeTo = address(0xFEE);
     address sponsor = address(0x5905);
-    uint256 constant NFT_FEE = 5e6;
+    /// owner de UnsweepConfig en TODOS los despliegues: wallet fria del humano
+    address constant COLD = 0x7E26916f1FF93FcF6CCd7eAaa0561007783FDA1B;
     uint256 n1 = uint256(keccak256("random-nonce-1"));
 
     function setUp() public virtual {
@@ -34,9 +35,16 @@ abstract contract UnsweepBase is Test {
         junk = new MockToken(18);
         nft = new MockERC721();
         drop = new MockAirdrop(gov);
-        cfg = new UnsweepConfig(feeTo, 1500, address(usdc), NFT_FEE);
+        address[] memory targets = new address[](1);
+        targets[0] = address(drop);
+        cfg = new UnsweepConfig(COLD, feeTo, 1500, targets);
         impl = new UnsweepDelegate(cfg);
-        cfg.setClaimTarget(address(drop), true);
+    }
+
+    /// alta en la allowlist firmada por el owner (wallet fria)
+    function _allow(address t) internal {
+        vm.prank(COLD);
+        cfg.setClaimTarget(t, true);
     }
 
     function _base() internal view returns (UnsweepDelegate.Rescue memory r) {
@@ -47,8 +55,6 @@ abstract contract UnsweepBase is Test {
         r.deadline = block.timestamp + 1 hours;
         r.maxFeeBps = 1500;
     }
-
-    function _noPermit() internal pure returns (UnsweepDelegate.Permit memory p) {}
 
     function _digest(UnsweepDelegate.Rescue memory r) internal view returns (bytes32) {
         bytes32 ds = keccak256(
@@ -67,7 +73,6 @@ abstract contract UnsweepBase is Test {
                 keccak256(abi.encode(r.calls)),
                 keccak256(abi.encode(r.tokens)),
                 keccak256(abi.encode(r.nfts)),
-                r.maxNftFee,
                 r.maxFeeBps,
                 keccak256(abi.encode(r.minFees)),
                 r.nonce,
@@ -82,24 +87,10 @@ abstract contract UnsweepBase is Test {
         vm.signAndAttachDelegation(address(impl), victimPk);
     }
 
-    function _rescue(UnsweepDelegate.Rescue memory r, UnsweepDelegate.Permit memory p) internal {
+    function _rescue(UnsweepDelegate.Rescue memory r) internal {
         (uint8 v, bytes32 a, bytes32 b) = _prep(r, victimPk);
         vm.prank(sponsor);
-        UnsweepDelegate(payable(victim)).rescue(r, p, v, a, b);
-    }
-
-    function _permit(uint256 value, uint256 pk) internal view returns (UnsweepDelegate.Permit memory p) {
-        address o = vm.addr(pk);
-        p.value = value;
-        p.deadline = block.timestamp + 1 hours;
-        bytes32 d = keccak256(
-            abi.encodePacked(
-                "\x19\x01",
-                usdc.DOMAIN_SEPARATOR(),
-                keccak256(abi.encode(usdc.PERMIT_TYPEHASH(), o, victim, value, usdc.nonces(o), p.deadline))
-            )
-        );
-        (p.v, p.r, p.s) = vm.sign(pk, d);
+        UnsweepDelegate(payable(victim)).rescue(r, v, a, b);
     }
 
     function _nftRescue(uint256 count) internal returns (UnsweepDelegate.Rescue memory r) {
@@ -110,6 +101,5 @@ abstract contract UnsweepBase is Test {
             nft.mint(victim, 100 + i);
             r.nfts[i] = UnsweepDelegate.Nft(address(nft), 100 + i);
         }
-        r.maxNftFee = NFT_FEE * count;
     }
 }

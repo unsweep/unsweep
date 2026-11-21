@@ -22,14 +22,14 @@ const v = JSON.parse(process.argv[2]);
 const c = E.AbiCoder.defaultAbiCoder();
 const types = { Rescue: [
   { name: 'safe', type: 'address' }, { name: 'callsHash', type: 'bytes32' }, { name: 'tokensHash', type: 'bytes32' },
-  { name: 'nftsHash', type: 'bytes32' }, { name: 'maxNftFee', type: 'uint256' },
+  { name: 'nftsHash', type: 'bytes32' },
   { name: 'maxFeeBps', type: 'uint16' }, { name: 'minFeesHash', type: 'bytes32' }, { name: 'nonce', type: 'uint256' },
   { name: 'deadline', type: 'uint256' }] };
 const msg = { safe: v.safe,
   callsHash: E.keccak256(c.encode(['tuple(address,uint256,bytes)[]'], [v.calls])),
   tokensHash: E.keccak256(c.encode(['address[]'], [v.tokens])),
   nftsHash: E.keccak256(c.encode(['tuple(address,uint256)[]'], [v.nfts])),
-  maxNftFee: v.maxNftFee, maxFeeBps: v.maxFeeBps,
+  maxFeeBps: v.maxFeeBps,
   minFeesHash: E.keccak256(c.encode(['uint256[]'], [v.minFees])), nonce: v.nonce, deadline: v.deadline };
 const domain = { name: 'Unsweep', version: '1', chainId: v.chainId, verifyingContract: v.vc };
 const enc = E.TypedDataEncoder.from(types);
@@ -71,7 +71,7 @@ T1 = '0x2222222222222222222222222222222222222222'
 T2 = '0x3333333333333333333333333333333333333333'
 NFT = '0x4444444444444444444444444444444444444444'
 VECTOR = dict(safe=SAFE, calls=[(T1, 0, bytes.fromhex('deadbeef'))], tokens=[T1, T2], nfts=[(NFT, 7)],
-              maxNftFee=123456, maxFeeBps=1000, minFees=[5_000_000, 0], nonce=2**200 + 17, deadline=1_900_000_000)
+              maxFeeBps=1000, minFees=[5_000_000, 0], nonce=2**200 + 17, deadline=1_900_000_000)
 
 
 def test_typehash_string_matches_solidity_source():
@@ -86,7 +86,7 @@ def test_parity_solidity_python_js(w3):
                  ['0x0000000000000000000000000000000000000FEE', 1500, T1, 5_000_000])
     impl = deploy(w3, 'UnsweepDelegate.sol', 'UnsweepDelegate', ['address'], [cfg.address])
     v = VECTOR
-    r = X.rescue_tuple(v['safe'], v['calls'], v['tokens'], v['nfts'], v['maxNftFee'], v['maxFeeBps'],
+    r = X.rescue_tuple(v['safe'], v['calls'], v['tokens'], v['nfts'], v['maxFeeBps'],
                        v['minFees'], v['nonce'], v['deadline'])
     chain_id = w3.eth.chain_id
     # Solidity
@@ -96,7 +96,7 @@ def test_parity_solidity_python_js(w3):
     py_th, py_dg = bytes(X.RESCUE_TYPEHASH), bytes(X.rescue_digest(r, chain_id, impl.address))
     # JS (ethers vendorizado de la web)
     jv = dict(safe=SAFE, calls=[[a, str(b), '0x' + d.hex()] for a, b, d in v['calls']], tokens=v['tokens'],
-              nfts=[[a, str(i)] for a, i in v['nfts']], maxNftFee=str(v['maxNftFee']), maxFeeBps=v['maxFeeBps'],
+              nfts=[[a, str(i)] for a, i in v['nfts']], maxFeeBps=v['maxFeeBps'],
               minFees=[str(x) for x in v['minFees']], nonce=str(v['nonce']), deadline=str(v['deadline']),
               chainId=chain_id, vc=impl.address)
     out = subprocess.run(['node', '-e', JS, str(ETHERS), json.dumps(jv)], capture_output=True, text=True, timeout=60)
@@ -110,6 +110,6 @@ def test_parity_solidity_python_js(w3):
 def test_parity_detects_mismatch():
     """Control negativo: cambiar maxFeeBps cambia el digest (el test no pasa por accidente)."""
     v = VECTOR
-    a = X.rescue_tuple(v['safe'], v['calls'], v['tokens'], v['nfts'], v['maxNftFee'], 1000, v['minFees'], v['nonce'], v['deadline'])
-    b = X.rescue_tuple(v['safe'], v['calls'], v['tokens'], v['nfts'], v['maxNftFee'], 999, v['minFees'], v['nonce'], v['deadline'])
+    a = X.rescue_tuple(v['safe'], v['calls'], v['tokens'], v['nfts'], 1000, v['minFees'], v['nonce'], v['deadline'])
+    b = X.rescue_tuple(v['safe'], v['calls'], v['tokens'], v['nfts'], 999, v['minFees'], v['nonce'], v['deadline'])
     assert X.rescue_digest(a, 1, SAFE) != X.rescue_digest(b, 1, SAFE)

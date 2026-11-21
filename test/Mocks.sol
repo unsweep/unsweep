@@ -64,13 +64,18 @@ contract MockToken {
 
 contract MockERC721 {
     mapping(uint256 => address) public ownerOf;
+    mapping(address => mapping(address => bool)) public isApprovedForAll;
+
+    function setApprovalForAll(address op, bool ok) external {
+        isApprovedForAll[msg.sender][op] = ok;
+    }
 
     function mint(address to, uint256 id) external {
         ownerOf[id] = to;
     }
 
     function transferFrom(address f, address to, uint256 id) external {
-        require(ownerOf[id] == f && msg.sender == f, "nft auth");
+        require(ownerOf[id] == f && (msg.sender == f || isApprovedForAll[f][msg.sender]), "nft auth");
         ownerOf[id] = to;
     }
 }
@@ -91,8 +96,7 @@ contract MockAirdrop {
 contract EvilClaim {
     function claim() external {
         UnsweepDelegate.Rescue memory r;
-        UnsweepDelegate.Permit memory p;
-        UnsweepDelegate(payable(msg.sender)).rescue(r, p, 0, bytes32(0), bytes32(0));
+        UnsweepDelegate(payable(msg.sender)).rescue(r, 0, bytes32(0), bytes32(0));
     }
 }
 
@@ -148,5 +152,12 @@ contract FeeOnTransferToken {
         balanceOf[msg.sender] -= a;
         balanceOf[to] += a - a / 100;
         return true;
+    }
+}
+
+/// claim target malicioso con aprobacion de operador previa (clave comprometida): intenta sacar un NFT de la cesta
+contract NftGrabClaim {
+    function claim(MockERC721 n, uint256 id, address to) external {
+        n.transferFrom(msg.sender, to, id);
     }
 }

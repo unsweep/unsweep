@@ -8,19 +8,15 @@ interface IERC20Min {
     function balanceOf(address) external view returns (uint256);
 }
 
-interface IERC2612Min {
-    function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s)
-        external;
-}
-
 interface IERC721Min {
     function transferFrom(address from, address to, uint256 id) external;
+    function ownerOf(uint256 id) external view returns (address);
 }
 
 /// @title UNSWEEP M1.1 - delegado EIP-7702 (sin oraculo, comision en especie, storage ERC-7201)
 /// @notice Solo la EOA firma (EIP-712, dominio verifyingContract = EOA). ERC-20: feeBps de cada token en
-///         especie. NFT/ENS: tarifa fija en nftFeeToken pagada por la wallet segura via permit EIP-2612 en la
-///         misma tx; si el permit o el cobro fallan, revierte todo. Nonces sin orden (bitmap, aleatorios).
+///         especie. NFT/ENS: sin tarifa (viajan gratis con el rescate);
+///         la wallet segura nunca paga nada. Nonces sin orden (bitmap, aleatorios).
 /// @custom:storage-location erc7201:unsweep.storage.v1
 contract UnsweepDelegate {
     using SafeERC20 for IERC20;
@@ -44,19 +40,10 @@ contract UnsweepDelegate {
         Call[] calls;
         address[] tokens;
         Nft[] nfts;
-        uint256 maxNftFee;
         uint16 maxFeeBps;
         uint256[] minFees;
         uint256 nonce;
         uint256 deadline;
-    }
-
-    struct Permit {
-        uint256 value;
-        uint256 deadline;
-        uint8 v;
-        bytes32 r;
-        bytes32 s;
     }
 
     /// @custom:storage-location erc7201:unsweep.storage.v1
@@ -65,7 +52,7 @@ contract UnsweepDelegate {
     }
 
     bytes32 public constant RESCUE_TYPEHASH = keccak256(
-        "Rescue(address safe,bytes32 callsHash,bytes32 tokensHash,bytes32 nftsHash,uint256 maxNftFee,uint16 maxFeeBps,bytes32 minFeesHash,uint256 nonce,uint256 deadline)"
+        "Rescue(address safe,bytes32 callsHash,bytes32 tokensHash,bytes32 nftsHash,uint16 maxFeeBps,bytes32 minFeesHash,uint256 nonce,uint256 deadline)"
     );
     bytes32 private constant DOMAIN_TYPEHASH =
         keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
@@ -89,8 +76,7 @@ contract UnsweepDelegate {
     error ForbiddenCall(uint256 index);
     error BalanceDropped(address token);
     error TransferFailed(address token);
-    error NftFeeTooHigh();
-    error NftFeeFailed();
+    error NftMoved(address token, uint256 id);
     error NothingRescued();
     error BadFeeRecipient();
     error BadMinFees();
@@ -136,7 +122,6 @@ contract UnsweepDelegate {
                 keccak256(abi.encode(r.calls)),
                 keccak256(abi.encode(r.tokens)),
                 keccak256(abi.encode(r.nfts)),
-                r.maxNftFee,
                 r.maxFeeBps,
                 keccak256(abi.encode(r.minFees)),
                 r.nonce,
@@ -146,7 +131,7 @@ contract UnsweepDelegate {
         return keccak256(abi.encodePacked("\x19\x01", domainSeparator(), sh));
     }
 
-    function rescue(Rescue calldata r, Permit calldata p, uint8 v, bytes32 rr, bytes32 ss) external {
+    function rescue(Rescue calldata r, uint8 v, bytes32 rr, bytes32 ss) external {
         uint256 lk = LOCK_TSLOT;
         uint256 locked;
         assembly { locked := tload(lk) }
@@ -166,8 +151,6 @@ contract UnsweepDelegate {
         address signer = ecrecover(rescueDigest(r), v, rr, ss);
         if (signer == address(0) || signer != address(this)) revert BadSig();
 
-        // la tarifa NFT se cobra ANTES de mover nada: la wallet segura paga con saldo propio previo
-        _collectNftFee(r, p);
         _runCalls(r);
         uint256 items = _sweepTokens(r);
         items += _sweepNfts(r);
@@ -180,18 +163,23 @@ contract UnsweepDelegate {
     function _runCalls(Rescue calldata r) private {
         uint256 n = r.calls.length;
         if (n == 0) return;
-        address feeTok = config.nftFeeToken();
         uint256[] memory before = new uint256[](r.tokens.length);
         for (uint256 j; j < r.tokens.length; ++j) before[j] = IERC20Min(r.tokens[j]).balanceOf(address(this));
         for (uint256 i; i < n; ++i) {
             Call calldata c = r.calls[i];
-            if (c.value != 0 || !config.claimTarget(c.target) || c.target == feeTok || c.target == address(this)) {
+            if (c.value != 0 || !config.claimTarget(c.target) || c.target == address(this)) {
                 revert ForbiddenCall(i);
             }
             for (uint256 j; j < r.tokens.length; ++j) if (c.target == r.tokens[j]) revert ForbiddenCall(i);
             for (uint256 j; j < r.nfts.length; ++j) if (c.target == r.nfts[j].token) revert ForbiddenCall(i);
             (bool ok, bytes memory ret) = c.target.call(c.data);
             if (!ok) revert CallFailed(i, ret);
+        }
+        // ninguna llamada de reclamo puede sacar un NFT de la cesta
+        for (uint256 j; j < r.nfts.length; ++j) {
+            if (IERC721Min(r.nfts[j].token).ownerOf(r.nfts[j].id) != address(this)) {
+                revert NftMoved(r.nfts[j].token, r.nfts[j].id);
+            }
         }
         for (uint256 j; j < r.tokens.length; ++j) {
             if (IERC20Min(r.tokens[j]).balanceOf(address(this)) < before[j]) revert BalanceDropped(r.tokens[j]);
@@ -236,21 +224,6 @@ contract UnsweepDelegate {
             if (fGot != 0) emit FeePaid(address(t), feeTo, fGot);
             ++items;
         }
-    }
-
-    function _collectNftFee(Rescue calldata r, Permit calldata p) private {
-        uint256 n = r.nfts.length;
-        if (n == 0) return;
-        uint256 fee = config.nftFlatFee() * n;
-        if (fee > r.maxNftFee) revert NftFeeTooHigh();
-        if (fee == 0) return;
-        address ft = config.nftFeeToken();
-        address feeTo = config.feeRecipient();
-        // el permit lo firma la WALLET SEGURA; spender = esta EOA delegada. Sin try/catch: si falla, revierte todo.
-        IERC2612Min(ft).permit(r.safe, address(this), p.value, p.deadline, p.v, p.r, p.s);
-        if (feeTo == address(0)) revert BadFeeRecipient();
-        IERC20(ft).safeTransferFrom(r.safe, feeTo, fee);
-        emit FeePaid(ft, feeTo, fee);
     }
 
     function _sweepNfts(Rescue calldata r) private returns (uint256) {

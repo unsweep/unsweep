@@ -7,62 +7,11 @@ import {GarbageWriter, AttackerSweeper} from "./Mocks.sol";
 
 /// Tests nuevos M1.1
 contract HardeningTest is UnsweepBase {
-    function _try(UnsweepDelegate.Rescue memory r, UnsweepDelegate.Permit memory p, bytes memory err) internal {
+    function _try(UnsweepDelegate.Rescue memory r, bytes memory err) internal {
         (uint8 v, bytes32 a, bytes32 b) = _prep(r, victimPk);
         vm.prank(sponsor);
         vm.expectRevert(err);
-        UnsweepDelegate(payable(victim)).rescue(r, p, v, a, b);
-    }
-
-    // ---- 2) NFT/ENS: tarifa fija en USDC pagada por la wallet segura via permit ----
-    function test_nft_fee_paid_by_safe_via_permit() public {
-        UnsweepDelegate.Rescue memory r = _nftRescue(2);
-        usdc.mint(safe, 2 * NFT_FEE);
-        _rescue(r, _permit(2 * NFT_FEE, safePk));
-        assertEq(nft.ownerOf(100), safe);
-        assertEq(nft.ownerOf(101), safe);
-        assertEq(usdc.balanceOf(feeTo), 2 * NFT_FEE);
-        assertEq(usdc.balanceOf(safe), 0);
-    }
-
-    function test_nft_permit_bad_signer_reverts_all() public {
-        UnsweepDelegate.Rescue memory r = _nftRescue(1);
-        usdc.mint(safe, NFT_FEE);
-        _try(r, _permit(NFT_FEE, attackerPk), bytes("bad permit"));
-        assertEq(nft.ownerOf(100), victim);
-        assertEq(usdc.balanceOf(feeTo), 0);
-    }
-
-    function test_nft_no_permit_reverts_all() public {
-        UnsweepDelegate.Rescue memory r = _nftRescue(1);
-        usdc.mint(safe, NFT_FEE);
-        (uint8 v, bytes32 a, bytes32 b) = _prep(r, victimPk);
-        vm.prank(sponsor);
-        vm.expectRevert();
-        UnsweepDelegate(payable(victim)).rescue(r, _noPermit(), v, a, b);
-        assertEq(nft.ownerOf(100), victim);
-    }
-
-    function test_nft_safe_without_balance_reverts_all() public {
-        UnsweepDelegate.Rescue memory r = _nftRescue(1);
-        usdc.mint(victim, 100e6); // ERC-20 en la cesta: tampoco debe moverse
-        r.tokens = new address[](1);
-        r.tokens[0] = address(usdc);
-        (uint8 v, bytes32 a, bytes32 b) = _prep(r, victimPk);
-        UnsweepDelegate.Permit memory p = _permit(NFT_FEE, safePk);
-        vm.prank(sponsor);
-        vm.expectRevert();
-        UnsweepDelegate(payable(victim)).rescue(r, p, v, a, b);
-        assertEq(nft.ownerOf(100), victim);
-        assertEq(usdc.balanceOf(victim), 100e6);
-        assertEq(usdc.balanceOf(safe), 0);
-    }
-
-    function test_nft_fee_above_signed_max_reverts() public {
-        UnsweepDelegate.Rescue memory r = _nftRescue(1);
-        r.maxNftFee = NFT_FEE - 1;
-        usdc.mint(safe, NFT_FEE);
-        _try(r, _permit(NFT_FEE, safePk), abi.encodeWithSelector(UnsweepDelegate.NftFeeTooHigh.selector));
+        UnsweepDelegate(payable(victim)).rescue(r, v, a, b);
     }
 
     // ---- 3) ERC-7201 + nonces bitmap: basura del atacante y nonces marcados ----
@@ -82,12 +31,12 @@ contract HardeningTest is UnsweepBase {
         GarbageWriter(victim).scribble(slots, bytes32(type(uint256).max));
 
         // el nonce marcado por el atacante queda inutilizable...
-        _try(_base(), _noPermit(), abi.encodeWithSelector(UnsweepDelegate.NonceUsed.selector));
+        _try(_base(), abi.encodeWithSelector(UnsweepDelegate.NonceUsed.selector));
         assertTrue(UnsweepDelegate(payable(victim)).nonceUsed(n1)); // la basura marco n1 (leido ya con impl delegado)
         // ...pero un nonce aleatorio nuevo funciona (el atacante no puede marcar 2^256)
         UnsweepDelegate.Rescue memory r = _base();
         r.nonce = uint256(keccak256("fresh-random-nonce"));
-        _rescue(r, _noPermit());
+        _rescue(r);
         assertEq(usdc.balanceOf(safe), 340e6);
         assertEq(usdc.balanceOf(feeTo), 60e6);
     }
@@ -96,10 +45,10 @@ contract HardeningTest is UnsweepBase {
         UnsweepDelegate.Rescue memory r = _base();
         r.nonce = 999;
         usdc.mint(victim, 100e6);
-        _rescue(r, _noPermit());
+        _rescue(r);
         r.nonce = 3; // menor que el anterior: valido
         usdc.mint(victim, 100e6);
-        _rescue(r, _noPermit());
+        _rescue(r);
         assertTrue(UnsweepDelegate(payable(victim)).nonceUsed(999));
         assertTrue(UnsweepDelegate(payable(victim)).nonceUsed(3));
         assertFalse(UnsweepDelegate(payable(victim)).nonceUsed(4));
@@ -117,10 +66,10 @@ contract HardeningTest is UnsweepBase {
 
     // ---- 4) rescate de valor 0 revierte ----
     function test_rescue_zero_reverts() public {
-        _try(_base(), _noPermit(), abi.encodeWithSelector(UnsweepDelegate.NothingRescued.selector));
+        _try(_base(), abi.encodeWithSelector(UnsweepDelegate.NothingRescued.selector));
         UnsweepDelegate.Rescue memory r = _base();
         r.tokens = new address[](0);
-        _try(r, _noPermit(), abi.encodeWithSelector(UnsweepDelegate.NothingRescued.selector));
+        _try(r, abi.encodeWithSelector(UnsweepDelegate.NothingRescued.selector));
     }
 
     // ---- 7) re-delegacion: la EOA estaba delegada al sweeper del atacante ----
@@ -131,7 +80,7 @@ contract HardeningTest is UnsweepBase {
         AttackerSweeper(victim).sweep(usdc, attacker); // el sweeper funciona mientras esta delegado
         assertEq(usdc.balanceOf(attacker), 50e6);
         usdc.mint(victim, 400e6);
-        _rescue(_base(), _noPermit()); // nueva delegacion + rescate en la misma llamada
+        _rescue(_base()); // nueva delegacion + rescate en la misma llamada
         assertEq(usdc.balanceOf(safe), 340e6);
         assertEq(usdc.balanceOf(victim), 0);
         bytes memory code = victim.code;

@@ -60,7 +60,7 @@ def world(w3):
 def rescue_calldata(w3, impl, victim, safe, usdc):
     nonce = int.from_bytes(os.urandom(32), 'big')
     dl = w3.eth.get_block('latest').timestamp + 3600
-    r = X.rescue_tuple(safe.address, [], [usdc.address], [], 0, 1500, [], nonce, dl)
+    r = X.rescue_tuple(safe.address, [], [usdc.address], [], 1500, [], nonce, dl)
     sig = Account.unsafe_sign_hash(X.rescue_digest(r, w3.eth.chain_id, victim.address), victim.key)
     p = (0, 0, 0, b'\x00' * 32, b'\x00' * 32)
     return bytes.fromhex(impl.encode_abi('rescue', [r, p, sig.v, sig.r.to_bytes(32, 'big'), sig.s.to_bytes(32, 'big')])[2:])

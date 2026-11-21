@@ -129,16 +129,14 @@ async def api_rescue(req: Request):
             rescue_t = X.rescue_tuple(
                 safe, [(c['target'], int(c['value']), HexBytes(c['data'])) for c in r.get('calls', [])],
                 r.get('tokens', []), [(n['token'], int(n['id'])) for n in r.get('nfts', [])],
-                int(r.get('maxNftFee', 0)), int(r['maxFeeBps']), r.get('minFees', []), int(r['nonce']), int(r['deadline']))
+                int(r['maxFeeBps']), r.get('minFees', []), int(r['nonce']), int(r['deadline']))
         except ValueError as e:
             raise PolicyError(str(e))
-        p = b['permit']
-        permit_t = (int(p['value']), int(p['deadline']), int(p['v']), HexBytes(p['r']), HexBytes(p['s']))
-        data = delegate_c.encode_abi('rescue', args=[rescue_t, permit_t, int(b['v']), HexBytes(b['r']), HexBytes(b['s'])])
+        data = delegate_c.encode_abi('rescue', args=[rescue_t, int(b['v']), HexBytes(b['r']), HexBytes(b['s'])])
         qd, _ = quote(s)
         if not qd['policy_ok']:
             raise PolicyError(qd['policy_reason'] or 'rechazado por politica')
-        if rescue_t[5] > qd['maxFeeBps']:
+        if rescue_t[4] > qd['maxFeeBps']:
             raise PolicyError('maxFeeBps firmado superior al cotizado')
         rc = send_rescue(w3, SPONSOR_KEY, victim, auth, HexBytes(data), q,
                          track=P.TrackRecord.load() if hasattr(P.TrackRecord, 'load') else None,

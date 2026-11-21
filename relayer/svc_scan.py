@@ -94,8 +94,6 @@ def scan(addr):
 
 def quote(s, gas=1_500_000):
     """Cotizacion M4: tramos 15/10/5 %; en Ethereum minimo = gas x1.5 (va firmado como minFees)."""
-    nft_fee = config_c.functions.nftFlatFee().call()  # #66: maxNftFee configurable, no bloquea
-    nft_tok = config_c.functions.nftFeeToken().call()
     toks = []
     for t in s['tokens']:
         bal = int(t['balance']); dec = int(t.get('decimals', 18)); px = float(t.get('price_usd', 0))
@@ -118,9 +116,9 @@ def quote(s, gas=1_500_000):
         fee_usd += fee / 10**dec * px
         lines.append({'token': t['address'], 'symbol': t.get('symbol', ''), 'decimals': dec, 'amount': str(bal),
                       'fee': str(fee), 'minFee': str(mn), 'net': str(bal - fee)})
-    n_nft = len(s['nfts']); nft_total = nft_fee * n_nft
-    tok_meta = next((t for t in assets()['tokens'] if t['address'].lower() == nft_tok.lower()), {})
-    fee_usd += nft_total / 10**int(tok_meta.get('decimals', 6)) * float(tok_meta.get('price_usd', 0))
+    n_nft = len(s['nfts'])  # #66: los NFTs viajan gratis con un rescate de ERC-20
+    if ok and n_nft and not toks:
+        ok, why = False, 'rescate solo de NFTs no disponible (los NFTs viajan gratis junto a tokens ERC-20)'
     q = Quote(rescued_usd=rescued_usd, fee_usd=fee_usd, gas_cost_usd=gas_cost_usd)
     if ok and CHAIN_ID not in P.MAINNETS:
         try:
@@ -131,6 +129,6 @@ def quote(s, gas=1_500_000):
     if not has_min:
         for l in lines: l.pop('minFee')
     # sin datos de gas en la respuesta al usuario (gas interno)
-    return {'feeBps': bps, 'maxFeeBps': bps, 'lines': lines, 'nfts': n_nft, 'nftFeeEach': str(nft_fee),
-            'maxNftFee': str(nft_fee), 'nftFeeToken': nft_tok, 'nftFeeTotal': str(nft_total),
-            'rescued_usd': round(rescued_usd, 4), 'fee_usd': round(fee_usd, 4), 'policy_ok': ok, 'policy_reason': why}, q
+    fee_pct = round(fee_usd / rescued_usd * 100, 2) if rescued_usd > 0 else 0.0
+    return {'feeBps': bps, 'maxFeeBps': bps, 'lines': lines, 'nfts': n_nft,
+            'rescued_usd': round(rescued_usd, 4), 'fee_usd': round(fee_usd, 4), 'fee_pct': fee_pct, 'policy_ok': ok, 'policy_reason': why}, q

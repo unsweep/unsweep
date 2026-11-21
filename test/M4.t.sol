@@ -12,7 +12,7 @@ contract M4Test is UnsweepBase {
         usdc.mint(victim, 1000e6);
         UnsweepDelegate.Rescue memory r = _base();
         r.maxFeeBps = 500;
-        _rescue(r, _noPermit());
+        _rescue(r);
         assertEq(usdc.balanceOf(feeTo), 50e6);
         assertEq(usdc.balanceOf(safe), 950e6);
     }
@@ -21,7 +21,7 @@ contract M4Test is UnsweepBase {
         usdc.mint(victim, 1000e6);
         UnsweepDelegate.Rescue memory r = _base();
         r.maxFeeBps = 9000;
-        _rescue(r, _noPermit());
+        _rescue(r);
         assertEq(usdc.balanceOf(feeTo), 150e6);
         assertEq(usdc.balanceOf(safe), 850e6);
         assertEq(impl.MAX_FEE_BPS(), 1500);
@@ -31,7 +31,7 @@ contract M4Test is UnsweepBase {
         usdc.mint(victim, 1000e6);
         UnsweepDelegate.Rescue memory r = _base();
         r.maxFeeBps = 0;
-        _rescue(r, _noPermit());
+        _rescue(r);
         assertEq(usdc.balanceOf(feeTo), 0);
         assertEq(usdc.balanceOf(safe), 1000e6);
     }
@@ -42,7 +42,7 @@ contract M4Test is UnsweepBase {
         t.mint(victim, 1000e6);
         UnsweepDelegate.Rescue memory r = _base();
         r.tokens[0] = address(t);
-        _rescue(r, _noPermit());
+        _rescue(r);
         assertEq(t.balanceOf(feeTo), 150e6);
         assertEq(t.balanceOf(safe), 850e6);
         assertEq(t.balanceOf(victim), 0);
@@ -54,7 +54,7 @@ contract M4Test is UnsweepBase {
         t.mint(victim, 1000e18);
         UnsweepDelegate.Rescue memory r = _base();
         r.tokens[0] = address(t);
-        _rescue(r, _noPermit());
+        _rescue(r);
         uint256 f = t.balanceOf(feeTo);
         uint256 s = t.balanceOf(safe);
         assertGt(s, 0);
@@ -68,7 +68,7 @@ contract M4Test is UnsweepBase {
         UnsweepDelegate.Rescue memory r = _base();
         r.minFees = new uint256[](1);
         r.minFees[0] = 100e6; // 15 % = 60e6 < 100e6
-        _rescue(r, _noPermit());
+        _rescue(r);
         assertEq(usdc.balanceOf(feeTo), 100e6);
         assertEq(usdc.balanceOf(safe), 300e6);
     }
@@ -80,7 +80,7 @@ contract M4Test is UnsweepBase {
         (uint8 v, bytes32 a, bytes32 b) = _prep(r, victimPk);
         vm.prank(sponsor);
         vm.expectRevert(UnsweepDelegate.BadMinFees.selector);
-        UnsweepDelegate(payable(victim)).rescue(r, _noPermit(), v, a, b);
+        UnsweepDelegate(payable(victim)).rescue(r, v, a, b);
     }
 
     // (5) firma de Base rechazada en Arbitrum y Ethereum con la misma direccion CREATE2
@@ -98,12 +98,12 @@ contract M4Test is UnsweepBase {
             vm.signAndAttachDelegation(address(d), victimPk);
             vm.prank(sponsor);
             vm.expectRevert(UnsweepDelegate.BadSig.selector);
-            UnsweepDelegate(payable(victim)).rescue(r, _noPermit(), v, a, b);
+            UnsweepDelegate(payable(victim)).rescue(r, v, a, b);
         }
         vm.chainId(8453);
         vm.signAndAttachDelegation(address(d), victimPk);
         vm.prank(sponsor);
-        UnsweepDelegate(payable(victim)).rescue(r, _noPermit(), v, a, b);
+        UnsweepDelegate(payable(victim)).rescue(r, v, a, b);
         assertEq(usdc.balanceOf(safe), 340e6);
     }
 
@@ -122,7 +122,7 @@ contract M4Test is UnsweepBase {
         r.maxFeeBps = 1000;
         r.minFees = new uint256[](1);
         r.minFees[0] = 1e6;
-        _rescue(r, _noPermit());
+        _rescue(r);
         assertEq(usdc.balanceOf(feeTo), 100e6);
         assertEq(usdc.balanceOf(safe), 900e6);
     }
@@ -135,17 +135,17 @@ contract M4Test is UnsweepBase {
         (uint8 v, bytes32 a, bytes32 b) = _prep(r, victimPk);
         vm.prank(sponsor);
         vm.expectRevert(UnsweepDelegate.BadSafe.selector);
-        UnsweepDelegate(payable(victim)).rescue(r, _noPermit(), v, a, b);
+        UnsweepDelegate(payable(victim)).rescue(r, v, a, b);
     }
 
     function test_config_zero_fee_recipient_reverts() public {
         vm.expectRevert(UnsweepConfig.BadParam.selector);
-        new UnsweepConfig(address(0), 1500, address(usdc), NFT_FEE);
+        new UnsweepConfig(COLD, address(0), 1500, new address[](0));
     }
 
-    function test_config_zero_nft_fee_token_reverts() public {
+    function test_config_zero_owner_reverts() public {
         vm.expectRevert(UnsweepConfig.BadParam.selector);
-        new UnsweepConfig(feeTo, 1500, address(0), NFT_FEE);
+        new UnsweepConfig(address(0), feeTo, 1500, new address[](0));
     }
 
     function test_delegate_zero_config_reverts() public {

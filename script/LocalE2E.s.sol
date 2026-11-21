@@ -22,9 +22,10 @@ contract E2EToken {
 
 /// SOLO red local (anvil --hardfork prague). Claves de prueba.
 contract LocalE2E is Script {
+    address constant OWNER = 0x7E26916f1FF93FcF6CCd7eAaa0561007783FDA1B;
     address constant FEE_TO = 0x7E26916f1FF93FcF6CCd7eAaa0561007783FDA1B;
     bytes32 constant RESCUE_TYPEHASH = keccak256(
-        "Rescue(address safe,bytes32 callsHash,bytes32 tokensHash,bytes32 nftsHash,uint256 maxNftFee,uint256 nonce,uint256 deadline)"
+        "Rescue(address safe,bytes32 callsHash,bytes32 tokensHash,bytes32 nftsHash,uint16 maxFeeBps,bytes32 minFeesHash,uint256 nonce,uint256 deadline)"
     );
     bytes32 constant DOMAIN_TYPEHASH =
         keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
@@ -34,7 +35,7 @@ contract LocalE2E is Script {
         address victim = vm.addr(vm.envUint("VICTIM_PK"));
         vm.startBroadcast(sponsorPk);
         E2EToken usdc = new E2EToken();
-        UnsweepConfig cfg = new UnsweepConfig(FEE_TO, 1500, address(usdc), 5e6);
+        UnsweepConfig cfg = new UnsweepConfig(OWNER, FEE_TO, 1500, new address[](0));
         UnsweepDelegate impl = new UnsweepDelegate(cfg);
         usdc.mint(victim, 400e6);
         vm.stopBroadcast();
@@ -56,7 +57,8 @@ contract LocalE2E is Script {
         r.tokens = new address[](1);
         r.tokens[0] = usdc;
         r.nfts = new UnsweepDelegate.Nft[](0);
-        r.maxNftFee = 0;
+        r.maxFeeBps = 1500;
+        r.minFees = new uint256[](0);
         r.nonce = uint256(keccak256(abi.encode("e2e", block.timestamp)));
         r.deadline = block.timestamp + 1 hours;
 
@@ -68,7 +70,8 @@ contract LocalE2E is Script {
                 keccak256(abi.encode(r.calls)),
                 keccak256(abi.encode(r.tokens)),
                 keccak256(abi.encode(r.nfts)),
-                r.maxNftFee,
+                r.maxFeeBps,
+                keccak256(abi.encode(r.minFees)),
                 r.nonce,
                 r.deadline
             )
@@ -77,8 +80,7 @@ contract LocalE2E is Script {
 
         vm.startBroadcast(sponsorPk);
         vm.signAndAttachDelegation(impl, victimPk);
-        UnsweepDelegate.Permit memory p;
-        UnsweepDelegate(payable(victim)).rescue(r, p, v, rr, ss);
+        UnsweepDelegate(payable(victim)).rescue(r, v, rr, ss);
         vm.stopBroadcast();
     }
 }

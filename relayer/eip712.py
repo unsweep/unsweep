@@ -7,7 +7,7 @@ encoding estandar de arrays de EIP-712. test_typehash_parity.py compara Solidity
 from eth_abi import encode
 from eth_utils import keccak, to_checksum_address
 
-RESCUE_TYPE = ("Rescue(address safe,bytes32 callsHash,bytes32 tokensHash,bytes32 nftsHash,uint256 maxNftFee,"
+RESCUE_TYPE = ("Rescue(address safe,bytes32 callsHash,bytes32 tokensHash,bytes32 nftsHash,"
                "uint16 maxFeeBps,bytes32 minFeesHash,uint256 nonce,uint256 deadline)")
 DOMAIN_TYPE = "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
 RESCUE_TYPEHASH = keccak(text=RESCUE_TYPE)
@@ -39,7 +39,7 @@ def min_fees_hash(min_fees) -> bytes:
     return keccak(encode(["uint256[]"], [[int(x) for x in min_fees]]))
 
 
-def rescue_tuple(safe, calls, tokens, nfts, max_nft_fee, max_fee_bps, min_fees, nonce, deadline):
+def rescue_tuple(safe, calls, tokens, nfts, max_fee_bps, min_fees, nonce, deadline):
     """Tupla en el orden del struct Rescue del contrato (para encode_abi('rescue', ...))."""
     if not 0 < int(max_fee_bps) <= MAX_FEE_BPS:
         raise ValueError("maxFeeBps fuera de (0, 1500]")
@@ -49,15 +49,15 @@ def rescue_tuple(safe, calls, tokens, nfts, max_nft_fee, max_fee_bps, min_fees, 
             [(to_checksum_address(t), int(v), bytes(d)) for t, v, d in calls],
             [to_checksum_address(t) for t in tokens],
             [(to_checksum_address(t), int(i)) for t, i in nfts],
-            int(max_nft_fee), int(max_fee_bps), [int(x) for x in min_fees], int(nonce), int(deadline))
+            int(max_fee_bps), [int(x) for x in min_fees], int(nonce), int(deadline))
 
 
 def struct_hash(r) -> bytes:
-    safe, calls, tokens, nfts, max_nft_fee, max_fee_bps, min_fees, nonce, deadline = r
+    safe, calls, tokens, nfts, max_fee_bps, min_fees, nonce, deadline = r
     return keccak(encode(
-        ["bytes32", "address", "bytes32", "bytes32", "bytes32", "uint256", "uint16", "bytes32", "uint256", "uint256"],
+        ["bytes32", "address", "bytes32", "bytes32", "bytes32", "uint16", "bytes32", "uint256", "uint256"],
         [RESCUE_TYPEHASH, to_checksum_address(safe), calls_hash(calls), tokens_hash(tokens), nfts_hash(nfts),
-         int(max_nft_fee), int(max_fee_bps), min_fees_hash(min_fees), int(nonce), int(deadline)]))
+         int(max_fee_bps), min_fees_hash(min_fees), int(nonce), int(deadline)]))
 
 
 def rescue_digest(r, chain_id: int, verifying_contract: str) -> bytes:
