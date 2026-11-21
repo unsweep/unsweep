@@ -52,20 +52,52 @@ def delegation_of(addr):
     return None
 
 
+class ApprovalsError(Exception):
+    """#92: approvals no verificables (429/RPC caido). NUNCA se devuelve lista vacia por error."""
+
+
+_AP_W3 = []
+
+
+def _ap_providers():
+    """#92: RPC de pago (BASE_RPC_URL) PRINCIPAL en approvals; publico (w3) solo como respaldo."""
+    if not _AP_W3:
+        u = os.environ.get('BASE_RPC_URL', '').strip().strip('"').strip("'")
+        if u and CHAIN_ID == 8453:
+            _AP_W3.append(Web3(Web3.HTTPProvider(u, request_kwargs={'timeout': 20})))
+        _AP_W3.append(w3)
+    return _AP_W3
+
+
+def _is_429(e):
+    r = getattr(e, 'response', None)
+    m = str(e).lower()
+    return getattr(r, 'status_code', None) == 429 or 'too many requests' in m or 'rate limit' in m
+
+
+def _ap_call(fn):
+    """fn(web3) en el RPC principal y, si falla, en el respaldo. Error visible y sin URL."""
+    rl = False
+    for p in _ap_providers():
+        try:
+            return fn(p)
+        except Exception as e:
+            rl = rl or _is_429(e)
+            log.warning('approvals rpc %s: %s', 'public' if p is w3 else 'paid', type(e).__name__)
+    raise ApprovalsError('rpc rate limited (HTTP 429)' if rl else 'rpc unavailable')
+
+
 def live_approvals(addr):
     out, seen = [], set()
-    head = w3.eth.block_number
+    head = _ap_call(lambda p: p.eth.block_number)
     owner_topic = '0x' + '0' * 24 + addr[2:].lower()
     start = max(0, head - APPROVAL_LOOKBACK)
     for topic in (T_APPROVAL, T_APPROVAL_ALL):
         frm = start
         while frm <= head:
             to = min(head, frm + LOG_CHUNK - 1)
-            try:
-                logs = w3.eth.get_logs({'fromBlock': frm, 'toBlock': to, 'topics': [topic, owner_topic]})
-            except Exception as e:
-                log.warning('get_logs %s: %s', topic[:10], type(e).__name__)
-                logs = []
+            flt = {'fromBlock': frm, 'toBlock': to, 'topics': [topic, owner_topic]}
+            logs = _ap_call(lambda p, f=flt: p.eth.get_logs(f))
             for lg in logs:
                 if len(lg['topics']) < 3:
                     continue
@@ -76,14 +108,18 @@ def live_approvals(addr):
                 seen.add(key)
                 try:
                     if topic == T_APPROVAL_ALL:
-                        if w3.eth.contract(address=lg['address'], abi=ERC721).functions.isApprovedForAll(addr, spender).call():
+                        c = _ap_providers()[0].eth.contract(address=lg['address'], abi=ERC721)
+                        if c.functions.isApprovedForAll(addr, spender).call():
                             out.append({'token': lg['address'], 'spender': spender, 'type': 'ApprovalForAll'})
                     else:
-                        amt = w3.eth.contract(address=lg['address'], abi=ERC20).functions.allowance(addr, spender).call()
+                        c = _ap_providers()[0].eth.contract(address=lg['address'], abi=ERC20)
+                        amt = c.functions.allowance(addr, spender).call()
                         if amt > 0:
                             out.append({'token': lg['address'], 'spender': spender, 'type': 'ERC20', 'amount': str(amt)})
-                except Exception:
-                    pass  # ERC-721 Approval (3 topics indexados) u otros: se ignoran
+                except Exception as e:
+                    if _is_429(e):
+                        raise ApprovalsError('rpc rate limited (HTTP 429)') from None
+                    # ERC-721 Approval (3 topics indexados) u otros: se ignoran
             frm = to + 1
     return out
 
@@ -107,11 +143,15 @@ def scan(addr):
                     nfts.append({'address': n['address'], 'symbol': n.get('symbol', ''), 'id': str(i)})
             except Exception:
                 pass
+    try:
+        aps, ap_err = live_approvals(addr), None
+    except ApprovalsError as e:
+        aps, ap_err = [], str(e)  # #92: error visible, nunca lista vacia silenciosa
     deleg = delegation_of(addr)
     return {'address': addr, 'chainId': CHAIN_ID, 'eth_wei': str(w3.eth.get_balance(addr)),
             'nonce': w3.eth.get_transaction_count(addr, 'pending'),
             'delegation7702': deleg, 'delegatedToUnsweep': deleg == DELEGATE,
-            'tokens': tokens, 'nfts': nfts, 'approvals': live_approvals(addr),
+            'tokens': tokens, 'nfts': nfts, 'approvals': aps, 'approvalsError': ap_err,
             'rescuable': bool(tokens or nfts)}
 
 

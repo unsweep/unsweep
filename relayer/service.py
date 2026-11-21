@@ -125,6 +125,8 @@ async def api_scan(req: Request):
                                 req.headers.get('user-agent', ''), req.headers.get('referer', ''))
         return s
     s = scan(_addr(b.get('address')))
+    if s.get('approvalsError'):  # #92: 429/RPC caido -> error VISIBLE (app.js muestra 'Scan failed: ...')
+        raise HTTPException(503, 'approvals check unavailable (%s); retry in a minute' % s['approvalsError'])
     record('scan', 'ok', n_tokens=len(s['tokens']), n_nfts=len(s['nfts']))
     return s
 
