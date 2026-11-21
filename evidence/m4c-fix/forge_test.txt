@@ -1,0 +1,51 @@
+No files changed, compilation skipped
+
+Ran 6 tests for test/M4c.t.sol:M4cTest
+[PASS] test_claim_target_cannot_move_basket_nft() (gas: 486144)
+[PASS] test_nft_rides_free_with_erc20() (gas: 346533)
+[PASS] test_owner_is_cold_wallet() (gas: 345788)
+[PASS] test_owner_transfer_is_two_step() (gas: 131545)
+[PASS] test_safe_wallet_never_debited() (gas: 315223)
+[PASS] test_third_party_cannot_set_allowlist() (gas: 89592)
+Suite result: ok. 6 passed; 0 failed; 0 skipped; finished in 5.53ms (3.48ms CPU time)
+
+Ran 5 tests for test/Hardening.t.sol:HardeningTest
+[PASS] test_garbage_storage_and_marked_nonces_do_not_block() (gas: 601286)
+[PASS] test_invalidate_nonce_only_self() (gas: 110451)
+[PASS] test_redelegation_from_attacker_sweeper() (gas: 514088)
+[PASS] test_rescue_zero_reverts() (gas: 191668)
+[PASS] test_unordered_nonces() (gas: 380323)
+Suite result: ok. 5 passed; 0 failed; 0 skipped; finished in 7.67ms (6.37ms CPU time)
+
+Ran 13 tests for test/M4.t.sol:M4Test
+[PASS] test_base_signature_rejected_on_other_chains_same_create2() (gas: 1583300)
+[PASS] test_config_zero_fee_recipient_reverts() (gas: 115200)
+[PASS] test_config_zero_owner_reverts() (gas: 116696)
+[PASS] test_delegate_zero_config_reverts() (gas: 301439)
+[PASS] test_fee_le_signed_maxFeeBps() (gas: 220975)
+[PASS] test_fee_on_transfer_token() (gas: 410159)
+[PASS] test_min_fee_above_percentage() (gas: 221776)
+[PASS] test_min_fees_length_mismatch_reverts() (gas: 143168)
+[PASS] test_redelegation_garbage_storage_new_params() (gas: 467734)
+[PASS] test_signed_above_cap_is_capped_at_1500() (gas: 226343)
+[PASS] test_usdt_no_bool() (gas: 401295)
+[PASS] test_zero_safe_reverts() (gas: 114408)
+[PASS] test_zero_signed_fee_bps_no_fee() (gas: 193412)
+Suite result: ok. 13 passed; 0 failed; 0 skipped; finished in 8.33ms (7.50ms CPU time)
+
+Ran 12 tests for test/Unsweep.t.sol:UnsweepTest
+[PASS] test_airdrop_claim_plus_nft() (gas: 275346)
+[PASS] test_call_to_basket_token_forbidden() (gas: 211112)
+[PASS] test_call_unlisted_or_value_forbidden() (gas: 242701)
+[PASS] test_claim_target_cannot_drain_basket() (gas: 468839)
+[PASS] test_erc20_split_85_15() (gas: 226367)
+[PASS] test_fee_in_kind_any_token() (gas: 220836)
+[PASS] test_no_onchain_cap() (gas: 218626)
+[PASS] test_nonce_replay_and_expiry() (gas: 342097)
+[PASS] test_reentrancy_blocked() (gas: 467495)
+[PASS] test_sweeper_classic_fails_7702_succeeds() (gas: 272466)
+[PASS] test_tampered_safe_rejected() (gas: 138780)
+[PASS] test_third_party_signature_rejected() (gas: 136659)
+Suite result: ok. 12 passed; 0 failed; 0 skipped; finished in 11.98ms (12.04ms CPU time)
+
+Ran 4 test suites in 20.56ms (33.51ms CPU time): 36 tests passed, 0 failed, 0 skipped (36 total tests)

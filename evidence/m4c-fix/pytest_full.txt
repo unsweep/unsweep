@@ -1,0 +1,33 @@
+.............................                                            [100%]
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED relayer/test_digest_parity_appjs.py::test_app_js_has_no_nft_fee_nor_permit
+PASSED relayer/test_digest_parity_appjs.py::test_digest_parity_solidity_python_appjs
+PASSED relayer/test_e2e.py::test_policy_cap_and_gas
+PASSED relayer/test_e2e.py::test_chain_id_zero_rejected
+PASSED relayer/test_e2e.py::test_race_attacker_tx_first_aborts
+PASSED relayer/test_e2e.py::test_redelegation_from_attacker_sweeper
+PASSED relayer/test_min_fee_single.py::test_min_fee_single_token_not_multiplied
+PASSED relayer/test_min_fee_single.py::test_min_fee_zero_when_tier_dominates
+PASSED relayer/test_policy.py::test_tiers
+PASSED relayer/test_policy.py::test_ethereum_min_gas_x15
+PASSED relayer/test_policy.py::test_caps
+PASSED relayer/test_policy.py::test_manual_exception
+PASSED relayer/test_policy.py::test_ethereum_route
+PASSED relayer/test_policy.py::test_simulate_aborts
+PASSED relayer/test_policy.py::test_gas_lost_alert_once
+PASSED relayer/test_service_policy.py::test_quote_tiers[500-1500]
+PASSED relayer/test_service_policy.py::test_quote_tiers[5000-1000]
+PASSED relayer/test_service_policy.py::test_quote_tiers[20000-500]
+PASSED relayer/test_service_policy.py::test_quote_never_exposes_gas
+PASSED relayer/test_service_policy.py::test_quote_ethereum_min_fee_gas_x15
+PASSED relayer/test_service_policy.py::test_policy_error_single_class
+PASSED relayer/test_service_policy.py::test_simulation_failure_blocks_send
+PASSED relayer/test_service_policy.py::test_simulation_ok_then_send
+PASSED relayer/test_service_policy.py::test_revert_records_gas_lost_and_alerts
+PASSED relayer/test_service_policy.py::test_mainnet_disabled_by_default
+PASSED relayer/test_service_policy.py::test_quote_ethereum_min_above_cap_rejected
+PASSED relayer/test_typehash_parity.py::test_typehash_string_matches_solidity_source
+PASSED relayer/test_typehash_parity.py::test_parity_solidity_python_js
+PASSED relayer/test_typehash_parity.py::test_parity_detects_mismatch
+29 passed in 2.73s

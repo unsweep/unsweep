@@ -1,0 +1,21 @@
+[90m4:49AM[0m [32mINF[0m [1mscanned ~304518 bytes (304.52 KB) in 203ms[0m
+[90m4:49AM[0m [32mINF[0m [1mno leaks found[0m
+relayer exit=0
+[90m4:49AM[0m [32mINF[0m [1mscanned ~428987 bytes (428.99 KB) in 650ms[0m
+[90m4:49AM[0m [32mINF[0m [1mno leaks found[0m
+web exit=0
+[90m4:50AM[0m [32mINF[0m [1mscanned ~11670 bytes (11.67 KB) in 10.3ms[0m
+[90m4:50AM[0m [32mINF[0m [1mno leaks found[0m
+src exit=0
+[90m4:50AM[0m [32mINF[0m [1mscanned ~28716 bytes (28.72 KB) in 23.8ms[0m
+[90m4:50AM[0m [32mINF[0m [1mno leaks found[0m
+test exit=0
+[90m4:50AM[0m [32mINF[0m [1mscanned ~38235 bytes (38.24 KB) in 26.9ms[0m
+[90m4:50AM[0m [32mINF[0m [1mno leaks found[0m
+scripts exit=0
+[90m4:50AM[0m [32mINF[0m [1mscanned ~777 bytes (777 bytes) in 4.91ms[0m
+[90m4:50AM[0m [33mWRN[0m [1mleaks found: 1[0m
+deployments exit=1
+[90m4:50AM[0m [32mINF[0m [1mscanned ~65471 bytes (65.47 KB) in 75.4ms[0m
+[90m4:50AM[0m [33mWRN[0m [1mleaks found: 6[0m
+evidence exit=1

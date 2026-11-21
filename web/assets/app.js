@@ -71,6 +71,23 @@
   });
 
   // ---------- STEP 2: simulation ----------
+  // @@typed-begin (pure; evaluated by relayer/test_typehash_parity.py)
+  function unsweepTyped(E, r, chainId, victim) {
+    const c = E.AbiCoder.defaultAbiCoder();
+    const types = { Rescue: [{ name: 'safe', type: 'address' }, { name: 'callsHash', type: 'bytes32' },
+      { name: 'tokensHash', type: 'bytes32' }, { name: 'nftsHash', type: 'bytes32' }, { name: 'maxFeeBps', type: 'uint16' },
+      { name: 'minFeesHash', type: 'bytes32' }, { name: 'nonce', type: 'uint256' }, { name: 'deadline', type: 'uint256' }] };
+    const msg = { safe: r.safe,
+      callsHash: E.keccak256(c.encode(['tuple(address,uint256,bytes)[]'], [r.calls])),
+      tokensHash: E.keccak256(c.encode(['address[]'], [r.tokens])),
+      nftsHash: E.keccak256(c.encode(['tuple(address,uint256)[]'], [r.nfts])),
+      maxFeeBps: r.maxFeeBps, minFeesHash: E.keccak256(c.encode(['uint256[]'], [r.minFees])),
+      nonce: r.nonce, deadline: r.deadline };
+    const domain = { name: 'Unsweep', version: '1', chainId: chainId, verifyingContract: victim };
+    return { domain, types, msg };
+  }
+  // @@typed-end
+
   $('btnQuote').addEventListener('click', async () => {
     const safe = addr($('safe').value);
     if (!safe || !st.scan) return show($('quoteOut'), 'Invalid safe address.', 'err');
@@ -80,10 +97,14 @@
     try {
       const r = await api('quote', { address: st.scan.address, safe: safe });
       const q = r.quote; st.quote = q; st.safe = safe; st.scan = r.scan;
-      const out = ['Fee: ' + (q.feeBps / 100) + '% of each rescued token, taken in kind.'];
+      const tierBps = Number(q.maxFeeBps != null ? q.maxFeeBps : q.feeBps); st.shownBps = tierBps;
+      const out = ['Fee tier: ' + (tierBps / 100) + '% (maximum signed by you; taken in kind from the rescued tokens).'];
       for (const l of q.lines) out.push((l.symbol || l.token) + ': total ' + fmt(l.amount, l.decimals) + ' | fee ' + fmt(l.fee, l.decimals) + ' | you receive ' + fmt(l.net, l.decimals));
       if (q.nfts > 0) out.push('NFTs found: ' + q.nfts + ' (NFT rescue is not enabled in this preview; they are excluded).');
-      out.push('Estimated value (testnet prices): $' + q.rescued_usd + ' | fee: $' + q.fee_usd);
+      const netUsd = Math.max(0, Number(q.rescued_usd) - Number(q.fee_usd));
+      out.push('Estimated value (testnet prices): $' + q.rescued_usd);
+      out.push('Fee: $' + q.fee_usd + ' (' + q.fee_pct + '% of the rescued value; tier ' + (tierBps / 100) + '%)');
+      out.push('Your safe wallet receives: ~$' + netUsd.toFixed(2) + ' (per token amounts above).');
       if (!q.policy_ok) { out.push('Not eligible: ' + q.policy_reason); return show($('quoteOut'), out, 'err'); }
       if (q.lines.length === 0) { out.push('Nothing to rescue.'); return show($('quoteOut'), out, 'err'); }
       show($('quoteOut'), out, 'ok');
@@ -128,30 +149,19 @@
       const au = w.authorizeSync({ address: st.cfg.delegate, nonce: BigInt(st.scan.nonce), chainId: BigInt(chainId) });
       const sa = au.signature;
       // 2) EIP-712 Rescue (verifyingContract = the compromised EOA itself)
-      const coder = E.AbiCoder.defaultAbiCoder();
       const tokens = st.quote.lines.map((l) => E.getAddress(l.token));
       const q = st.quote;
       const maxFeeBps = Number(q.maxFeeBps != null ? q.maxFeeBps : q.feeBps);
       const minFees = q.lines.some((l) => l.minFee != null) ? q.lines.map((l) => String(l.minFee || '0')) : [];
-      const rescue = { safe: st.safe, calls: [], tokens: tokens, nfts: [], maxNftFee: String(q.maxNftFee || '0'),
+      if (maxFeeBps !== st.shownBps) throw new Error('Fee tier changed since the simulation; simulate again.');
+      const rescue = { safe: st.safe, calls: [], tokens: tokens, nfts: [],
         maxFeeBps: maxFeeBps, minFees: minFees, nonce: randNonce(), deadline: String(Math.floor(Date.now() / 1000) + 600) };
-      const msg = {
-        safe: rescue.safe,
-        callsHash: E.keccak256(coder.encode(['tuple(address,uint256,bytes)[]'], [[]])),
-        tokensHash: E.keccak256(coder.encode(['address[]'], [tokens])),
-        nftsHash: E.keccak256(coder.encode(['tuple(address,uint256)[]'], [[]])),
-        maxNftFee: rescue.maxNftFee, maxFeeBps: rescue.maxFeeBps,
-        minFeesHash: E.keccak256(coder.encode(['uint256[]'], [minFees])), nonce: rescue.nonce, deadline: rescue.deadline };
-      const types = { Rescue: [{ name: 'safe', type: 'address' }, { name: 'callsHash', type: 'bytes32' }, { name: 'tokensHash', type: 'bytes32' },
-        { name: 'nftsHash', type: 'bytes32' }, { name: 'maxNftFee', type: 'uint256' },
-        { name: 'maxFeeBps', type: 'uint16' }, { name: 'minFeesHash', type: 'bytes32' }, { name: 'nonce', type: 'uint256' }, { name: 'deadline', type: 'uint256' }] };
-      const domain = { name: 'Unsweep', version: '1', chainId: chainId, verifyingContract: victim };
+      const { domain, types, msg } = unsweepTyped(E, rescue, chainId, victim);
       const sig = E.Signature.from(await w.signTypedData(domain, types, msg));
       w = null; // drop the key from memory as soon as signing is done
-      const Z = '0x' + '00'.repeat(32);
       const body = { turnstile: st.tsToken,
         auth: { chainId: chainId, nonce: String(st.scan.nonce), address: st.cfg.delegate, yParity: sa.yParity, r: sa.r, s: sa.s },
-        rescue: rescue, permit: { value: '0', deadline: '0', v: 0, r: Z, s: Z }, v: sig.v, r: sig.r, s: sig.s };
+        rescue: rescue, v: sig.v, r: sig.r, s: sig.s };
       show(out, 'Signed locally. Sending signatures only to the relayer...');
       const res = await api('rescue', body);
       show(out, ['Status: ' + res.status, 'Tx: ' + res.txHash, res.explorer], res.status === 'success' ? 'ok' : 'err');

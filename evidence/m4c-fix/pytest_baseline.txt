@@ -1,0 +1,156 @@
+.FFF...................F.                                                [100%]
+=================================== FAILURES ===================================
+_________________________ test_chain_id_zero_rejected __________________________
+
+env = <web3.main.Web3 object at 0x7b7ab4b8aa80>
+
+    def test_chain_id_zero_rejected(env):
+        w3 = env
+>       usdc, impl, victim, safe = world(w3)
+                                   ^^^^^^^^^
+
+relayer/test_e2e.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+relayer/test_e2e.py:52: in world
+    cfg = deploy(w3, 'UnsweepConfig.sol', 'UnsweepConfig', ['address', 'uint16', 'address', 'uint256'], [FEE_TO, 1500, usdc.address, 5_000_000])
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+relayer/test_e2e.py:46: in deploy
+    rc = send(w3, SPONSOR, {'data': bc + encode(list(types), list(args)).hex()})
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+w3 = <web3.main.Web3 object at 0x7b7ab4b8aa80>
+key = '0x<REDACTED64>'
+tx = {'chainId': 31337, 'nonce': 1, 'gas': 3000000, 'maxFeePerGas': 3757168835, ...}
+
+    def send(w3, key, tx):
+        a = Account.from_key(key)
+        tx = {'chainId': w3.eth.chain_id, 'nonce': w3.eth.get_transaction_count(a.address, 'pending'), 'gas': 3_000_000,
+              'maxFeePerGas': w3.eth.gas_price * 2 + 1, 'maxPriorityFeePerGas': 1, 'value': 0, **tx}
+        rc = w3.eth.wait_for_transaction_receipt(w3.eth.send_raw_transaction(a.sign_transaction(tx).raw_transaction))
+>       assert rc.status == 1
+E       AssertionError: assert 0 == 1
+E        +  where 0 = AttributeDict({'type': 2, 'status': 0, 'cumulativeGasUsed': 78350, 'logs': [], 'logsBloom': HexBytes('0x00000000000000...ffFb92266', 'to': None, 'contractAddress': '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512', 'blockTimestamp': 1795236341}).status
+
+relayer/test_e2e.py:40: AssertionError
+______________________ test_race_attacker_tx_first_aborts ______________________
+
+env = <web3.main.Web3 object at 0x7b7ab4b8aa80>
+
+    def test_race_attacker_tx_first_aborts(env):
+        w3 = env
+>       usdc, impl, victim, safe = world(w3)
+                                   ^^^^^^^^^
+
+relayer/test_e2e.py:90: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+relayer/test_e2e.py:52: in world
+    cfg = deploy(w3, 'UnsweepConfig.sol', 'UnsweepConfig', ['address', 'uint16', 'address', 'uint256'], [FEE_TO, 1500, usdc.address, 5_000_000])
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+relayer/test_e2e.py:46: in deploy
+    rc = send(w3, SPONSOR, {'data': bc + encode(list(types), list(args)).hex()})
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+w3 = <web3.main.Web3 object at 0x7b7ab4b8aa80>
+key = '0x<REDACTED64>'
+tx = {'chainId': 31337, 'nonce': 3, 'gas': 3000000, 'maxFeePerGas': 3351851501, ...}
+
+    def send(w3, key, tx):
+        a = Account.from_key(key)
+        tx = {'chainId': w3.eth.chain_id, 'nonce': w3.eth.get_transaction_count(a.address, 'pending'), 'gas': 3_000_000,
+              'maxFeePerGas': w3.eth.gas_price * 2 + 1, 'maxPriorityFeePerGas': 1, 'value': 0, **tx}
+        rc = w3.eth.wait_for_transaction_receipt(w3.eth.send_raw_transaction(a.sign_transaction(tx).raw_transaction))
+>       assert rc.status == 1
+E       AssertionError: assert 0 == 1
+E        +  where 0 = AttributeDict({'type': 2, 'status': 0, 'cumulativeGasUsed': 78350, 'logs': [], 'logsBloom': HexBytes('0x00000000000000...ffFb92266', 'to': None, 'contractAddress': '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9', 'blockTimestamp': 1795236343}).status
+
+relayer/test_e2e.py:40: AssertionError
+___________________ test_redelegation_from_attacker_sweeper ____________________
+
+env = <web3.main.Web3 object at 0x7b7ab4b8aa80>
+
+    def test_redelegation_from_attacker_sweeper(env):
+        w3 = env
+>       usdc, impl, victim, safe = world(w3)
+                                   ^^^^^^^^^
+
+relayer/test_e2e.py:104: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+relayer/test_e2e.py:52: in world
+    cfg = deploy(w3, 'UnsweepConfig.sol', 'UnsweepConfig', ['address', 'uint16', 'address', 'uint256'], [FEE_TO, 1500, usdc.address, 5_000_000])
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+relayer/test_e2e.py:46: in deploy
+    rc = send(w3, SPONSOR, {'data': bc + encode(list(types), list(args)).hex()})
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+w3 = <web3.main.Web3 object at 0x7b7ab4b8aa80>
+key = '0x<REDACTED64>'
+tx = {'chainId': 31337, 'nonce': 5, 'gas': 3000000, 'maxFeePerGas': 3040026687, ...}
+
+    def send(w3, key, tx):
+        a = Account.from_key(key)
+        tx = {'chainId': w3.eth.chain_id, 'nonce': w3.eth.get_transaction_count(a.address, 'pending'), 'gas': 3_000_000,
+              'maxFeePerGas': w3.eth.gas_price * 2 + 1, 'maxPriorityFeePerGas': 1, 'value': 0, **tx}
+        rc = w3.eth.wait_for_transaction_receipt(w3.eth.send_raw_transaction(a.sign_transaction(tx).raw_transaction))
+>       assert rc.status == 1
+E       AssertionError: assert 0 == 1
+E        +  where 0 = AttributeDict({'type': 2, 'status': 0, 'cumulativeGasUsed': 78320, 'logs': [], 'logsBloom': HexBytes('0x00000000000000...ffFb92266', 'to': None, 'contractAddress': '0x5FC8d32690cc91D4c39d9d3abcBD16989F875707', 'blockTimestamp': 1795236345}).status
+
+relayer/test_e2e.py:40: AssertionError
+________________________ test_parity_solidity_python_js ________________________
+
+w3 = <web3.main.Web3 object at 0x7b7ab4a48200>
+
+    def test_parity_solidity_python_js(w3):
+>       cfg = deploy(w3, 'UnsweepConfig.sol', 'UnsweepConfig', ['address', 'uint16', 'address', 'uint256'],
+                     ['0x0000000000000000000000000000000000000FEE', 1500, T1, 5_000_000])
+
+relayer/test_typehash_parity.py:85: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+w3 = <web3.main.Web3 object at 0x7b7ab4a48200>, f = 'UnsweepConfig.sol'
+c = 'UnsweepConfig', types = ['address', 'uint16', 'address', 'uint256']
+args = ['0x0000000000000000000000000000000000000FEE', 1500, '0x2222222222222222222222222222222222222222', 5000000]
+
+    def deploy(w3, f, c, types=(), args=()):
+        abi, bc = art(f, c)
+        a = Account.from_key(SPONSOR)
+        tx = {'chainId': w3.eth.chain_id, 'nonce': w3.eth.get_transaction_count(a.address), 'gas': 6_000_000,
+              'maxFeePerGas': w3.eth.gas_price * 2 + 1, 'maxPriorityFeePerGas': 1, 'value': 0,
+              'data': bc + encode(list(types), list(args)).hex()}
+        rc = w3.eth.wait_for_transaction_receipt(w3.eth.send_raw_transaction(a.sign_transaction(tx).raw_transaction))
+>       assert rc.status == 1
+E       AssertionError: assert 0 == 1
+E        +  where 0 = AttributeDict({'type': 2, 'status': 0, 'cumulativeGasUsed': 78350, 'logs': [], 'logsBloom': HexBytes('0x00000000000000...ffFb92266', 'to': None, 'contractAddress': '0x5FbDB2315678afecb367f032d93F642f64180aa3', 'blockTimestamp': 1795236340}).status
+
+relayer/test_typehash_parity.py:65: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED relayer/test_e2e.py::test_policy_cap_and_gas
+PASSED relayer/test_policy.py::test_tiers
+PASSED relayer/test_policy.py::test_ethereum_min_gas_x15
+PASSED relayer/test_policy.py::test_caps
+PASSED relayer/test_policy.py::test_manual_exception
+PASSED relayer/test_policy.py::test_ethereum_route
+PASSED relayer/test_policy.py::test_simulate_aborts
+PASSED relayer/test_policy.py::test_gas_lost_alert_once
+PASSED relayer/test_service_policy.py::test_quote_tiers[500-1500]
+PASSED relayer/test_service_policy.py::test_quote_tiers[5000-1000]
+PASSED relayer/test_service_policy.py::test_quote_tiers[20000-500]
+PASSED relayer/test_service_policy.py::test_quote_never_exposes_gas
+PASSED relayer/test_service_policy.py::test_quote_ethereum_min_fee_gas_x15
+PASSED relayer/test_service_policy.py::test_policy_error_single_class
+PASSED relayer/test_service_policy.py::test_simulation_failure_blocks_send
+PASSED relayer/test_service_policy.py::test_simulation_ok_then_send
+PASSED relayer/test_service_policy.py::test_revert_records_gas_lost_and_alerts
+PASSED relayer/test_service_policy.py::test_mainnet_disabled_by_default
+PASSED relayer/test_service_policy.py::test_quote_ethereum_min_above_cap_rejected
+PASSED relayer/test_typehash_parity.py::test_typehash_string_matches_solidity_source
+PASSED relayer/test_typehash_parity.py::test_parity_detects_mismatch
+FAILED relayer/test_e2e.py::test_chain_id_zero_rejected - AssertionError: ass...
+FAILED relayer/test_e2e.py::test_race_attacker_tx_first_aborts - AssertionErr...
+FAILED relayer/test_e2e.py::test_redelegation_from_attacker_sweeper - Asserti...
+FAILED relayer/test_typehash_parity.py::test_parity_solidity_python_js - Asse...
+4 failed, 21 passed in 1.61s

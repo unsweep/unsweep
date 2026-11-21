@@ -105,13 +105,18 @@ def quote(s, gas=1_500_000):
     except PolicyError as e:
         plan, ok, why = None, False, str(e)
     bps = plan.max_fee_bps if plan else 0
-    # minimo de Ethereum: se asigna al token de mayor valor (resto 0), acotado a su saldo
+    # minimo de Ethereum (#718 p.3): UN solo token (el de mayor valor) lleva minFee, el resto 0.
+    # Su minFee cubre solo lo que falte tras el tramo del resto, de modo que la comision total es
+    # max(tramo, gas x1.5) y no se multiplica por el numero de tokens. Acotado a su saldo.
     big = max(range(len(toks)), key=lambda k: toks[k][4]) if toks else -1
+    rest_tier_usd = sum((bal * bps // 10000) / 10**dec * px
+                        for k, (_, bal, dec, px, _) in enumerate(toks) if k != big)
     lines, fee_usd = [], 0.0
     for k, (t, bal, dec, px, _) in enumerate(toks):
         mn = 0
-        if plan and plan.min_fee_usd > 0 and k == big and px > 0:
-            mn = min(bal, int(plan.min_fee_usd / px * 10**dec) + 1)
+        need_usd = (plan.min_fee_usd - rest_tier_usd) if plan else 0.0
+        if plan and plan.min_fee_usd > 0 and k == big and px > 0 and need_usd > 0:
+            mn = min(bal, int(need_usd / px * 10**dec) + 1)
         fee = max(bal * bps // 10000, mn)
         fee_usd += fee / 10**dec * px
         lines.append({'token': t['address'], 'symbol': t.get('symbol', ''), 'decimals': dec, 'amount': str(bal),

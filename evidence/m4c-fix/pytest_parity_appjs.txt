@@ -1,0 +1,6 @@
+..                                                                       [100%]
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED relayer/test_digest_parity_appjs.py::test_app_js_has_no_nft_fee_nor_permit
+PASSED relayer/test_digest_parity_appjs.py::test_digest_parity_solidity_python_appjs
+2 passed in 1.21s

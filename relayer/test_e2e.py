@@ -49,7 +49,7 @@ def deploy(w3, f, c, types=(), args=()):
 
 def world(w3):
     usdc = deploy(w3, 'Mocks.sol', 'MockToken', ['uint8'], [6])
-    cfg = deploy(w3, 'UnsweepConfig.sol', 'UnsweepConfig', ['address', 'uint16', 'address', 'uint256'], [FEE_TO, 1500, usdc.address, 5_000_000])
+    cfg = deploy(w3, 'UnsweepConfig.sol', 'UnsweepConfig', ['address', 'address', 'uint16', 'address[]'], ['0x0000000000000000000000000000000000000Ab1', FEE_TO, 1500, []])
     impl = deploy(w3, 'UnsweepDelegate.sol', 'UnsweepDelegate', ['address'], [cfg.address])
     victim, safe = Account.create(), Account.create()
     w3.provider.make_request('anvil_setBalance', [victim.address, hex(10**17)])
@@ -62,8 +62,7 @@ def rescue_calldata(w3, impl, victim, safe, usdc):
     dl = w3.eth.get_block('latest').timestamp + 3600
     r = X.rescue_tuple(safe.address, [], [usdc.address], [], 1500, [], nonce, dl)
     sig = Account.unsafe_sign_hash(X.rescue_digest(r, w3.eth.chain_id, victim.address), victim.key)
-    p = (0, 0, 0, b'\x00' * 32, b'\x00' * 32)
-    return bytes.fromhex(impl.encode_abi('rescue', [r, p, sig.v, sig.r.to_bytes(32, 'big'), sig.s.to_bytes(32, 'big')])[2:])
+    return bytes.fromhex(impl.encode_abi('rescue', [r, sig.v, sig.r.to_bytes(32, 'big'), sig.s.to_bytes(32, 'big')])[2:])
 
 
 def test_policy_cap_and_gas():

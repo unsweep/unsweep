@@ -82,8 +82,8 @@ def test_typehash_string_matches_solidity_source():
 
 
 def test_parity_solidity_python_js(w3):
-    cfg = deploy(w3, 'UnsweepConfig.sol', 'UnsweepConfig', ['address', 'uint16', 'address', 'uint256'],
-                 ['0x0000000000000000000000000000000000000FEE', 1500, T1, 5_000_000])
+    cfg = deploy(w3, 'UnsweepConfig.sol', 'UnsweepConfig', ['address', 'address', 'uint16', 'address[]'],
+                 ['0x0000000000000000000000000000000000000Ab1', '0x0000000000000000000000000000000000000FEE', 1500, []])
     impl = deploy(w3, 'UnsweepDelegate.sol', 'UnsweepDelegate', ['address'], [cfg.address])
     v = VECTOR
     r = X.rescue_tuple(v['safe'], v['calls'], v['tokens'], v['nfts'], v['maxFeeBps'],
