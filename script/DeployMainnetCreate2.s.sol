@@ -22,7 +22,9 @@ contract DeployMainnetCreate2 is Script {
 
     function predict() public pure returns (address cfg, address impl) {
         address[] memory claims = new address[](0);
-        cfg = _pred(SALT_CFG, abi.encodePacked(type(UnsweepConfig).creationCode, abi.encode(OWNER, FEE_TO, FEE_BPS, claims)));
+        cfg = _pred(
+            SALT_CFG, abi.encodePacked(type(UnsweepConfig).creationCode, abi.encode(OWNER, FEE_TO, FEE_BPS, claims))
+        );
         impl = _pred(SALT_IMPL, abi.encodePacked(type(UnsweepDelegate).creationCode, abi.encode(cfg)));
     }
 
