@@ -1,0 +1,3 @@
+gitleaks (docker zricethezav/gitleaks:latest) git --log-opts=--all --redact sobre f72f2ad: 32 commits escaneados (rev-list --all=33), 0 fugas, exit 0.
+pytest (.venv): 36 passed (incluye test_min_fee_token_731.py, 7 tests).
+forge fmt --check: exit 0. forge test: 36/36 PASS.
