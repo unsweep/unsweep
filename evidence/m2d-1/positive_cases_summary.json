@@ -1,0 +1,25 @@
+{
+ "case_a": {
+  "http": 200,
+  "status": "complete",
+  "reasons": [],
+  "n_approvals": 1,
+  "match_token_spender": 1,
+  "allowance_scan": [
+   "115792089237316195423570985008687907853269984665640564039457584007913129639935"
+  ],
+  "allowance_eth_call": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+  "allowance_match": true,
+  "token": "0xdac17f958d2ee523a2206206994597c13d831ec7"
+ },
+ "case_b": {
+  "http": 200,
+  "status": "complete",
+  "reasons": [],
+  "active": true,
+  "delegate_scan": "0xe6b97aa1490c93c28a14d86c13c9dc9c950643ed",
+  "delegate_getcode": "0xe6b97aa1490c93c28a14d86c13c9dc9c950643ed",
+  "code_match": true,
+  "code_prefix_ok": true
+ }
+}

@@ -31,19 +31,26 @@
         const m = await api('scan', { address: a, chain: chain });
         const d = m.delegation7702 || {};
         const nat = m.native || {};
-        const out = ['Network: ' + chain + ' mainnet (read-only, nothing was signed)', 'Address: ' + a, 'Nonce: ' + m.nonce,
-          'EIP-7702 delegation: ' + (d.active ? ('ACTIVE -> ' + d.delegate + ' (verify this contract; an unknown delegate may be a sweeper)') : 'none'),
-          (nat.symbol || 'ETH') + ': ' + fmt(nat.balanceWei || '0', 18)];
+        const complete = m.status === 'complete';
+        const out = [];
+        if (!complete) {
+          out.push('Incomplete check — this is NOT a clean result.');
+          for (const r of (m.incompleteReasons || ['the server did not confirm that every query finished'])) out.push('Reason: ' + r);
+          out.push('Some data could not be verified. Try again in a minute; do not assume this wallet is safe.');
+        }
+        out.push('Network: ' + chain + ' mainnet (read-only, nothing was signed)', 'Address: ' + a, 'Nonce: ' + m.nonce,
+          'EIP-7702 delegation: ' + (d.active ? ('ACTIVE -> ' + d.delegate + ' (verify this contract; an unknown delegate may be a sweeper)') : (d.active === false ? 'none' : 'unknown (check failed)')),
+          (nat.symbol || 'ETH') + ': ' + (nat.balanceWei == null ? 'unknown' : fmt(nat.balanceWei, 18)));
         const toks = m.tokens || [];
-        if (toks.length === 0) out.push('No ERC-20 balances found.');
+        if (toks.length === 0 && complete) out.push('No ERC-20 balances found.');
         for (const t of toks) out.push('Token ' + (t.symbol || t.contract || t.address || t.token) + ': ' + (t.balanceFmt || fmt(t.balance || t.balanceRaw || '0', t.decimals == null ? 18 : t.decimals)));
         const aps = m.approvals || [];
-        if (aps.length === 0) out.push('No open ERC-20 approvals found from direct approve transactions in the last 90 days.');
+        if (aps.length === 0 && complete) out.push('No open ERC-20 approvals found from direct approve transactions in the last 90 days.');
         for (const ap of aps) out.push('Open approval: ' + (ap.symbol || ap.token) + ' -> spender ' + ap.spender + (ap.unlimited ? ' (unlimited)' : '') + ' - see /guides/revoke-approvals/');
         const am = m.approvalsMeta || {};
-        if (am.truncated || am.error) out.push('Note: approval history was only partially scanned (' + (am.txScanned || 0) + ' recent transactions checked). Some older approvals may not be listed.');
+        if (!complete) out.push('Approvals listed above may be partial (' + (am.txScanned || 0) + ' recent transactions checked).');
         out.push('Mainnet: read-only check. Rescue is testnet beta only.');
-        show($('scanOut'), out, 'ok');
+        show($('scanOut'), out, complete ? 'ok' : 'err');
       } catch (e) { show($('scanOut'), 'Scan failed: ' + e.message, 'err'); }
       return;
     }

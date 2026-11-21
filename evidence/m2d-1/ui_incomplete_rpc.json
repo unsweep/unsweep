@@ -1,0 +1,10 @@
+{
+ "mode": "rpc",
+ "chain": "ethereum",
+ "text": "Incomplete check \u2014 this is NOT a clean result.\nReason: block number failed: rpc unavailable\nReason: EIP-7702 code check failed: rpc unavailable\nReason: nonce failed: rpc unavailable\nReason: native balance failed: rpc unavailable\nReason: token balances failed: rpc unavailable\nReason: approvals not checked: no block number\nSome data could not be verified. Try again in a minute; do not assume this wallet is safe.\nNetwork: ethereum mainnet (read-only, nothing was signed)\nAddress: 0x000000000000000000000000000000000000dEaD\nNonce: null\nEIP-7702 delegation: unknown (check failed)\nETH: unknown\nApprovals listed above may be partial (0 recent transactions checked).\nMainnet: read-only check. Rescue is testnet beta only.",
+ "class": "out err",
+ "border": "rgb(248, 81, 73)",
+ "has_warning": true,
+ "claims_clean": false,
+ "PASS": true
+}

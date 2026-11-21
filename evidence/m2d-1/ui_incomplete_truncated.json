@@ -1,0 +1,10 @@
+{
+ "mode": "truncated",
+ "chain": "base",
+ "text": "Incomplete check \u2014 this is NOT a clean result.\nReason: token list truncated: more tokens than one page\nReason: approval history truncated: page limit of 200 transactions reached\nSome data could not be verified. Try again in a minute; do not assume this wallet is safe.\nNetwork: base mainnet (read-only, nothing was signed)\nAddress: 0x000000000000000000000000000000000000dEaD\nNonce: 0\nEIP-7702 delegation: none\nETH: 4.602984043973700697\nToken CX: 1.707853933681221952\nToken gtUSDa: 0.000000653639099627\nToken flETH: 0.000664505726700566\nToken NEKO: 1000000000000.0\nToken TOWNS: 0.042444292503700063\nToken \ud835\udd4f: 51404490.046626332639179496\nToken yoUSD: 0.000657\nToken MUSN: 240887760130.63142705\nToken HYDX: 1540003.05556217225448431\nToken NETA: 14003525000.0\nToken UNI-V2: 122.474487139158903909\nToken UNI-V2: 0.001414213562372095\nToken USDA: 0.009304886278354279\nToken UNI-V2: 9.999999999999999\nToken BEGGAR: 0.000000000014177167\nApprovals listed above may be partial (0 recent transactions checked).\nMainnet: read-only check. Rescue is testnet beta only.",
+ "class": "out err",
+ "border": "rgb(248, 81, 73)",
+ "has_warning": true,
+ "claims_clean": false,
+ "PASS": true
+}
