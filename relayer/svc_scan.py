@@ -98,7 +98,7 @@ def scan(addr):
             continue
         bal = w3.eth.contract(address=Web3.to_checksum_address(t['address']), abi=ERC20).functions.balanceOf(addr).call()
         if bal > 0:
-            tokens.append({**t, 'balance': str(bal), 'price_usd': _token_px(a, t), 'price_age_s': _token_age(a, t)})
+            tokens.append({**t, 'balance': str(bal), 'price_usd': _token_px(a, t), 'price_feeds': _token_feeds(a, t)})
     for n in a['nfts']:
         c = w3.eth.contract(address=Web3.to_checksum_address(n['address']), abi=ERC721)
         for i in n.get('ids', []):
@@ -115,11 +115,26 @@ def scan(addr):
             'rescuable': bool(tokens or nfts)}
 
 
-def _token_age(a, t):
-    """#927(a): antiguedad del precio Chainlink; None si no hay feed (solo testnet) -> >10k se rechaza."""
+def _token_feeds(a, t):
+    """#98: [{'feed','age_s','heartbeat_s'}] de cada feed Chainlink usado (compuestos incluidos); None sin feed -> >10k se rechaza."""
     if t.get('feed'):
-        return O.token_price_age_s(w3, a, t)
+        return O.token_price_feeds(w3, a, t)
     return None
+
+
+def _high_value_items(toks):
+    """#98 fail-closed: precio y antiguedad por feed releidos en servidor desde assets (nunca del cliente)."""
+    a = assets()
+    by = {Web3.to_checksum_address(x['address']): x for x in a['tokens']}
+    items = []
+    for (t, _b, _d, _p, u) in toks:
+        cfg_t = by.get(Web3.to_checksum_address(t['address']))
+        if not cfg_t or not cfg_t.get('feed'):
+            raise PolicyError('token sin feed Chainlink verificable en rescate >10.000 USD')
+        items.append({'symbol': cfg_t.get('symbol', ''), 'value_usd': u,
+                      'price_usd': O.token_price_usd(w3, a, cfg_t),
+                      'price_feeds': O.token_price_feeds(w3, a, cfg_t)})
+    return items, O.eur_usd(w3, a)
 
 
 def quote(s, gas=1_500_000):
@@ -173,12 +188,14 @@ def quote(s, gas=1_500_000):
         except PolicyError as e:
             ok, why = False, str(e)
     if ok and CHAIN_ID in P.MAINNETS and P.needs_extra_checks(rescued_usd):
-        # #927(a)+(b): precio Chainlink < 1 h y lista de alto valor; si falla, no se ofrece el rescate
+        # #927(a)+(b) con #98: heartbeat por feed, lista de alto valor y bandas de stablecoins/EURC; si falla, no se ofrece
         try:
-            P.check_high_value(rescued_usd, [{'symbol': t.get('symbol', ''), 'value_usd': u,
-                                             'price_age_s': t.get('price_age_s')} for (t, _b, _d, _p, u) in toks])
+            items, eur = _high_value_items(toks)
+            P.check_high_value(rescued_usd, items, eur_usd=eur)
         except PolicyError as e:
             ok, why = False, str(e)
+        except Exception as e:  # fail-closed ante cualquier error del oraculo
+            ok, why = False, 'precio no verificable (%s)' % type(e).__name__
     has_min = any(l['minFee'] != '0' for l in lines)
     if not has_min:
         for l in lines: l.pop('minFee')

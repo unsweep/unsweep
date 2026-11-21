@@ -27,7 +27,11 @@ CAP_INITIAL_USD = 100_000.0  # #927: tope automatico por rescate
 FIXED_CAP_USD = 10_000.0  # umbral de controles extra (#927) y tope de tokens fuera de HIGH_VALUE
 CAP_RAISED_USD = 100_000.0  # #927: sin tramos por historial; el tope automatico es 100k
 HIGH_VALUE_USD = 10_000.0
-MAX_PRICE_AGE_S = 3600  # #927(a): precio Chainlink < 1 h por encima de 10k
+# #98 sustituye #927(a) "< 1 h": la antiguedad maxima es el heartbeat de CADA feed usado (tambien compuestos X/ETH * ETH/USD).
+# #98: por encima de 10k, ademas, stablecoins dentro de 0.98-1.02 USD y EURC dentro de un 2% del feed EUR/USD si existe.
+STABLE_BAND_SYMBOLS = frozenset({"USDC", "USDT", "DAI", "GHO", "sUSDe"})
+STABLE_BAND = (0.98, 1.02)
+EURC_BAND = 0.02
 HIGH_VALUE_SYMBOLS = frozenset({"USDC", "USDT", "DAI", "EURC", "WETH", "wstETH", "weETH", "cbETH", "cbBTC"})
 REPO_DIR = Path(__file__).resolve().parent.parent
 CASOS_MD = Path(os.environ.get("UNSWEEP_CASOS_MD", REPO_DIR / "docs" / "CASOS.md"))
@@ -119,18 +123,33 @@ def needs_extra_checks(rescued_usd: float) -> bool:
     return rescued_usd > HIGH_VALUE_USD
 
 
-def check_high_value(rescued_usd: float, items: list):
-    """#927 (a)+(b). items: [{'symbol','value_usd','price_age_s'}]. Solo aplica si rescued_usd > 10.000.
-    (a) toda valoracion debe venir de un feed Chainlink con antiguedad < 1 h, o se rechaza.
-    (b) los tokens fuera de HIGH_VALUE_SYMBOLS suman como maximo 10.000 USD."""
+def check_high_value(rescued_usd: float, items: list, eur_usd: float | None = None):
+    """#927 (a)+(b) con #98. items: [{'symbol','value_usd','price_usd','price_feeds':[{'age_s','heartbeat_s'}]}].
+    Solo aplica si rescued_usd > 10.000 (fail-closed):
+    (a/#98) cada feed usado para valorar el token (compuestos: X/ETH y ETH/USD) con 0 <= antiguedad <= su heartbeat.
+    (b) los tokens fuera de HIGH_VALUE_SYMBOLS suman como maximo 10.000 USD.
+    (#98) USDC/USDT/DAI/GHO/sUSDe con precio en [0.98, 1.02]; EURC a <= 2% de EUR/USD si ese feed existe (eur_usd)."""
     if not needs_extra_checks(rescued_usd):
         return
     other = 0.0
     for it in items:
-        age = it.get("price_age_s")
-        if age is None or not (0 <= int(age) < MAX_PRICE_AGE_S):
-            raise PolicyError(f"precio de {it.get('symbol','?')} con mas de 1 h (>{MAX_PRICE_AGE_S}s) en rescate >10.000 USD")
-        if it.get("symbol") not in HIGH_VALUE_SYMBOLS:
+        sym = it.get("symbol", "?")
+        feeds = it.get("price_feeds")
+        if not feeds:
+            raise PolicyError(f"precio de {sym} sin feed Chainlink verificable en rescate >10.000 USD")
+        for f in feeds:
+            age, hb = f.get("age_s"), f.get("heartbeat_s")
+            if age is None or hb is None or int(hb) <= 0 or not (0 <= int(age) <= int(hb)):
+                raise PolicyError(f"precio de {sym} desactualizado (antiguedad {age}s > heartbeat {hb}s) en rescate >10.000 USD")
+        px = it.get("price_usd")
+        if sym in STABLE_BAND_SYMBOLS:
+            lo, hi = STABLE_BAND
+            if px is None or not (lo <= float(px) <= hi):
+                raise PolicyError(f"stablecoin {sym} fuera de {lo}-{hi} USD (precio {px}) en rescate >10.000 USD")
+        if sym == "EURC" and eur_usd is not None:
+            if px is None or float(eur_usd) <= 0 or abs(float(px) / float(eur_usd) - 1) > EURC_BAND:
+                raise PolicyError(f"EURC fuera de un 2% de EUR/USD (precio {px}, EUR/USD {eur_usd}) en rescate >10.000 USD")
+        if sym not in HIGH_VALUE_SYMBOLS:
             other += float(it.get("value_usd", 0))
     if other > HIGH_VALUE_USD:
         raise PolicyError(f"tokens fuera de la lista de alto valor superan 10.000 USD ({other:.2f})")

@@ -113,6 +113,30 @@ def token_price_age_s(w3, cfg, tok, now=None):
     return max(ages)
 
 
+def token_price_feeds(w3, cfg, tok, now=None):
+    """#98: [{'feed','age_s','heartbeat_s'}] de CADA feed usado para valorar tok (compuestos: X/ETH y ETH/USD).
+    Valida antes con token_price_usd (fail-closed) y usa el updatedAt cacheado."""
+    token_price_usd(w3, cfg, tok)
+    f = tok['feed']
+    feeds = [f] + ([cfg['eth_usd_feed']] if f.get('quote') == 'ETH' else [])
+    t = now if now is not None else _now(w3)
+    out = []
+    for fd in feeds:
+        hit = _cache.get(Web3.to_checksum_address(fd['address']))
+        if not hit:
+            raise OracleError('price feed age unavailable')
+        out.append({'feed': fd['address'], 'age_s': int(t) - int(hit['upd']), 'heartbeat_s': int(fd['heartbeat'])})
+    return out
+
+
+def eur_usd(w3, cfg):
+    """#98: precio EUR/USD si el feed esta configurado (cfg['eur_usd_feed']); None si no existe."""
+    f = cfg.get('eur_usd_feed')
+    if not f:
+        return None
+    return read_feed(w3, f['address'], f['heartbeat'], f.get('decimals'))
+
+
 price_usd = token_price_usd
 
 
