@@ -15,6 +15,21 @@
     if (!r.ok) throw new Error((j && j.detail) ? String(j.detail) : ('HTTP ' + r.status));
     return j;
   }
+  // #985: unverified extras, unchecked by default; names rendered as text only
+  function renderExtras(list) {
+    const box = $('extrasBox'), ul = $('extrasList'); if (!box || !ul) return;
+    ul.textContent = '';
+    for (const x of list.slice(0, 20)) {
+      const a = addr(x.address); if (!a) continue;
+      const lab = document.createElement('label'); lab.className = 'small';
+      const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = false; cb.value = a; cb.className = 'extraCb';
+      lab.appendChild(cb);
+      lab.appendChild(document.createTextNode(' ' + String(x.symbol || '?').slice(0, 24) + ' ' + a + ': ' + fmt(x.balance, x.decimals)));
+      const d = document.createElement('div'); d.appendChild(lab); ul.appendChild(d);
+    }
+    box.hidden = ul.childNodes.length === 0;
+  }
+  function checkedExtras() { return Array.from(document.querySelectorAll('#extrasList .extraCb')).filter((c) => c.checked).map((c) => c.value); }
   function addr(v) { try { return E.getAddress(String(v).trim()); } catch (e) { return null; } }
   function fmt(amount, dec) { try { return E.formatUnits(BigInt(amount), Number(dec)); } catch (e) { return String(amount); } }
 
@@ -66,6 +81,7 @@
       for (const n of s.nfts) out.push('NFT ' + (n.symbol || n.address) + ' #' + n.id);
       for (const ap of (s.approvals || [])) out.push('Live approval: ' + ap.token + ' -> ' + ap.spender + ' (revoke recommended)');
       show($('scanOut'), out, 'ok');
+      renderExtras(s.extras || []);
       if (s.rescuable) $('step2').hidden = false;
     } catch (e) { show($('scanOut'), 'Scan failed: ' + e.message, 'err'); }
   });
@@ -95,11 +111,12 @@
     show($('quoteOut'), 'Simulating...');
     $('step3').hidden = true;
     try {
-      const r = await api('quote', { address: st.scan.address, safe: safe });
+      const r = await api('quote', { address: st.scan.address, safe: safe, extras: checkedExtras() });
       const q = r.quote; st.quote = q; st.safe = safe; st.scan = r.scan;
       const tierBps = Number(q.maxFeeBps != null ? q.maxFeeBps : q.feeBps); st.shownBps = tierBps;
       const out = ['Fee tier: ' + (tierBps / 100) + '% (maximum signed by you; taken in kind from the rescued tokens).'];
-      for (const l of q.lines) out.push((l.symbol || l.token) + ': total ' + fmt(l.amount, l.decimals) + ' | fee ' + fmt(l.fee, l.decimals) + ' | you receive ' + fmt(l.net, l.decimals));
+      for (const l of q.lines) out.push((l.unverified ? '[unverified] ' : '') + (l.symbol || l.token) + ': total ' + fmt(l.amount, l.decimals) + ' | fee ' + fmt(l.fee, l.decimals) + ' | you receive ' + fmt(l.net, l.decimals));
+      if (checkedExtras().length && q.extras_reason) out.push('Unverified tokens excluded: ' + q.extras_reason);
       if (q.nfts > 0) out.push('NFTs found: ' + q.nfts + ' (NFT rescue is not enabled in this preview; they are excluded).');
       const netUsd = Math.max(0, Number(q.rescued_usd) - Number(q.fee_usd));
       out.push('Estimated value: $' + q.rescued_usd);

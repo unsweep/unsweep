@@ -7,6 +7,7 @@ import policy as P
 from svc_core import w3, abi, assets, log, CHAIN_ID, DELEGATE, CONFIG, ETH_USD
 import oracle as O
 from relayer import TESTNETS
+import extras as EX
 
 
 def _token_px(a, t):
@@ -152,7 +153,7 @@ def scan(addr):
             'nonce': w3.eth.get_transaction_count(addr, 'pending'),
             'delegation7702': deleg, 'delegatedToUnsweep': deleg == DELEGATE,
             'tokens': tokens, 'nfts': nfts, 'approvals': aps, 'approvalsError': ap_err,
-            'rescuable': bool(tokens or nfts)}
+            'rescuable': bool(tokens or nfts), 'extras': scan_extras(addr)}
 
 
 def _token_feeds(a, t):
@@ -177,7 +178,37 @@ def _high_value_items(toks):
     return items, O.eur_usd(w3, a)
 
 
-def quote(s, gas=1_500_000):
+def _safe_sym(x):
+    return ''.join(ch for ch in str(x or '') if ch.isalnum())[:12]
+
+
+ERC20_META = [{'name': 'decimals', 'type': 'function', 'stateMutability': 'view', 'inputs': [], 'outputs': [{'type': 'uint8'}]},
+              {'name': 'symbol', 'type': 'function', 'stateMutability': 'view', 'inputs': [], 'outputs': [{'type': 'string'}]}]
+
+
+def scan_extras(addr):
+    """#985: ERC-20 fuera de assets -> unverified, value_usd 0. Fail-soft: cualquier error -> []."""
+    try:
+        allowed = O.allowlist(assets())
+        rpc = lambda m, p: w3.provider.make_request(m, p).get('result')
+        exs = EX.discover_extras(rpc, addr, allowed)
+    except Exception as e:
+        log.warning('extras no disponibles: %s', type(e).__name__)
+        return []
+    for e in exs[:50]:
+        c = w3.eth.contract(address=e['address'], abi=ERC20_META)
+        try:
+            e['decimals'] = int(c.functions.decimals().call())
+        except Exception:
+            e['decimals'] = 18
+        try:
+            e['symbol'] = _safe_sym(c.functions.symbol().call())
+        except Exception:
+            e['symbol'] = ''
+    return exs[:50]
+
+
+def quote(s, gas=1_500_000, extras=None):
     """Cotizacion M4: tramos 15/10/5 %; en Ethereum minimo = gas x1.5 (va firmado como minFees)."""
     toks = []
     allowed = O.allowlist(assets())  # misma allowlist que scan y check_allowlist (rescate)
@@ -236,12 +267,34 @@ def quote(s, gas=1_500_000):
             ok, why = False, str(e)
         except Exception as e:  # fail-closed ante cualquier error del oraculo
             ok, why = False, 'precio no verificable (%s)' % type(e).__name__
-    has_min = any(l['minFee'] != '0' for l in lines)
+    # #985: extras sin garantia; no alteran rescued_usd, tope ni umbral (value_usd 0)
+    ex_reason, ex_gas, ex_lines = None, 0, []
+    if extras:
+        want = set()
+        for x in extras:
+            try:
+                want.add(Web3.to_checksum_address(str(x)))
+            except Exception:
+                pass
+        avail = [e for e in s.get('extras', []) if e['address'] in want]
+        if not ok:
+            ex_reason = 'cotizacion de listados no valida: extras excluidos'
+        else:
+            gp = w3.eth.gas_price
+            est = lambda tx: w3.eth.estimate_gas(tx)
+            call = lambda tx: w3.eth.call(tx)
+            sel, ex_reason = EX.select_extras((call, est), s['address'], s.get('safe') or s['address'], avail, len(toks),
+                                              fee_usd, gas, gp, _eth_usd())
+            ex_lines = EX.extra_lines(sel, bps)
+            ex_gas = sum(e['gas'] for e in sel)
+    lines = lines + ex_lines
+    has_min = any(l.get('minFee', '0') != '0' for l in lines)
     if not has_min:
-        for l in lines: l.pop('minFee')
+        for l in lines: l.pop('minFee', None)
     # sin datos de gas en la respuesta al usuario (gas interno)
     fee_pct = round(fee_usd / rescued_usd * 100, 2) if rescued_usd > 0 else 0.0
     return {'feeBps': bps, 'maxFeeBps': bps, 'lines': lines, 'nfts': n_nft,
             'rescued_usd': round(rescued_usd, 4), 'fee_usd': round(fee_usd, 4), 'fee_pct': fee_pct, 'policy_ok': ok, 'policy_reason': why,
             'extra_checks': P.needs_extra_checks(rescued_usd),
-            'breakdown': P.breakdown(lines, rescued_usd, fee_usd)}, q
+            'breakdown': P.breakdown([l for l in lines if not l.get('unverified')], rescued_usd, fee_usd),
+            'extras_reason': ex_reason, 'extras_note': EX.UNVERIFIED_NOTE if ex_lines else None}, q
