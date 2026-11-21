@@ -1,59 +1,114 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>UNSWEEP - free read-only wallet check (EIP-7702 delegation, open approvals) on Base and Ethereum</title><meta name="description" content="Free read-only check of a public wallet address on Base and Ethereum mainnet: EIP-7702 delegation, nonce, balances and open ERC-20 approvals. No keys, no signatures. Rescue is a testnet beta only."><meta name="referrer" content="no-referrer"><link rel="canonical" href="https://unsweep.com/"><link rel="stylesheet" href="/assets/style.css"></head><body><main>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>UNSWEEP - Rescue tokens from a hacked wallet on Base</title><meta name="description" content="Rescue ERC-20 tokens left in a hacked wallet on Base, even if a sweeper bot drains every deposit. Free read-only check on Base and Ethereum mainnet. Non-custodial: your key never leaves your browser."><meta name="referrer" content="no-referrer"><link rel="canonical" href="https://unsweep.com/"><link rel="stylesheet" href="/assets/style.css">
+<!--gen:faqld--><script type="application/ld+json" id="faqSchema">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is a sweeper?","acceptedAnswer":{"@type":"Answer","text":"A sweeper is an automated bot run by whoever stole your private key. It watches the wallet and moves out any ETH the moment it arrives, so you can never pay the gas to move your remaining tokens yourself. It may also install an EIP-7702 delegation on your address."}},{"@type":"Question","name":"What can be rescued and what cannot?","acceptedAnswer":{"@type":"Answer","text":"Supported ERC-20 tokens that are still in the compromised wallet on Base mainnet can be rescued. Funds already moved out, unsupported tokens and assets on other networks cannot. Ethereum mainnet is a free read-only check only."}},{"@type":"Question","name":"How does it work?","acceptedAnswer":{"@type":"Answer","text":"Scan the public address, enter a safe wallet and review a simulation with the exact amounts and fee, then sign locally. Our relayer pays the gas and submits one transaction that moves the tokens to your safe wallet. No ETH is ever sent to the compromised wallet, so the sweeper has nothing to grab."}},{"@type":"Question","name":"Does my private key leave my browser?","acceptedAnswer":{"@type":"Answer","text":"No. The key is used only in memory inside this browser tab to sign. It is never sent, stored or logged; only signatures reach our relayer. Seed phrases are rejected. The code is open source, so anyone can check this."}},{"@type":"Question","name":"How much does it cost?","acceptedAnswer":{"@type":"Answer","text":"A share of the value rescued: 15% below 1,000 USD, 10% from 1,000 to 10,000 USD and 5% above 10,000 USD. The fee comes out of the rescued tokens in the same transaction and is shown in the simulation before you sign. Nothing is paid upfront: if the rescue does not execute, you pay nothing."}},{"@type":"Question","name":"Which tokens and networks are supported?","acceptedAnswer":{"@type":"Answer","text":"Rescue works on Base mainnet for the ERC-20 tokens listed under Supported tokens on this page. Ethereum mainnet is a free read-only check of delegation, nonce, balances and open approvals."}},{"@type":"Question","name":"Can you rescue airdrops or vesting tokens?","acceptedAnswer":{"@type":"Answer","text":"Sometimes. Every airdrop or vesting contract is different, so they are reviewed case by case. Email support@unsweep.com with your public address and the name of the claim or vesting contract. Never send keys or seed phrases."}},{"@type":"Question","name":"What happens with rescues above 10,000 USD?","acceptedAnswer":{"@type":"Answer","text":"They run automatically up to 100,000 USD per rescue, with extra safety checks that take a few seconds: fresh Chainlink prices for every token, stablecoin prices within a safe band and a shorter list of eligible tokens. Other tokens are limited to 10,000 USD per rescue."}},{"@type":"Question","name":"How do I tell real support from scammers?","acceptedAnswer":{"@type":"Answer","text":"The only site is unsweep.com and the only contact is support@unsweep.com, which only replies to emails you send. We never DM you first on Reddit, Telegram, Discord or X, never ask for your seed phrase or private key and never ask for payment upfront. Anyone who does is a scammer."}},{"@type":"Question","name":"My wallet was just hacked. What should I do right now?","acceptedAnswer":{"@type":"Answer","text":"Stop sending funds to the compromised wallet. Create a new wallet with a new seed phrase, ideally on a clean device. Scan your address above to see what is left, then follow the compromised wallet checklist in the guides below."}},{"@type":"Question","name":"Why does speed matter?","acceptedAnswer":{"@type":"Answer","text":"While you wait for manual help, the attacker can come back and you can make costly mistakes. UNSWEEP is fully automatic: no signup, no forms, no waiting for a human."}}]}</script><!--/gen:faqld-->
+</head>
+<body>
+<main>
 <h1>UNSWEEP</h1>
-<p>Rescue tokens left in a hacked wallet — even if a bot drains your funds.</p>
-<p class="notice" id="mainnetNotice"><strong>Mainnet: read-only check; rescue is testnet beta only.</strong> Your compromised key never leaves your browser. We will never DM you first and never ask for your seed phrase.</p>
+<p class="intro">Rescue tokens left in a hacked wallet on Base, even if a sweeper bot drains every deposit.</p>
+<!--gen:top-->
+<p class="notice" id="mainnetNotice"><span id="capLine">Base mainnet: rescue is live (16 ERC-20 tokens, up to $100,000* per rescue). Ethereum: free read-only check. Your compromised key never leaves your browser. We will never DM you first and never ask for your seed phrase.</span></p>
+<!--/gen:top-->
 
-<nav class="tabs" aria-label="Mode">
-<button type="button" id="tabScan" class="tab active">Check (read-only)</button>
-<button type="button" id="tabRescueMainnet" class="tab" disabled aria-disabled="true" title="Rescue on mainnet is disabled">Rescue on mainnet: disabled</button>
-</nav>
-
-<section id="step1"><h2>Step 1 &middot; Check your wallet</h2>
-<p>Paste your hacked wallet address (0x...). No private key or login needed.</p>
+<section id="step1">
+<h2>Step 1 &middot; Check your wallet</h2>
 <div class="form">
-<div class="field"><label for="chain">Network</label>
+<div class="field">
+<label for="chain">Network</label>
 <select id="chain">
-<option value="base" selected>Base mainnet (read-only check)</option>
+<option value="base" selected>Base mainnet (scan &amp; rescue)</option>
 <option value="ethereum">Ethereum mainnet (read-only check)</option>
-<option value="testnet">Base Sepolia testnet (rescue beta)</option>
-</select></div>
-<div class="field wide"><label for="victim">Public wallet address</label>
-<input id="victim" type="text" placeholder="0x... your wallet address" autocomplete="off" spellcheck="false"></div>
+</select>
+</div>
+<div class="field wide">
+<label for="victim">Public wallet address (no private key needed)</label>
+<input id="victim" type="text" placeholder="0x... your wallet address" autocomplete="off" spellcheck="false">
+</div>
 <button id="btnScan" class="primary">Scan</button>
 </div>
-<div id="scanOut" class="out"></div>
-<details class="info"><summary>What does this check?</summary>
-<p class="small">The mainnet check shows: EIP-7702 delegation and its target contract, nonce, native balance, main ERC-20 balances and ERC-20 approvals granted by direct transactions in the last 90 days that are still open. It cannot see approvals granted by off-chain signatures (permits). Results are cached for 10 minutes.</p></details></section>
+<div id="scanOut" class="out">
+</div>
+<!--gen:cap-->
+<p class="small muted" id="capNote">*Rescues above $10,000 get automatic extra safety checks (a few seconds more).</p>
+<!--/gen:cap-->
+<details class="info">
+<summary>What does this check?</summary>
+<p class="small">The mainnet check shows: EIP-7702 delegation and its target contract, nonce, native balance, main ERC-20 balances and ERC-20 approvals granted by direct transactions in the last 90 days that are still open. It cannot see approvals granted by off-chain signatures (permits). Results are cached for 10 minutes.</p>
+</details>
+</section>
 
-<section id="step2" hidden><h2>Step 2 &middot; Simulation: what you receive and the fee (testnet only)</h2>
+<section id="step2" hidden>
+<h2>Step 2 &middot; Simulation: what you receive and the fee</h2>
 <p>Enter the <strong>safe wallet</strong> that will receive the assets.</p>
 <div class="form">
-<div class="field"><label for="safe">Safe wallet address</label>
-<input id="safe" type="text" placeholder="0x... safe wallet address" autocomplete="off" spellcheck="false"></div>
+<div class="field">
+<label for="safe">Safe wallet address</label>
+<input id="safe" type="text" placeholder="0x... safe wallet address" autocomplete="off" spellcheck="false">
+</div>
 <button id="btnQuote" class="primary">Simulate</button>
 </div>
-<div id="quoteOut" class="out"></div></section>
+<div id="quoteOut" class="out">
+</div>
+</section>
 
-<section id="step3" hidden><h2>Step 3 &middot; Sign locally and rescue (testnet beta only)</h2>
-<ul class="small list"><li>Your key is used <strong>only inside this browser tab</strong>, in memory, to sign. It is never sent, stored or logged. Only signatures go to our relayer.</li><li>Seed phrases (12/24 words) are <strong>rejected</strong>. Paste only the 64-hex private key of the <em>compromised</em> testnet wallet.</li><li>Prefer offline signing? Open this page offline in a separate tab (option D, coming soon).</li></ul>
+<section id="step3" hidden>
+<h2>Step 3 &middot; Sign locally and rescue</h2>
+<ul class="small list">
+<li>Your key is used <strong>only inside this browser tab</strong>, in memory, to sign. It is never sent, stored or logged. Only signatures go to our relayer.</li>
+<li>Seed phrases (12/24 words) are <strong>rejected</strong>. Paste only the 64-hex private key of the <em>compromised</em> wallet.</li>
+<li>Prefer offline signing? Open this page offline in a separate tab (option D, coming soon).</li>
+</ul>
 <div class="form">
-<div class="field"><label for="pk">Compromised testnet private key</label>
-<input id="pk" type="password" placeholder="private key of the COMPROMISED testnet wallet (0x + 64 hex)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
-<div id="ts"></div>
+<div class="field">
+<label for="pk">Compromised wallet private key</label>
+<input id="pk" type="password" placeholder="private key of the COMPROMISED wallet (0x + 64 hex)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+</div>
+<div id="ts">
+</div>
 <button id="btnRescue" class="primary">Sign locally &amp; rescue</button>
 </div>
-<div id="rescueOut" class="out"></div></section>
+<div id="rescueOut" class="out">
+</div>
+</section>
 
-<section id="guides"><h2>Guides</h2>
-<div class="guides">
-<a href="/guides/eip-7702-sweeper/">What an EIP-7702 sweeper delegation is and how to check for one</a>
-<a href="/guides/compromised-wallet-checklist/">Compromised wallet checklist: what to do first</a>
-<a href="/guides/revoke-approvals/">How to find and revoke ERC-20 approvals</a>
-</div></section>
+<section id="faq">
+<h2>FAQ</h2>
+<details class="faq"><summary>What is a sweeper?</summary><p>A sweeper is an automated bot run by whoever stole your private key. It watches the wallet and moves out any ETH the moment it arrives, so you can never pay the gas to move your remaining tokens yourself. It may also install an EIP-7702 delegation on your address.</p></details>
+<details class="faq"><summary>What can be rescued and what cannot?</summary><p>Supported ERC-20 tokens that are still in the compromised wallet on Base mainnet can be rescued. Funds already moved out, unsupported tokens and assets on other networks cannot. Ethereum mainnet is a free read-only check only.</p></details>
+<details class="faq"><summary>How does it work?</summary><p>Scan the public address, enter a safe wallet and review a simulation with the exact amounts and fee, then sign locally. Our relayer pays the gas and submits one transaction that moves the tokens to your safe wallet. No ETH is ever sent to the compromised wallet, so the sweeper has nothing to grab.</p></details>
+<details class="faq"><summary>Does my private key leave my browser?</summary><p>No. The key is used only in memory inside this browser tab to sign. It is never sent, stored or logged; only signatures reach our relayer. Seed phrases are rejected. The code is open source, so anyone can check this.</p></details>
+<details class="faq"><summary>How much does it cost?</summary><p>A share of the value rescued: 15% below 1,000 USD, 10% from 1,000 to 10,000 USD and 5% above 10,000 USD. The fee comes out of the rescued tokens in the same transaction and is shown in the simulation before you sign. Nothing is paid upfront: if the rescue does not execute, you pay nothing.</p></details>
+<details class="faq"><summary>Which tokens and networks are supported?</summary><p>Rescue works on Base mainnet for the ERC-20 tokens listed under Supported tokens on this page. Ethereum mainnet is a free read-only check of delegation, nonce, balances and open approvals.</p></details>
+<details class="faq"><summary>Can you rescue airdrops or vesting tokens?</summary><p>Sometimes. Every airdrop or vesting contract is different, so they are reviewed case by case. Email support@unsweep.com with your public address and the name of the claim or vesting contract. Never send keys or seed phrases.</p></details>
+<details class="faq"><summary>What happens with rescues above 10,000 USD?</summary><p>They run automatically up to 100,000 USD per rescue, with extra safety checks that take a few seconds: fresh Chainlink prices for every token, stablecoin prices within a safe band and a shorter list of eligible tokens. Other tokens are limited to 10,000 USD per rescue.</p></details>
+<details class="faq"><summary>How do I tell real support from scammers?</summary><p>The only site is unsweep.com and the only contact is support@unsweep.com, which only replies to emails you send. We never DM you first on Reddit, Telegram, Discord or X, never ask for your seed phrase or private key and never ask for payment upfront. Anyone who does is a scammer.</p></details>
+<details class="faq"><summary>My wallet was just hacked. What should I do right now?</summary><p>Stop sending funds to the compromised wallet. Create a new wallet with a new seed phrase, ideally on a clean device. Scan your address above to see what is left, then follow the compromised wallet checklist in the guides below.</p></details>
+<details class="faq"><summary>Why does speed matter?</summary><p>While you wait for manual help, the attacker can come back and you can make costly mistakes. UNSWEEP is fully automatic: no signup, no forms, no waiting for a human.</p></details>
+</section>
+
+<section id="contracts">
+<h2>Verify our contracts</h2>
+<ul class="small list">
+<li>UnsweepDelegate: <a class="addr" href="https://basescan.org/address/0x38bcF425bC4d13624734e09376F2fafc799fA8c8#code" rel="noopener noreferrer">0x38bcF425bC4d13624734e09376F2fafc799fA8c8</a></li>
+<li>UnsweepConfig: <a class="addr" href="https://basescan.org/address/0x56a345661e3999F2b20f1E069aAC14097Fa0D118#code" rel="noopener noreferrer">0x56a345661e3999F2b20f1E069aAC14097Fa0D118</a></li>
+<li>Source code: <a href="https://github.com/unsweep/unsweep" rel="noopener noreferrer">github.com/unsweep/unsweep</a></li>
+</ul>
+<!--gen:tokens-->
+<details class="info" id="tokens"><summary>Supported tokens on Base (16)</summary><p class="small">USDC, USDT, DAI, WETH, cbETH, cbBTC, LINK, AERO, EURC, GHO, tBTC, sUSDe, COMP, WELL, wstETH, weETH</p></details>
+<!--/gen:tokens-->
+</section>
+
+<section id="guides">
+<h2>Guides</h2>
+<ul class="guides">
+<li><a href="/guides/eip-7702-sweeper/">What an EIP-7702 sweeper delegation is and how to check for one</a></li>
+<li><a href="/guides/compromised-wallet-checklist/">Compromised wallet checklist: what to do first</a></li>
+<li><a href="/guides/revoke-approvals/">How to find and revoke ERC-20 approvals</a></li>
+</ul>
+</section>
 
 <footer>
-<p class="small">Open source, non-custodial. Nothing on this page can recover funds that have already been moved.</p>
-<p class="small">Testnet beta contracts on Base Sepolia: <a href="https://sepolia.basescan.org/address/0xbe0E049F17836736772206E6BA3C3EfF21C2E0bC" rel="noopener noreferrer">0xbe0E…E0bC</a> · <a href="https://sepolia.basescan.org/address/0xc69D4aF59BaD315180db5961fb7196D31b33E331" rel="noopener noreferrer">UnsweepDelegate 0xc69D…E331</a>. Source code verification and public repository: pending.</p>
+<p class="small">Contact: <a href="mailto:support@unsweep.com">support@unsweep.com</a> (never send keys or seed phrases).</p>
+<p class="small muted">Non-custodial software. Use at your own risk.</p>
 </footer>
 </main>
 <script src="/assets/ethers.min.js"></script>

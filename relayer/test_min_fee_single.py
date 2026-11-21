@@ -16,7 +16,9 @@ def _scan_multi(usds):
 
 def _eth_env(env):
     env.setattr(S, 'CHAIN_ID', 1)
-    env.setattr(S, 'ETH_USD', 3000.0)
+    env.setattr(S, '_eth_usd', lambda: 3000.0)  # oraculo ETH/USD simulado (fail-closed en prod)
+    env.setattr(S, 'assets', lambda: {'tokens': [{'address': x, 'decimals': 6, 'fee_on_transfer': False}
+                                                 for x in (USDC, TKA, TKB)]})  # allowlist del test
     # gas 1.5M * 50 gwei * 3000 USD = 225 USD -> minimo M = 337.5 USD
     env.setattr(S, 'w3', types.SimpleNamespace(eth=types.SimpleNamespace(gas_price=50 * 10**9)))
     return 337.5

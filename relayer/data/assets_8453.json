@@ -1,0 +1,221 @@
+{
+ "_note": "Base mainnet (8453). Lista aprobada #90 (16 tokens). Direcciones: docs oficiales (Circle, Chainlink, Ethena, Aave address-book) y eth_call on-chain; feeds: directorio oficial Chainlink (evidence/chainlink). Precios SOLO por latestRoundData on-chain (relayer/oracle.py, fail-closed). Generado por tools/gen_assets_8453.py. ETH nativo NO incluido: el delegate solo barre ERC-20/ERC-721.",
+ "eth_usd_feed": {
+  "address": "0x71041dddad3595F9CEd3DcCFBe3D1F4b0a16Bb70",
+  "pair": "ETH / USD",
+  "quote": "USD",
+  "heartbeat": 1200,
+  "decimals": 8
+ },
+ "tokens": [
+  {
+   "address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+   "symbol": "USDC",
+   "decimals": 6,
+   "fee_on_transfer": false,
+   "feed": {
+    "address": "0x7e860098F58bBFC8648a4311b374B1D669a2bc6B",
+    "pair": "USDC / USD",
+    "quote": "USD",
+    "heartbeat": 86400,
+    "decimals": 8
+   }
+  },
+  {
+   "address": "0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2",
+   "symbol": "USDT",
+   "decimals": 6,
+   "fee_on_transfer": false,
+   "feed": {
+    "address": "0xf19d560eB8d2ADf07BD6D13ed03e1D11215721F9",
+    "pair": "USDT / USD",
+    "quote": "USD",
+    "heartbeat": 86400,
+    "decimals": 8
+   }
+  },
+  {
+   "address": "0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb",
+   "symbol": "DAI",
+   "decimals": 18,
+   "fee_on_transfer": false,
+   "feed": {
+    "address": "0x591e79239a7d679378eC8c847e5038150364C78F",
+    "pair": "DAI / USD",
+    "quote": "USD",
+    "heartbeat": 86400,
+    "decimals": 8
+   }
+  },
+  {
+   "address": "0x4200000000000000000000000000000000000006",
+   "symbol": "WETH",
+   "decimals": 18,
+   "fee_on_transfer": false,
+   "feed": {
+    "address": "0x71041dddad3595F9CEd3DcCFBe3D1F4b0a16Bb70",
+    "pair": "ETH / USD",
+    "quote": "USD",
+    "heartbeat": 1200,
+    "decimals": 8
+   }
+  },
+  {
+   "address": "0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22",
+   "symbol": "cbETH",
+   "decimals": 18,
+   "fee_on_transfer": false,
+   "feed": {
+    "address": "0xd7818272B9e248357d13057AAb0B417aF31E817d",
+    "pair": "CBETH / USD",
+    "quote": "USD",
+    "heartbeat": 1200,
+    "decimals": 8
+   }
+  },
+  {
+   "address": "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf",
+   "symbol": "cbBTC",
+   "decimals": 8,
+   "fee_on_transfer": false,
+   "feed": {
+    "address": "0x07DA0E54543a844a80ABE69c8A12F22B3aA59f9D",
+    "pair": "cbBTC / USD",
+    "quote": "USD",
+    "heartbeat": 1200,
+    "decimals": 8
+   }
+  },
+  {
+   "address": "0x88Fb150BDc53A65fe94Dea0c9BA0a6dAf8C6e196",
+   "symbol": "LINK",
+   "decimals": 18,
+   "fee_on_transfer": false,
+   "feed": {
+    "address": "0x17CAb8FE31E32f08326e5E27412894e49B0f9D65",
+    "pair": "LINK / USD",
+    "quote": "USD",
+    "heartbeat": 86400,
+    "decimals": 8
+   }
+  },
+  {
+   "address": "0x940181a94A35A4569E4529A3CDfB74e38FD98631",
+   "symbol": "AERO",
+   "decimals": 18,
+   "fee_on_transfer": false,
+   "feed": {
+    "address": "0x4EC5970fC728C5f65ba413992CD5fF6FD70fcfF0",
+    "pair": "AERO / USD",
+    "quote": "USD",
+    "heartbeat": 86400,
+    "decimals": 8
+   }
+  },
+  {
+   "address": "0x60a3E35Cc302bFA44Cb288Bc5a4F316Fdb1adb42",
+   "symbol": "EURC",
+   "decimals": 6,
+   "fee_on_transfer": false,
+   "feed": {
+    "address": "0xDAe398520e2B67cd3f27aeF9Cf14D93D927f8250",
+    "pair": "EURC / USD",
+    "quote": "USD",
+    "heartbeat": 86400,
+    "decimals": 8
+   }
+  },
+  {
+   "address": "0x6Bb7a212910682DCFdbd5BCBb3e28FB4E8da10Ee",
+   "symbol": "GHO",
+   "decimals": 18,
+   "fee_on_transfer": false,
+   "feed": {
+    "address": "0x42868EFcee13C0E71af89c04fF7d96f5bec479b0",
+    "pair": "GHO / USD",
+    "quote": "USD",
+    "heartbeat": 86400,
+    "decimals": 8
+   }
+  },
+  {
+   "address": "0x236aa50979D5f3De3Bd1Eeb40E81137F22ab794b",
+   "symbol": "tBTC",
+   "decimals": 18,
+   "fee_on_transfer": false,
+   "feed": {
+    "address": "0x6D75BFB5A5885f841b132198C9f0bE8c872057BF",
+    "pair": "TBTC / USD",
+    "quote": "USD",
+    "heartbeat": 86400,
+    "decimals": 8
+   }
+  },
+  {
+   "address": "0x211Cc4DD073734dA055fbF44a2b4667d5E5fE5d2",
+   "symbol": "sUSDe",
+   "decimals": 18,
+   "fee_on_transfer": false,
+   "feed": {
+    "address": "0x79cf4a31B29D69191f0b6E97916eB93FEB81E533",
+    "pair": "sUSDe / USD",
+    "quote": "USD",
+    "heartbeat": 86400,
+    "decimals": 8
+   }
+  },
+  {
+   "address": "0x9e1028F5F1D5eDE59748FFceE5532509976840E0",
+   "symbol": "COMP",
+   "decimals": 18,
+   "fee_on_transfer": false,
+   "feed": {
+    "address": "0x9DDa783DE64A9d1A60c49ca761EbE528C35BA428",
+    "pair": "COMP / USD",
+    "quote": "USD",
+    "heartbeat": 86400,
+    "decimals": 8
+   }
+  },
+  {
+   "address": "0xA88594D404727625A9437C3f886C7643872296AE",
+   "symbol": "WELL",
+   "decimals": 18,
+   "fee_on_transfer": false,
+   "feed": {
+    "address": "0xc15d9944dAefE2dB03e53bef8DDA25a56832C5fe",
+    "pair": "WELL / USD",
+    "quote": "USD",
+    "heartbeat": 86400,
+    "decimals": 8
+   }
+  },
+  {
+   "address": "0xc1CBa3fCea344f92D9239c08C0568f6F2F0ee452",
+   "symbol": "wstETH",
+   "decimals": 18,
+   "fee_on_transfer": false,
+   "feed": {
+    "address": "0x43a5C292A453A3bF3606fa856197f09D7B74251a",
+    "pair": "WSTETH / ETH",
+    "quote": "ETH",
+    "heartbeat": 86400,
+    "decimals": 18
+   }
+  },
+  {
+   "address": "0x04C0599Ae5A44757c0af6F9eC3b93da8976c150A",
+   "symbol": "weETH",
+   "decimals": 18,
+   "fee_on_transfer": false,
+   "feed": {
+    "address": "0xFC1415403EbB0c693f9a7844b92aD2Ff24775C65",
+    "pair": "weETH / ETH",
+    "quote": "ETH",
+    "heartbeat": 86400,
+    "decimals": 18
+   }
+  }
+ ],
+ "nfts": []
+}

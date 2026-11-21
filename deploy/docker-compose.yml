@@ -1,4 +1,4 @@
-# UNSWEEP relayer (testnet). SIN 'ports': solo alcanzable en la red docker por el nombre unsweep-relayer:8787 (Caddy).
+# UNSWEEP relayer (Base mainnet 8453, #737 4a-fix3, #85=A,X). SIN 'ports': solo alcanzable en la red docker por el nombre unsweep-relayer:8787 (Caddy).
 name: unsweep
 services:
   relayer:
@@ -6,15 +6,16 @@ services:
     container_name: unsweep-relayer
     restart: always
     user: "1000:1000"
-    env_file: /opt/aire/product.env
+    # #89: env MINIMO (TURNSTILE_*, OPS_PK, BASE_RPC_URL, ETH_RPC_URL) generado por tools/gen_env_min.py, 600, fuera del repo
+    env_file: /opt/aire/unsweep-relayer.env
     environment:
-      UNSWEEP_CHAIN_ID: "84532"
-      # M4c (deployments/base-sepolia.txt): fija contratos; evita defaults desfasados
-      UNSWEEP_DELEGATE: "0xBe5a2F788fa56DeCc7b13a20F45429d167a8080e"
-      UNSWEEP_CONFIG: "0x2421aa3a6c473fD7ccA6be9bF4024E92CE80176d"
-      # M2c-2c: claves de TEST publicas de Cloudflare (siempre pasan), SOLO testnet; prevalecen sobre env_file
-      TURNSTILE_SECRET: "1x0000000000000000000000000000000AA"
-      TURNSTILE_SITEKEY: "1x00000000000000000000AA"
+      UNSWEEP_CHAIN_ID: "8453"
+      # deployments/mainnet.txt (blob 21863f98): contratos CREATE2 verificados en Basescan
+      UNSWEEP_DELEGATE: "0x38bcF425bC4d13624734e09376F2fafc799fA8c8"
+      UNSWEEP_CONFIG: "0x56a345661e3999F2b20f1E069aAC14097Fa0D118"
+      # RPC publico oficial de Base (sin secretos en el repo)
+      UNSWEEP_RPC: "https://mainnet.base.org"
+      # Turnstile: claves reales desde env_file minimo (/opt/aire/unsweep-relayer.env); sin overrides de TEST (svc_core las rechaza en mainnet)
       UNSWEEP_PG: "host=/var/run/postgresql dbname=unsweep user=tecnoclic"
     volumes:
       - ..:/app:ro

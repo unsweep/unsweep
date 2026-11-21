@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
-"""E2E UNSWEEP M2c-2 por la web real (un solo intento, sin reintentos).
-Navegador headless estandar; NO evade Turnstile. La clave de prueba nunca se imprime."""
+"""E2E UNSWEEP por la web real, modo MAINNET (#737 4a-fix3, respuesta humana #85 = X).
+Valida SOLO el escaneo en Base mainnet (8453): sin clave privada, sin firma y sin /api/rescue.
+Un solo intento, sin reintentos. Navegador headless estandar; no interactua con Turnstile.
+Uso: e2e_web.py [URL] [DIRECCION_PUBLICA]
+  URL por defecto: https://unsweep.com/
+  DIRECCION por defecto: VICTIM de .e2e/addrs.env (solo direccion publica; nunca se lee keys.env)."""
 import json, re, sys, time
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 BASE = Path(__file__).resolve().parent.parent / '.e2e'
+URL = sys.argv[1] if len(sys.argv) > 1 else 'https://unsweep.com/'
 
 def envfile(p):
     d = {}
@@ -14,15 +19,15 @@ def envfile(p):
             k, v = line.split('=', 1); d[k.strip()] = v.strip()
     return d
 
-keys = envfile(BASE / 'keys.env'); addrs = envfile(BASE / 'addrs.env')
-PK = keys['VICTIM_PK']; VICTIM = addrs['VICTIM']; SAFE = addrs['SAFE']
-
-def clean(s):
-    s = str(s or '')
-    return s.replace(PK, '[REDACTED]').replace(PK[2:], '[REDACTED]')
+if len(sys.argv) > 2:
+    ADDR = sys.argv[2]
+else:
+    ADDR = envfile(BASE / 'addrs.env')['VICTIM']
+if not re.fullmatch(r'0x[0-9a-fA-F]{40}', ADDR or ''):
+    print('RESULT', json.dumps({'abort': 'bad_address'})); sys.exit(1)
 
 def log(*a):
-    print(time.strftime('%H:%M:%S'), *[clean(x) for x in a], flush=True)
+    print(time.strftime('%H:%M:%S'), *a, flush=True)
 
 def wait_text(page, sel, pat, timeout):
     t0 = time.time()
@@ -33,65 +38,40 @@ def wait_text(page, sel, pat, timeout):
         time.sleep(1)
     return None
 
-result = {'stage': 'start'}
-rescue_resp = {}
+result = {'stage': 'start', 'mode': 'mainnet_scan_only', 'url': URL}
+signing_calls = []
+BASE.mkdir(exist_ok=True)
 with sync_playwright() as p:
     b = p.chromium.launch(headless=True)
     page = b.new_page()
-    def on_resp(r):
-        if r.url.endswith('/api/rescue'):
-            try: rescue_resp['status'] = r.status; rescue_resp['body'] = r.text()[:500]
-            except Exception as e: rescue_resp['err'] = type(e).__name__
-    page.on('response', on_resp)
+    def on_req(r):
+        if r.url.endswith('/api/rescue') or r.url.endswith('/api/quote'):
+            signing_calls.append(r.url)
+    page.on('request', on_req)
     page.on('console', lambda m: log('console', m.type, m.text[:200]))
     try:
-        page.goto('https://unsweep.com/', wait_until='load', timeout=60000)
-        # paso 1
-        page.select_option('#chain', 'testnet')
-        page.fill('#victim', VICTIM); page.click('#btnScan')
-        t = wait_text(page, '#scanOut', r'Address:|failed|Invalid', 120)
-        log('STEP1', t); result['stage'] = 'scan'
-        if not t or 'Address:' not in t: raise SystemExit('scan_failed')
+        page.goto(URL, wait_until='load', timeout=60000)
+        page.select_option('#chain', 'base')
         net = page.eval_on_selector('#step1 #chain', 'e => e.options[e.selectedIndex].text')
         log('STEP1_NETWORK', net); result['network'] = net
-        if 'Base Sepolia' not in (net or ''): raise SystemExit('scan_not_testnet')
-        page.wait_for_selector('#step2', state='visible', timeout=10000)
-        # paso 2
-        page.fill('#safe', SAFE); page.click('#btnQuote')
-        t = wait_text(page, '#quoteOut', r'Estimated value|failed|Invalid|Not eligible|Nothing', 120)
-        log('STEP2', t); result['stage'] = 'quote'
-        page.wait_for_selector('#step3', state='visible', timeout=10000)
-        # paso 3: Turnstile real (sin evasion)
-        tok = None; t0 = time.time()
-        while time.time() - t0 < 90:
-            try:
-                tok = page.eval_on_selector('input[name="cf-turnstile-response"]', 'e => e.value')
-            except Exception:
-                tok = None
-            if tok: break
-            time.sleep(2)
-        result['turnstile_token'] = bool(tok)
-        log('TURNSTILE token_obtenido=', bool(tok), 'segundos=', int(time.time() - t0))
-        page.screenshot(path=str(BASE / 'step3.png'), full_page=True)
-        if not tok: raise SystemExit('turnstile_not_solved_headless')
-        result['stage'] = 'turnstile'
-        page.fill('#pk', PK); page.click('#btnRescue')
-        t = wait_text(page, '#rescueOut', r'Status:|failed', 240)
-        log('STEP3', t); result['stage'] = 'rescue'; result['rescueOut'] = clean(t)
+        if not net or 'Base' not in net or re.search(r'sepolia|testnet', net, re.I):
+            raise SystemExit('network_not_mainnet')
+        page.fill('#victim', ADDR); page.click('#btnScan')
+        t = wait_text(page, '#scanOut', r'Address:|failed|Invalid', 120)
+        log('STEP1', t); result['stage'] = 'scan'; result['scanOut'] = (t or '')[:500]
+        if not t or 'Address:' not in t: raise SystemExit('scan_failed')
+        if re.search(r'failed|error', t, re.I): raise SystemExit('scan_error')
+        result['stage'] = 'scan_ok'
     except SystemExit as e:
         result['abort'] = str(e)
     except Exception as e:
-        result['abort'] = type(e).__name__ + ': ' + clean(str(e))[:300]
+        result['abort'] = type(e).__name__ + ': ' + str(e)[:300]
     finally:
-        try: page.screenshot(path=str(BASE / 'final.png'), full_page=True)
+        try: page.screenshot(path=str(BASE / 'final_mainnet.png'), full_page=True)
         except Exception: pass
-        result['rescue_http'] = {k: clean(v) for k, v in rescue_resp.items()}
+        result['signing_calls'] = signing_calls
         b.close()
 print('RESULT', json.dumps(result))
-# #773 A.2: codigo de salida distinto de 0 si hay abort o error
-_ro = str(result.get('rescueOut', ''))
-_ok = ('abort' not in result and 'error' not in result
-       and result.get('stage') == 'rescue'
-       and re.search(r'Status:\s*success', _ro, re.I) is not None
-       and re.search(r'error|failed|revert', _ro, re.I) is None)
+# Exito: escaneo mainnet correcto y ninguna llamada de cotizacion/rescate (sin firma).
+_ok = ('abort' not in result and result.get('stage') == 'scan_ok' and not signing_calls)
 sys.exit(0 if _ok else 1)

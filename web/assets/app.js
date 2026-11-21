@@ -24,7 +24,7 @@
     if (!a) return show($('scanOut'), 'Invalid address.', 'err');
     const chain = ($('chain') && $('chain').value) || 'testnet';
     $('step2').hidden = true; $('step3').hidden = true;
-    if (chain === 'base' || chain === 'ethereum') {
+    if (chain === 'ethereum') {
       st.scan = null; // rescue is never enabled on mainnet
       show($('scanOut'), 'Read-only check on ' + (chain === 'base' ? 'Base' : 'Ethereum') + ' mainnet...');
       try {
@@ -49,12 +49,12 @@
         for (const ap of aps) out.push('Open approval: ' + (ap.symbol || ap.token) + ' -> spender ' + ap.spender + (ap.unlimited ? ' (unlimited)' : '') + ' - see /guides/revoke-approvals/');
         const am = m.approvalsMeta || {};
         if (!complete) out.push('Approvals listed above may be partial (' + (am.txScanned || 0) + ' recent transactions checked).');
-        out.push('Mainnet: read-only check. Rescue is testnet beta only.');
+        out.push('Ethereum mainnet: read-only check. Rescue is currently live on Base mainnet (16 ERC-20 tokens).');
         show($('scanOut'), out, complete ? 'ok' : 'err');
       } catch (e) { show($('scanOut'), 'Scan failed: ' + e.message, 'err'); }
       return;
     }
-    show($('scanOut'), 'Scanning Base Sepolia... (can take ~30 s)');
+    show($('scanOut'), 'Scanning Base mainnet... (can take ~30 s)');
     try {
       if (!st.cfg) st.cfg = await api('config');
       const s = await api('scan', { address: a });
@@ -102,7 +102,7 @@
       for (const l of q.lines) out.push((l.symbol || l.token) + ': total ' + fmt(l.amount, l.decimals) + ' | fee ' + fmt(l.fee, l.decimals) + ' | you receive ' + fmt(l.net, l.decimals));
       if (q.nfts > 0) out.push('NFTs found: ' + q.nfts + ' (NFT rescue is not enabled in this preview; they are excluded).');
       const netUsd = Math.max(0, Number(q.rescued_usd) - Number(q.fee_usd));
-      out.push('Estimated value (testnet prices): $' + q.rescued_usd);
+      out.push('Estimated value: $' + q.rescued_usd);
       out.push('Fee: $' + q.fee_usd + ' (' + q.fee_pct + '% of the rescued value; tier ' + (tierBps / 100) + '%)');
       out.push('Your safe wallet receives: ~$' + netUsd.toFixed(2) + ' (per token amounts above).');
       if (!q.policy_ok) { out.push('Not eligible: ' + q.policy_reason); return show($('quoteOut'), out, 'err'); }

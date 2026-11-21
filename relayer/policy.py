@@ -2,8 +2,8 @@
 
 - Tramos: 15 % (<1.000 USD), 10 % (1.000-10.000), 5 % (>10.000).
 - Ethereum (chain 1): comision = max(tramo, gas estimado x 1.5).
-- Limite por rescate: 10.000 USD hasta 3 rescates mainnet exitosos; despues 50.000;
-  sin limite tras 10 rescates sin incidentes o auditoria externa.
+- Limite por rescate (#827.2/3b): 10.000 USD; 50.000 USD solo con >=3 rescates reales.
+  Sin excepciones por encima del limite.
 - Excepcion manual: linea escrita por el HUMANO en HUMANO.md:
     UNSWEEP-EXCEPCION <ref> <max_usd> USD
 - Simulacion eth_call obligatoria antes de enviar.
@@ -17,16 +17,29 @@ import os
 import re
 import time
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 
 MAX_FEE_BPS = 1500  # igual que el techo inmutable del contrato
 ETH_MAINNET = 1
 MAINNETS = {1, 8453, 42161}
-CAP_INITIAL_USD = 10_000.0
-CAP_RAISED_USD = 50_000.0
+CAP_INITIAL_USD = 100_000.0  # #927: tope automatico por rescate
+FIXED_CAP_USD = 10_000.0  # umbral de controles extra (#927) y tope de tokens fuera de HIGH_VALUE
+CAP_RAISED_USD = 100_000.0  # #927: sin tramos por historial; el tope automatico es 100k
+HIGH_VALUE_USD = 10_000.0
+# #98 sustituye #927(a) "< 1 h": la antiguedad maxima es el heartbeat de CADA feed usado (tambien compuestos X/ETH * ETH/USD).
+# #98: por encima de 10k, ademas, stablecoins dentro de 0.98-1.02 USD y EURC dentro de un 2% del feed EUR/USD si existe.
+STABLE_BAND_SYMBOLS = frozenset({"USDC", "USDT", "DAI", "GHO", "sUSDe"})
+STABLE_BAND = (0.98, 1.02)
+EURC_BAND = 0.02
+HIGH_VALUE_SYMBOLS = frozenset({"USDC", "USDT", "DAI", "EURC", "WETH", "wstETH", "weETH", "cbETH", "cbBTC"})
+REPO_DIR = Path(__file__).resolve().parent.parent
+CASOS_MD = Path(os.environ.get("UNSWEEP_CASOS_MD", REPO_DIR / "docs" / "CASOS.md"))
 RAISE_AFTER_OK = 3
 UNCAP_AFTER_OK = 10
 GAS_LOST_ALERT_USD = 5.0
+OPS_CAP_WEI = 5 * 10**15   # #84: tope 0.005 ETH en la wallet OPS
+OPS_LOW_WEI = 15 * 10**14  # 30 % del tope: aviso en HUMANO.md
 ETH_GAS_MULT = 1.5
 
 DATA_DIR = Path(os.environ.get("UNSWEEP_DATA_DIR", Path(__file__).parent / "data"))
@@ -72,11 +85,10 @@ class TrackRecord:
     external_audit: bool = False
 
 
-def cap_usd(tr: TrackRecord):
-    """None = sin limite."""
-    if tr.external_audit or (tr.mainnet_ok >= UNCAP_AFTER_OK and tr.incidents == 0):
-        return None
-    return CAP_RAISED_USD if tr.mainnet_ok >= RAISE_AFTER_OK else CAP_INITIAL_USD
+def cap_usd(tr: TrackRecord) -> float:
+    """#927: tope automatico 100.000 USD por rescate, independiente del historial.
+    Por encima de 10.000 USD se exigen los controles de check_high_value/check_split."""
+    return CAP_INITIAL_USD
 
 
 _EXC = re.compile(r"^\s*UNSWEEP-EXCEPCION\s+(\S+)\s+([0-9][0-9_.,]*)\s*USD\b", re.M)
@@ -97,15 +109,109 @@ def manual_exception_usd(ref: str, humano_md: Path | None = None):
 
 
 def check_cap(chain_id: int, rescued_usd: float, tr: TrackRecord, ref: str = "", humano_md: Path | None = None):
+    """#827.2/3b: limite duro. Ninguna excepcion manual ni configuracion lo supera;
+    una excepcion (p.ej. 25.000) tampoco reduce el limite: <=10.000 siempre se acepta."""
     if chain_id not in MAINNETS:
         return
     cap = cap_usd(tr)
-    if cap is None or rescued_usd <= cap:
+    if rescued_usd <= cap:
         return
-    exc = manual_exception_usd(ref, humano_md) if ref else None
-    if exc is not None and rescued_usd <= exc:
+    raise PolicyError(f"supera el limite por rescate ({rescued_usd} > {cap} USD; {tr.mainnet_ok} rescates reales)")
+
+
+def needs_extra_checks(rescued_usd: float) -> bool:
+    return rescued_usd > HIGH_VALUE_USD
+
+
+def check_high_value(rescued_usd: float, items: list, eur_usd: float | None = None):
+    """#927 (a)+(b) con #98. items: [{'symbol','value_usd','price_usd','price_feeds':[{'age_s','heartbeat_s'}]}].
+    Solo aplica si rescued_usd > 10.000 (fail-closed):
+    (a/#98) cada feed usado para valorar el token (compuestos: X/ETH y ETH/USD) con 0 <= antiguedad <= su heartbeat.
+    (b) los tokens fuera de HIGH_VALUE_SYMBOLS suman como maximo 10.000 USD.
+    (#98) USDC/USDT/DAI/GHO/sUSDe con precio en [0.98, 1.02]; EURC a <= 2% de EUR/USD si ese feed existe (eur_usd)."""
+    if not needs_extra_checks(rescued_usd):
         return
-    raise PolicyError(f"supera el limite por rescate ({rescued_usd} > {cap} USD) sin excepcion manual")
+    other = 0.0
+    for it in items:
+        sym = it.get("symbol", "?")
+        feeds = it.get("price_feeds")
+        if not feeds:
+            raise PolicyError(f"precio de {sym} sin feed Chainlink verificable en rescate >10.000 USD")
+        for f in feeds:
+            age, hb = f.get("age_s"), f.get("heartbeat_s")
+            if age is None or hb is None or int(hb) <= 0 or not (0 <= int(age) <= int(hb)):
+                raise PolicyError(f"precio de {sym} desactualizado (antiguedad {age}s > heartbeat {hb}s) en rescate >10.000 USD")
+        px = it.get("price_usd")
+        if sym in STABLE_BAND_SYMBOLS:
+            lo, hi = STABLE_BAND
+            if px is None or not (lo <= float(px) <= hi):
+                raise PolicyError(f"stablecoin {sym} fuera de {lo}-{hi} USD (precio {px}) en rescate >10.000 USD")
+        if sym == "EURC" and eur_usd is not None:
+            if px is None or float(eur_usd) <= 0 or abs(float(px) / float(eur_usd) - 1) > EURC_BAND:
+                raise PolicyError(f"EURC fuera de un 2% de EUR/USD (precio {px}, EUR/USD {eur_usd}) en rescate >10.000 USD")
+        if sym not in HIGH_VALUE_SYMBOLS:
+            other += float(it.get("value_usd", 0))
+    if other > HIGH_VALUE_USD:
+        raise PolicyError(f"tokens fuera de la lista de alto valor superan 10.000 USD ({other:.2f})")
+
+
+def check_split(expected: list, simulated: dict):
+    """#927 (c): reparto exacto. expected: lines de la cotizacion {'token','amount','fee','net'}.
+    simulated: {token_lower: {'safe': int, 'fee': int}} obtenido de la resimulacion justo antes de enviar."""
+    sim = {str(k).lower(): v for k, v in (simulated or {}).items()}
+    if len(sim) != len(expected):
+        raise PolicyError("resimulacion: numero de tokens distinto al cotizado")
+    for l in expected:
+        got = sim.get(str(l["token"]).lower())
+        if got is None:
+            raise PolicyError(f"resimulacion: falta {l['token']}")
+        if int(got.get("safe", -1)) != int(l["net"]) or int(got.get("fee", -1)) != int(l["fee"]):
+            raise PolicyError(f"resimulacion: reparto SAFE/fee distinto al cotizado en {l['token']}")
+
+
+def breakdown(lines: list, rescued_usd: float, fee_usd: float) -> list:
+    """#927 (d): desglose que se muestra antes de firmar."""
+    out = []
+    for l in lines:
+        dec = int(l.get("decimals", 18))
+        out.append({"symbol": l.get("symbol", ""), "to_safe": int(l["net"]) / 10**dec, "fee": int(l["fee"]) / 10**dec})
+    return [{"rescued_usd": round(rescued_usd, 2), "fee_usd": round(fee_usd, 2), "to_safe_usd": round(rescued_usd - fee_usd, 2)}] + out
+
+
+def record_case(chain_id: int, rescued_usd: float, fee_usd: float, result: str, txh: str = "", path: Path | None = None):
+    """#927 (e): registro de cada rescate >10.000 USD en docs/CASOS.md (sin direcciones de usuario)."""
+    p = path or CASOS_MD
+    p.parent.mkdir(parents=True, exist_ok=True)
+    new = not p.exists()
+    with p.open("a", encoding="utf-8") as f:
+        if new:
+            f.write("# Casos de rescate > 10.000 USD\n\n| fecha UTC | chain | rescatado USD | fee USD | resultado | tx |\n|---|---|---|---|---|---|\n")
+        f.write(f"| {datetime.now(timezone.utc).isoformat(timespec='seconds')} | {chain_id} | {rescued_usd:.2f} | {fee_usd:.2f} | {result} | {txh} |\n")
+
+
+def ops_status(balance_wei) -> str:
+    if balance_wei is None or int(balance_wei) < 0:
+        return "unknown"
+    b = int(balance_wei)
+    return "over" if b > OPS_CAP_WEI else ("low" if b < OPS_LOW_WEI else "ok")
+
+
+def ops_guard(balance_wei, humano_md: Path | None = None) -> str:
+    """Fail-closed: saldo ilegible o por encima del tope => no se patrocina. Bajo 30 % => aviso unico."""
+    st = ops_status(balance_wei)
+    if st in ("unknown", "over"):
+        raise PolicyError(f"wallet OPS fuera de politica ({st}); tope {OPS_CAP_WEI / 1e18} ETH")
+    if st == "low":
+        flag = DATA_DIR / "ops_low_alerted"
+        try:
+            if not flag.exists():
+                with (humano_md or HUMANO_MD).open("a", encoding="utf-8") as h:
+                    h.write(f"\n- [UNSWEEP] Saldo OPS bajo: {int(balance_wei) / 1e18:.6f} ETH (< {OPS_LOW_WEI / 1e18} ETH). "
+                            f"Recargar hasta como maximo {OPS_CAP_WEI / 1e18} ETH.\n")
+                flag.write_text(str(int(time.time())))
+        except OSError:
+            pass  # contenedor read-only: el aviso lo publica /api/health (ops=low)
+    return st
 
 
 def check_ethereum_route(chain_id: int, rpc_url: str):
