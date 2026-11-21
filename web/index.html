@@ -1,5 +1,6 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>UNSWEEP - free read-only wallet check (EIP-7702 delegation, open approvals) on Base and Ethereum</title><meta name="description" content="Free read-only check of a public wallet address on Base and Ethereum mainnet: EIP-7702 delegation, nonce, balances and open ERC-20 approvals. No keys, no signatures. Rescue is a testnet beta only."><meta name="referrer" content="no-referrer"><link rel="canonical" href="https://unsweep.com/"><link rel="stylesheet" href="/assets/style.css"></head><body><main>
 <h1>UNSWEEP</h1>
+<p>Rescue the tokens still left in a hacked wallet &mdash; even if a bot steals any ETH you send.</p>
 <p class="notice" id="mainnetNotice"><strong>Mainnet: read-only check; rescue is testnet beta only.</strong> Your compromised key never leaves your browser. We will never DM you first and never ask for your seed phrase.</p>
 
 <nav class="tabs" aria-label="Mode">
@@ -7,8 +8,8 @@
 <button type="button" id="tabRescueMainnet" class="tab" disabled aria-disabled="true" title="Rescue on mainnet is disabled">Rescue on mainnet: disabled</button>
 </nav>
 
-<section id="step1"><h2>Step 1 &middot; Scan (public address only)</h2>
-<p>Enter a <strong>public address</strong>. No key and no signature are needed to scan.</p>
+<section id="step1"><h2>Step 1 &middot; Check your wallet</h2>
+<p>Paste your hacked wallet address (0x...). No private key or login needed.</p>
 <div class="form">
 <div class="field"><label for="chain">Network</label>
 <select id="chain">
@@ -17,7 +18,7 @@
 <option value="testnet">Base Sepolia testnet (rescue beta)</option>
 </select></div>
 <div class="field wide"><label for="victim">Public wallet address</label>
-<input id="victim" type="text" placeholder="0x... public wallet address" autocomplete="off" spellcheck="false"></div>
+<input id="victim" type="text" placeholder="0x... your wallet address" autocomplete="off" spellcheck="false"></div>
 <button id="btnScan" class="primary">Scan</button>
 </div>
 <div id="scanOut" class="out"></div>
