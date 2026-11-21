@@ -1,0 +1,72 @@
+### (a) ss -ltnp
+State  Recv-Q Send-Q Local Address:Port  Peer Address:PortProcess                                                 
+LISTEN 0      4096         0.0.0.0:443        0.0.0.0:*    users:(("docker-proxy",pid=1826,fd=7))                 
+LISTEN 0      4096       127.0.0.1:34445      0.0.0.0:*    users:(("containerd",pid=834,fd=13))                   
+LISTEN 0      4096   127.0.0.53%lo:53         0.0.0.0:*    users:(("systemd-resolve",pid=646,fd=15))              
+LISTEN 0      4096         0.0.0.0:22         0.0.0.0:*    users:(("sshd",pid=3367,fd=3),("systemd",pid=1,fd=260))
+LISTEN 0      4096         0.0.0.0:80         0.0.0.0:*    users:(("docker-proxy",pid=1793,fd=7))                 
+LISTEN 0      200        127.0.0.1:5432       0.0.0.0:*    users:(("postgres",pid=1041,fd=6))                     
+LISTEN 0      4096      127.0.0.54:53         0.0.0.0:*    users:(("systemd-resolve",pid=646,fd=17))              
+LISTEN 0      4096            [::]:443           [::]:*    users:(("docker-proxy",pid=1834,fd=7))                 
+LISTEN 0      4096            [::]:22            [::]:*    users:(("sshd",pid=3367,fd=4),("systemd",pid=1,fd=261))
+LISTEN 0      4096            [::]:80            [::]:*    users:(("docker-proxy",pid=1801,fd=7))                 
+### grep 8787
+NINGUN LISTENER 8787 EN EL HOST
+### docker ps
+unsweep-relayer	8787/tcp
+gas-fees-gas-1	8000/tcp
+web-read-webread-1	8000/tcp
+payto-activity-payto-1	8000/tcp
+x402-netcheck-api-1	8000/tcp
+x402-netcheck-caddy-1	0.0.0.0:80->80/tcp, [::]:80->80/tcp, 0.0.0.0:443->443/tcp, [::]:443->443/tcp, 443/udp, 2019/tcp
+### docker port unsweep-relayer
+(vacio = sin puertos publicados)
+### (b) health
+{"ok":true,"chainId":84532,"mainnet":false,"delegate":"0xc69D4aF59BaD315180db5961fb7196D31b33E331","ofac_entries":123,"turnstile":"prod"}
+HTTP 200
+### (c) rafaga 25x POST /api/scan
+400 400 400 400 400 400 400 400 400 400 400 400 400 400 400 400 400 400 400 400 429 429 429 429 429 
+### (c2) rafaga con X-Forwarded-For falsificado aleatorio (debe seguir dando 429)
+429 429 429 429 429 
+### (d) portada cabeceras
+HTTP/2 200 
+content-security-policy: default-src 'self'; script-src 'self' https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; connect-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'
+permissions-policy: camera=(), microphone=(), geolocation=()
+referrer-policy: no-referrer
+strict-transport-security: max-age=31536000; includeSubDomains
+x-content-type-options: nosniff
+x-frame-options: DENY
+### texto
+We will never DM you first.
+### enlaces
+### inline scripts
+0
+### (d2) portada tras cambio
+6
+HTTP/2 200 
+We will never DM you first.
+href="https://sepolia.basescan.org/address/0xbe0E049F17836736772206E6BA3C3EfF21C2E0bC"
+href="https://sepolia.basescan.org/address/0xc69D4aF59BaD315180db5961fb7196D31b33E331"
+inline scripts: 0
+### basescan desde curl (Cloudflare antibots):
+0xbe0E049F17836736772206E6BA3C3EfF21C2E0bC 403
+0xc69D4aF59BaD315180db5961fb7196D31b33E331 403
+### etherscan api: ambos -> Contract source code not verified
+### git remote
+(vacio = sin repo publico)
+### (e) netcheck y guias
+netcheck 200
+guias 404
+proxies 200
+### (e2) diagnostico /guias/ 404 (preexistente, no causado por este cambio)
+reload de Caddy de esta mision: ts 1795226145
+peticiones /guias* ANTERIORES al reload y su status: /guias/ 404 1795212692.2139359
+/guias/sitemap.xml 404 1795212692.4177828
+directorio static/guias:
+ls: cannot access '../x402-discovery/static/guias': No such file or directory
+rutas guias en Caddyfile:
+0
+/guia/ 200
+/guia 301
+### unsweep health final
+health 200

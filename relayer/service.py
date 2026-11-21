@@ -21,7 +21,9 @@ app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 
 
 def _ip(req):
-    return (req.headers.get('x-forwarded-for') or (req.client.host if req.client else '?')).split(',')[0].strip()
+    # uvicorn --proxy-headers solo confia en XFF desde Caddy (172.18.0.0/16) y deja en client.host la IP real;
+    # no se lee XFF a mano porque su primer valor lo puede falsificar el cliente.
+    return req.client.host if req.client else '?'
 
 
 def _guard(req):

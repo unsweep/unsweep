@@ -1,0 +1,28 @@
+# UNSWEEP relayer (testnet). SIN 'ports': solo alcanzable en la red docker por el nombre unsweep-relayer:8787 (Caddy).
+name: unsweep
+services:
+  relayer:
+    build: ../relayer
+    container_name: unsweep-relayer
+    restart: always
+    user: "1000:1000"
+    env_file: /opt/aire/product.env
+    environment:
+      UNSWEEP_CHAIN_ID: "84532"
+      UNSWEEP_PG: "host=/var/run/postgresql dbname=unsweep user=tecnoclic"
+    volumes:
+      - ..:/app:ro
+      - ../relayer/data:/app/relayer/data
+      - /var/run/postgresql:/var/run/postgresql
+    expose: ["8787"]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    networks:
+      x402:
+        aliases: [unsweep-relayer]
+networks:
+  x402:
+    name: x402-netcheck_default
+    external: true
