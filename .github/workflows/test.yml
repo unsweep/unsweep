@@ -33,3 +33,24 @@ jobs:
 
       - name: Run Forge tests
         run: forge test -vvv
+
+  pytest:
+    name: Relayer pytest
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Install relayer deps
+        working-directory: relayer
+        run: |
+          python3 --version
+          python3 -m venv .venv
+          .venv/bin/pip install -q -r requirements.txt
+
+      - name: Run pytest
+        working-directory: relayer
+        run: .venv/bin/python -m pytest -q -p no:cacheprovider
