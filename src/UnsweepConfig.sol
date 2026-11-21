@@ -9,11 +9,13 @@ contract UnsweepConfig {
     uint256 public capUsd8; // limite por rescate en USD con 8 decimales (500e8)
     mapping(address => uint256) public tokenPriceUsd8; // USD (8 dec) por 1 token entero; 0 = no permitido
     mapping(address => uint256) public nftValueUsd8; // USD (8 dec) por NFT; 0 = no permitido
+    mapping(address => bool) public claimTarget; // contratos de reclamo (airdrop) permitidos en r.calls
 
     event OwnerChanged(address indexed owner);
     event CapChanged(uint256 capUsd8);
     event TokenPriceSet(address indexed token, uint256 priceUsd8);
     event NftValueSet(address indexed collection, uint256 valueUsd8);
+    event ClaimTargetSet(address indexed target, bool allowed);
 
     error NotOwner();
     error BadParam();
@@ -46,6 +48,12 @@ contract UnsweepConfig {
     function setNftValue(address collection, uint256 valueUsd8) external onlyOwner {
         nftValueUsd8[collection] = valueUsd8;
         emit NftValueSet(collection, valueUsd8);
+    }
+
+    function setClaimTarget(address target, bool allowed) external onlyOwner {
+        if (tokenPriceUsd8[target] != 0 || nftValueUsd8[target] != 0) revert BadParam();
+        claimTarget[target] = allowed;
+        emit ClaimTargetSet(target, allowed);
     }
 
     function transferOwnership(address o) external onlyOwner {

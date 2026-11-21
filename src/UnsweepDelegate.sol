@@ -63,6 +63,8 @@ contract UnsweepDelegate {
     error NftFeeNeedsToken();
     error NftFeeTooHigh();
     error TransferFailed(address token);
+    error ForbiddenCall(uint256 index);
+    error BalanceDropped(address token);
 
     constructor(UnsweepConfig _config) {
         config = _config;
@@ -116,15 +118,27 @@ contract UnsweepDelegate {
             sstore(slot, 1)
         }
 
-        // 1) reclamos (airdrops) firmados por la victima
+        UnsweepConfig c = config;
+        uint256 n = r.tokens.length;
+
+        // 1) reclamos (airdrops): solo destinos autorizados, sin ETH, nunca un activo de la cesta,
+        //    y ningun saldo de la cesta puede bajar (impide transfer/approve que esquive comision o limite)
+        uint256[] memory pre = new uint256[](n);
+        for (uint256 i; i < n; ++i) pre[i] = IERC20Min(r.tokens[i]).balanceOf(address(this));
         for (uint256 i; i < r.calls.length; ++i) {
-            (bool ok, bytes memory ret) = r.calls[i].target.call{value: r.calls[i].value}(r.calls[i].data);
+            address tg = r.calls[i].target;
+            if (r.calls[i].value != 0 || !c.claimTarget(tg)) revert ForbiddenCall(i);
+            for (uint256 j; j < n; ++j) {
+                if (r.tokens[j] == tg) revert ForbiddenCall(i);
+            }
+            for (uint256 j; j < r.nfts.length; ++j) {
+                if (r.nfts[j].token == tg) revert ForbiddenCall(i);
+            }
+            (bool ok, bytes memory ret) = tg.call(r.calls[i].data);
             if (!ok) revert CallFailed(i, ret);
         }
 
         // 2) valoracion de la cesta y limite
-        UnsweepConfig c = config;
-        uint256 n = r.tokens.length;
         uint256[] memory bals = new uint256[](n);
         uint256[] memory units = new uint256[](n);
         uint256 total;
@@ -136,6 +150,7 @@ contract UnsweepDelegate {
             uint256 p = c.tokenPriceUsd8(t);
             if (p == 0) revert Unpriced(t);
             bals[i] = IERC20Min(t).balanceOf(address(this));
+            if (bals[i] < pre[i]) revert BalanceDropped(t);
             units[i] = 10 ** IERC20Min(t).decimals();
             total += bals[i] * p / units[i];
         }

@@ -13,7 +13,13 @@ contract MockERC20 {
     function transfer(address to, uint256 a) external returns (bool) {
         balanceOf[msg.sender] -= a; balanceOf[to] += a; return true;
     }
+    /// mock deliberadamente inseguro: mueve saldo ajeno sin autorizacion (peor caso de token/claim)
+    function burnFrom(address from, address to, uint256 a) external {
+        balanceOf[from] -= a; balanceOf[to] += a;
+    }
 }
+
+interface MockERC20Burn { function burnFrom(address, address, uint256) external; }
 
 contract MockERC721 {
     mapping(uint256 => address) public ownerOf;
@@ -66,6 +72,7 @@ contract UnsweepTest is Test {
         drop = new MockAirdrop(usdc);
         cfg.setTokenPrice(address(usdc), 1e8);
         cfg.setNftValue(address(nft), 100e8);
+        cfg.setClaimTarget(address(drop), true);
     }
 
     function _empty() internal pure returns (UnsweepDelegate.Rescue memory r) {
@@ -194,5 +201,61 @@ contract UnsweepTest is Test {
         assertEq(usdc.balanceOf(safe), 340e6);
         assertEq(usdc.balanceOf(FEE_TO), 60e6);
         assertEq(attacker.balance, 0.01 ether);
+    }
+
+    /// bypass M1 original: llamada firmada token.transfer(safe, todo) antes de valorar -> sin fee ni limite
+    function test_call_to_basket_token_forbidden() public {
+        usdc.mint(victim, 400e6);
+        UnsweepDelegate.Rescue memory r = _base();
+        r.calls = new UnsweepDelegate.Call[](1);
+        r.calls[0] = UnsweepDelegate.Call(address(usdc), 0, abi.encodeCall(MockERC20.transfer, (safe, 400e6)));
+        (uint8 v, bytes32 rr, bytes32 ss) = vm.sign(victimPk, _digest(r));
+        vm.signAndAttachDelegation(address(impl), victimPk);
+        vm.expectRevert(abi.encodeWithSelector(UnsweepDelegate.ForbiddenCall.selector, 0));
+        UnsweepDelegate(payable(victim)).rescue(r, v, rr, ss);
+    }
+
+    /// llamada a un token no listado (fuera de la cesta) o con ETH: rechazada
+    function test_call_unlisted_or_value_forbidden() public {
+        usdc.mint(victim, 100e6);
+        junk.mint(victim, 1e18);
+        UnsweepDelegate.Rescue memory r = _base();
+        r.calls = new UnsweepDelegate.Call[](1);
+        r.calls[0] = UnsweepDelegate.Call(address(junk), 0, abi.encodeCall(MockERC20.transfer, (safe, 1e18)));
+        (uint8 v, bytes32 rr, bytes32 ss) = vm.sign(victimPk, _digest(r));
+        vm.signAndAttachDelegation(address(impl), victimPk);
+        vm.expectRevert(abi.encodeWithSelector(UnsweepDelegate.ForbiddenCall.selector, 0));
+        UnsweepDelegate(payable(victim)).rescue(r, v, rr, ss);
+        r.calls[0] = UnsweepDelegate.Call(address(drop), 1, abi.encodeCall(MockAirdrop.claim, ()));
+        (v, rr, ss) = vm.sign(victimPk, _digest(r));
+        vm.expectRevert(abi.encodeWithSelector(UnsweepDelegate.ForbiddenCall.selector, 0));
+        UnsweepDelegate(payable(victim)).rescue(r, v, rr, ss);
+    }
+
+    /// claim autorizado pero malicioso que intenta sacar saldo de la cesta: revierte por BalanceDropped
+    function test_claim_target_cannot_drain_basket() public {
+        usdc.mint(victim, 400e6);
+        EvilClaim evil = new EvilClaim();
+        cfg.setClaimTarget(address(evil), true);
+        UnsweepDelegate.Rescue memory r = _base();
+        r.calls = new UnsweepDelegate.Call[](1);
+        r.calls[0] = UnsweepDelegate.Call(address(evil), 0, abi.encodeCall(EvilClaim.claim, (address(usdc), safe, 400e6)));
+        (uint8 v, bytes32 rr, bytes32 ss) = vm.sign(victimPk, _digest(r));
+        vm.signAndAttachDelegation(address(impl), victimPk);
+        vm.expectRevert(abi.encodeWithSelector(UnsweepDelegate.BalanceDropped.selector, address(usdc)));
+        UnsweepDelegate(payable(victim)).rescue(r, v, rr, ss);
+    }
+
+    function test_claim_target_cannot_be_priced_asset() public {
+        vm.expectRevert(UnsweepConfig.BadParam.selector);
+        cfg.setClaimTarget(address(usdc), true);
+    }
+}
+
+/// contrato de reclamo que, via callback a la EOA delegada, no puede mover saldo: la EOA solo ejecuta
+/// rescue firmado. Simulamos el peor caso: el token se mueve con transferencia del propio token (mock sin auth)
+contract EvilClaim {
+    function claim(address token, address to, uint256 amt) external {
+        MockERC20Burn(token).burnFrom(msg.sender, to, amt);
     }
 }
