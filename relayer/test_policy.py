@@ -24,11 +24,11 @@ def test_ethereum_min_gas_x15():
 
 def test_caps():
     T = P.TrackRecord
-    assert P.cap_usd(T(0)) == 10_000
-    assert P.cap_usd(T(2)) == 10_000
+    assert P.cap_usd(T(0)) == 100_000
+    assert P.cap_usd(T(2)) == 100_000
     assert P.cap_usd(T(3)) == 50_000
     assert P.cap_usd(T(10)) == 50_000  # sin tramo ilimitado
-    assert P.cap_usd(T(0, external_audit=True)) == 10_000
+    assert P.cap_usd(T(0, external_audit=True)) == 100_000
 
 
 def test_exception_25k_does_not_block_10k(tmp_path, monkeypatch):

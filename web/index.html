@@ -1,19 +1,14 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>UNSWEEP - free read-only wallet check (EIP-7702 delegation, open approvals) on Base and Ethereum</title><meta name="description" content="Free read-only check of a public wallet address on Base and Ethereum mainnet: EIP-7702 delegation, nonce, balances and open ERC-20 approvals. No keys, no signatures. Rescue on mainnet is not enabled yet."><meta name="referrer" content="no-referrer"><link rel="canonical" href="https://unsweep.com/"><link rel="stylesheet" href="/assets/style.css"></head><body><main>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>UNSWEEP - Rescue tokens from a hacked wallet on Base</title><meta name="description" content="Free read-only check of a public wallet address on Base and Ethereum mainnet: EIP-7702 delegation, nonce, balances and open ERC-20 approvals. No keys, no signatures. Rescue live on Base mainnet (16 ERC-20 tokens, up to $100,000)."><meta name="referrer" content="no-referrer"><link rel="canonical" href="https://unsweep.com/"><link rel="stylesheet" href="/assets/style.css"></head><body><main>
 <h1>UNSWEEP</h1>
 <p>Rescue tokens left in a hacked wallet — even if a bot drains your funds.</p>
-<p class="notice" id="mainnetNotice"><strong>Base mainnet: free read-only check. Rescue on mainnet is not enabled yet.</strong> Your compromised key never leaves your browser. We will never DM you first and never ask for your seed phrase.</p>
-
-<nav class="tabs" aria-label="Mode">
-<button type="button" id="tabScan" class="tab active">Check (read-only)</button>
-<button type="button" id="tabRescueMainnet" class="tab" disabled aria-disabled="true" title="Rescue on mainnet is disabled">Rescue on mainnet: disabled</button>
-</nav>
+<p class="notice" id="mainnetNotice"><strong>Base mainnet: rescue live (16 ERC-20 tokens, up to $100,000).</strong> Your key never leaves your browser. We never DM first or ask for your seed phrase.</p>
 
 <section id="step1"><h2>Step 1 &middot; Check your wallet</h2>
 <p>Paste your hacked wallet address (0x...). No private key or login needed.</p>
 <div class="form">
 <div class="field"><label for="chain">Network</label>
 <select id="chain">
-<option value="base" selected>Base mainnet (read-only check)</option>
+<option value="base" selected>Base mainnet (scan &amp; rescue)</option>
 <option value="ethereum">Ethereum mainnet (read-only check)</option>
 </select></div>
 <div class="field wide"><label for="victim">Public wallet address</label>
@@ -52,7 +47,7 @@
 
 <footer>
 <p class="small">Open source, non-custodial. Nothing on this page can recover funds that have already been moved.</p>
-<p class="small">Base mainnet contracts (verified source on Basescan): <a href="https://basescan.org/address/0x56a345661e3999F2b20f1E069aAC14097Fa0D118#code" rel="noopener noreferrer">UnsweepConfig 0x56a345661e3999F2b20f1E069aAC14097Fa0D118</a> · <a href="https://basescan.org/address/0x38bcF425bC4d13624734e09376F2fafc799fA8c8#code" rel="noopener noreferrer">UnsweepDelegate 0x38bcF425bC4d13624734e09376F2fafc799fA8c8</a>. Supported token: <a href="https://basescan.org/token/0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" rel="noopener noreferrer">USDC 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913</a>. Public repository: <a href="https://github.com/unsweep/unsweep" rel="noopener noreferrer">github.com/unsweep/unsweep</a>.</p>
+<p class="small">Base mainnet contracts (verified source on Basescan): <a href="https://basescan.org/address/0x56a345661e3999F2b20f1E069aAC14097Fa0D118#code" rel="noopener noreferrer">UnsweepConfig 0x56a345661e3999F2b20f1E069aAC14097Fa0D118</a> · <a href="https://basescan.org/address/0x38bcF425bC4d13624734e09376F2fafc799fA8c8#code" rel="noopener noreferrer">UnsweepDelegate 0x38bcF425bC4d13624734e09376F2fafc799fA8c8</a>. Supported Base tokens (16): USDC, USDT, DAI, WETH, cbETH, cbBTC, LINK, AERO, EURC, GHO, tBTC, sUSDe, COMP, WELL, wstETH, weETH. Public repository: <a href="https://github.com/unsweep/unsweep" rel="noopener noreferrer">github.com/unsweep/unsweep</a> · Contact: <a href="mailto:support@unsweep.com">support@unsweep.com</a> (never send keys or seed phrases).</p>
 </footer>
 </main>
 <script src="/assets/ethers.min.js"></script>

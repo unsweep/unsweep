@@ -22,9 +22,9 @@ from pathlib import Path
 MAX_FEE_BPS = 1500  # igual que el techo inmutable del contrato
 ETH_MAINNET = 1
 MAINNETS = {1, 8453, 42161}
-CAP_INITIAL_USD = 10_000.0
+CAP_INITIAL_USD = 100_000.0
 FIXED_CAP_USD = 10_000.0  # #827.2/3b: limite por rescate con <3 rescates reales
-CAP_RAISED_USD = 50_000.0
+CAP_RAISED_USD = 100_000.0
 RAISE_AFTER_OK = 3
 UNCAP_AFTER_OK = 10
 GAS_LOST_ALERT_USD = 5.0
