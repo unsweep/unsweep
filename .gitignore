@@ -9,3 +9,6 @@ out/
 web-src/node_modules/
 .e2e/
 evidence/m2d-1/private/
+d2/
+relayer/data/
+verify_*.log
