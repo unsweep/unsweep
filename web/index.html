@@ -5,6 +5,9 @@
 <main>
 <h1>UNSWEEP</h1>
 <p class="intro">Rescue tokens left in a hacked wallet on Base, even if a sweeper bot drains every deposit.</p>
+<!--gen:top-->
+<p class="notice" id="mainnetNotice"><span id="capLine">Base mainnet: rescue is live (16 ERC-20 tokens, up to $100,000* per rescue). Ethereum: free read-only check. Your compromised key never leaves your browser. We will never DM you first and never ask for your seed phrase.</span></p>
+<!--/gen:top-->
 
 <section id="step1">
 <h2>Step 1 &middot; Check your wallet</h2>
@@ -25,10 +28,8 @@
 <div id="scanOut" class="out">
 </div>
 <!--gen:cap-->
-<p class="cap" id="capLine">Base mainnet: rescue is live for 16 ERC-20 tokens, up to $100,000 per rescue. Ethereum mainnet: free read-only check.</p>
-<p class="small muted" id="capNote">Rescues above $10,000 get automatic extra safety checks (a few seconds more).</p>
+<p class="small muted" id="capNote">*Rescues above $10,000 get automatic extra safety checks (a few seconds more).</p>
 <!--/gen:cap-->
-<p class="notice" id="mainnetNotice">Non-custodial: your compromised key never leaves your browser. We never DM you first and never ask for your seed phrase.</p>
 <details class="info">
 <summary>What does this check?</summary>
 <p class="small">The mainnet check shows: EIP-7702 delegation and its target contract, nonce, native balance, main ERC-20 balances and ERC-20 approvals granted by direct transactions in the last 90 days that are still open. It cannot see approvals granted by off-chain signatures (permits). Results are cached for 10 minutes.</p>

@@ -2,8 +2,8 @@
 """Genera los bloques de web/index.html que dependen de fuentes de verdad.
 
 Bloques (entre <!--gen:X--> y <!--/gen:X-->):
-  cap    -> tope 'up to $X per rescue' (CAP_INITIAL_USD) y linea gris de controles
-            extra por encima de HIGH_VALUE_USD (relayer/policy.py). Sin asterisco.
+  top    -> recuadro superior literal de la orden #956 (tope 'up to $X*' de CAP_INITIAL_USD).
+  cap    -> nota gris bajo el formulario '*Rescues above $X ...' (HIGH_VALUE_USD).
   tokens -> lista plegable de tokens de Base (relayer/data/assets_8453.json).
   faqld  -> JSON-LD FAQPage derivado de los <details class="faq"> del propio HTML
             (una sola fuente de texto; type application/ld+json = bloque de datos,
@@ -23,9 +23,11 @@ ROOT = Path(__file__).resolve().parent.parent
 INDEX = ROOT / "web" / "index.html"
 POLICY = ROOT / "relayer" / "policy.py"
 
-CAP_TMPL = ('<p class="cap" id="capLine">Base mainnet: rescue is live for {n} ERC-20 tokens, '
-            'up to {cap} per rescue. Ethereum mainnet: free read-only check.</p>\n'
-            '<p class="small muted" id="capNote">Rescues above {hv} get automatic extra safety '
+TOP_TMPL = ('<p class="notice" id="mainnetNotice"><span id="capLine">Base mainnet: rescue is live '
+            '({n} ERC-20 tokens, up to {cap}* per rescue). Ethereum: free read-only check. '
+            'Your compromised key never leaves your browser. We will never DM you first and '
+            'never ask for your seed phrase.</span></p>')
+CAP_TMPL = ('<p class="small muted" id="capNote">*Rescues above {hv} get automatic extra safety '
             'checks (a few seconds more).</p>')
 
 
@@ -69,7 +71,8 @@ def _replace(html: str, key: str, body: str) -> str:
 def render(html: str) -> str:
     cap, hv = _const("CAP_INITIAL_USD"), _const("HIGH_VALUE_USD")
     toks = _assets()
-    html = _replace(html, "cap", "\n" + CAP_TMPL.format(n=len(toks), cap=usd(cap), hv=usd(hv)) + "\n")
+    html = _replace(html, "top", "\n" + TOP_TMPL.format(n=len(toks), cap=usd(cap)) + "\n")
+    html = _replace(html, "cap", "\n" + CAP_TMPL.format(hv=usd(hv)) + "\n")
     syms = ", ".join(htmlmod.escape(t["symbol"]) for t in toks)
     html = _replace(html, "tokens", (f'\n<details class="info" id="tokens"><summary>Supported tokens on Base '
                                      f'({len(toks)})</summary><p class="small">{syms}</p></details>\n'))

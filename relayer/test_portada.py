@@ -18,29 +18,47 @@ def test_portada_generada_por_pipeline():
     assert r.returncode == 0, r.stdout + r.stderr
 
 
-def test_portada_tope_sin_asterisco_y_linea_gris():
-    assert "up to $100,000 per rescue" in INDEX
-    assert "$100,000*" not in INDEX and "*Rescues" not in INDEX
-    assert ('<p class="small muted" id="capNote">Rescues above $10,000 get automatic extra '
-            'safety checks (a few seconds more).</p>') in INDEX
-    assert INDEX.count('id="capNote"') == 1
-    assert "up to $10,000 per rescue" not in INDEX
+LITERAL_956 = ("Base mainnet: rescue is live (16 ERC-20 tokens, up to $100,000* per rescue). "
+               "Ethereum: free read-only check. Your compromised key never leaves your browser. "
+               "We will never DM you first and never ask for your seed phrase.")
 
 
-def test_formulario_primero():
+def _texto(s):
+    return re.sub(r"<[^>]+>", "", s).strip()
+
+
+def test_recuadro_superior_literal_956():
+    m = re.findall(r'<p class="notice" id="mainnetNotice">(.*?)</p>', INDEX, re.S)
+    assert len(m) == 1
+    assert _texto(m[0]) == LITERAL_956
+    assert "$100,000*" in m[0] and "USD" not in m[0]  # la FAQ conserva "USD" (no es el recuadro)
     body = INDEX.split("<body>", 1)[1]
-    i_scan = body.index('id="btnScan"')
-    assert i_scan < body.index('id="mainnetNotice"') < body.index('id="faq"')
-    assert i_scan < body.index('id="contracts"') < body.index('id="guides"') < body.index("<footer>")
-    # intro de una sola linea
+    assert body.index('id="mainnetNotice"') < body.index('id="step1"')
+
+
+def test_frase_seguridad_no_repetida_bajo_scan():
+    body = INDEX.split("<body>", 1)[1]
+    bajo_scan = body.split('id="btnScan"', 1)[1].split('id="step2"', 1)[0]
+    for frag in ("never leaves your browser", "never DM you first", "seed phrase", "Non-custodial"):
+        assert frag not in bajo_scan, frag
+    assert INDEX.count("Your compromised key never leaves your browser") == 1
+
+
+def test_nota_asterisco_bajo_formulario():
+    nota = ('<p class="small muted" id="capNote">*Rescues above $10,000 get automatic extra '
+            'safety checks (a few seconds more).</p>')
+    assert INDEX.count(nota) == 1 and INDEX.count('id="capNote"') == 1
+    body = INDEX.split("<body>", 1)[1]
+    assert body.index('id="btnScan"') < body.index('id="capNote"') < body.index('id="step2"')
+    assert "10,000 USD get" not in INDEX and "up to $10,000 per rescue" not in INDEX
+
+
+def test_orden_portada():
+    body = INDEX.split("<body>", 1)[1]
+    assert body.index('id="btnScan"') < body.index('id="faq"')
+    assert body.index('id="btnScan"') < body.index('id="contracts"') < body.index('id="guides"') < body.index("<footer>")
     intro = re.search(r'<p class="intro">(.*?)</p>', INDEX, re.S).group(1)
     assert "\n" not in intro and len(intro) < 120
-
-
-def test_aviso_reducido_no_custodia_y_anti_phishing():
-    notice = re.search(r'<p class="notice" id="mainnetNotice">(.*?)</p>', INDEX, re.S).group(1)
-    assert "Non-custodial" in notice and "never ask for your seed phrase" in notice
-    assert "0x" not in notice and "github" not in notice.lower()
 
 
 def test_contratos_una_sola_vez():
@@ -50,6 +68,7 @@ def test_contratos_una_sola_vez():
     assert INDEX.count('href="https://github.com/unsweep/unsweep"') == 1
     sec = INDEX.split('id="contracts"', 1)[1].split("</section>", 1)[0]
     assert DELEGATE in sec and CONFIG in sec and "github.com/unsweep/unsweep" in sec
+    assert INDEX.count("Verify our contracts") == 1 and "<h2>Verify our contracts</h2>" in sec
 
 
 def test_tokens_plegables_desde_assets():
