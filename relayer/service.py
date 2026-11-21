@@ -19,6 +19,7 @@ from svc_core import (ETH_USD, assets, w3, abi, log, record, screen, turnstile_o
 from relayer import ACTIVE_MAINNETS
 from svc_scan import scan, quote, _eth_usd, config_c
 import oracle as O
+import sequencer as SEQ
 from fastapi.responses import JSONResponse
 from svc_mainnet import scan_mainnet, record_scan, ScanError, CHAINS as MAINNET_CHAINS
 from starlette.concurrency import run_in_threadpool
@@ -161,6 +162,7 @@ async def api_rescue(req: Request):
         if safe == victim:
             raise PolicyError('la wallet segura debe ser distinta')
         screen(safe, victim)
+        SEQ.check(w3, CHAIN_ID)  # #1011/#1012: L2 Sequencer Uptime Feed, fail-closed, antes de precios y comisiones
         s = scan(victim)
         _, q = quote(s)
         try:
