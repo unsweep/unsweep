@@ -9,6 +9,9 @@ services:
     env_file: /opt/aire/product.env
     environment:
       UNSWEEP_CHAIN_ID: "84532"
+      # M2c-2c: claves de TEST publicas de Cloudflare (siempre pasan), SOLO testnet; prevalecen sobre env_file
+      TURNSTILE_SECRET: "1x0000000000000000000000000000000AA"
+      TURNSTILE_SITEKEY: "1x00000000000000000000AA"
       UNSWEEP_PG: "host=/var/run/postgresql dbname=unsweep user=tecnoclic"
     volumes:
       - ..:/app:ro
