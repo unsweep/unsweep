@@ -24,11 +24,13 @@ INDEX = ROOT / "web" / "index.html"
 POLICY = ROOT / "relayer" / "policy.py"
 
 TOP_TMPL = ('<p class="notice" id="mainnetNotice"><span id="capLine">Base mainnet: rescue is live '
-            '({n} ERC-20 tokens, up to {cap}* per rescue). Ethereum: free read-only check. '
+            '({n}+ ERC-20 tokens†, up to {cap}* per rescue). Ethereum: free read-only check. '
             'Your compromised key never leaves your browser. We will never DM you first and '
             'never ask for your seed phrase.</span></p>')
 CAP_TMPL = ('<p class="small muted" id="capNote">*Rescues above {hv} get automatic extra safety '
-            'checks (a few seconds more).</p>')
+            'checks (a few seconds more).</p>\n'
+            '<p class="small muted" id="daggerNote">†16 verified tokens. Other ERC-20 tokens in the wallet '
+            'can be included, unverified and with no guarantee.</p>')
 
 
 def _const(name: str) -> float:

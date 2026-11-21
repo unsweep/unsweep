@@ -18,7 +18,7 @@ def test_portada_generada_por_pipeline():
     assert r.returncode == 0, r.stdout + r.stderr
 
 
-LITERAL_956 = ("Base mainnet: rescue is live (16 ERC-20 tokens, up to $100,000* per rescue). "
+LITERAL_956 = ("Base mainnet: rescue is live (16+ ERC-20 tokens†, up to $100,000* per rescue). "
                "Ethereum: free read-only check. Your compromised key never leaves your browser. "
                "We will never DM you first and never ask for your seed phrase.")
 
