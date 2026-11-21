@@ -88,3 +88,10 @@ with sync_playwright() as p:
         result['rescue_http'] = {k: clean(v) for k, v in rescue_resp.items()}
         b.close()
 print('RESULT', json.dumps(result))
+# #773 A.2: codigo de salida distinto de 0 si hay abort o error
+_ro = str(result.get('rescueOut', ''))
+_ok = ('abort' not in result and 'error' not in result
+       and result.get('stage') == 'rescue'
+       and re.search(r'Status:\s*success', _ro, re.I) is not None
+       and re.search(r'error|failed|revert', _ro, re.I) is None)
+sys.exit(0 if _ok else 1)

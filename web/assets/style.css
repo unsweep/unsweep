@@ -2,7 +2,7 @@
 body{font-family:system-ui,sans-serif;background:#0b0f14;color:#e6edf3;display:flex;min-height:100vh;justify-content:center;margin:0}
 main{width:100%;max-width:620px;padding:24px 16px;text-align:left}
 h1{letter-spacing:.2em;text-align:center;margin:8px 0 12px}
-h1+p{text-align:center;text-wrap:balance;max-width:36em;margin:0 auto 16px;font-size:1.05rem}
+h1+p{text-align:center;text-wrap:balance;max-width:36em;margin:0 auto 16px;font-size:1rem}
 h2{font-size:1.15rem;margin:24px 0 8px}
 p{color:#b4c2d0;line-height:1.5}
 .small{font-size:.9rem}
