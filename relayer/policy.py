@@ -152,3 +152,47 @@ def record_gas_lost(chain_id: int, tx_hash: str, gas_used: int, cost_usd: float)
                     "Revisar relayer/data/gas_lost.jsonl. No se cobra nada a nadie.\n")
         flag.write_text(str(int(time.time())))
     return total
+
+
+# --- #731: eleccion del token que lleva el minFee (solo Ethereum) -------------------------
+# Orden: (a) USDC, WETH, DAI, USDT con saldo suficiente (por DIRECCION oficial, nunca por simbolo);
+# (b) si no hay, el de mayor valor marcado explicitamente fee_on_transfer=False;
+# (c) nunca un token con comision al transferir (o sin verificar: se trata como posible FOT).
+# Si ninguno cubre el minFee -> NotViableOnEthereum (se sugiere Base o Arbitrum).
+# Direcciones canonicas de Ethereum mainnet: VERIFICAR en etherscan/emisor antes de activar mainnet.
+PREFERRED_MIN_FEE = {
+    ETH_MAINNET: [
+        ("USDC", "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"),
+        ("WETH", "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"),
+        ("DAI", "0x6b175474e89094c44da98b954eedeac495271d0f"),
+        ("USDT", "0xdac17f958d2ee523a2206206994597c13d831ec7"),
+    ],
+}
+NOT_VIABLE_ETH = "no viable en Ethereum: ningun token admisible cubre el minimo de gas; usa Base o Arbitrum"
+
+
+class NotViableOnEthereum(PolicyError):
+    pass
+
+
+def pick_min_fee_token(chain_id: int, tokens: list, min_fee_usd: float, bps: int):
+    """tokens: [{'address', 'value_usd', 'fee_on_transfer'(opcional)}].
+    Devuelve (indice, regla 'a'|'b') del token que lleva el minFee.
+    Saldo suficiente = su valor cubre lo que falta tras el tramo del resto de tokens."""
+    total = sum(float(t["value_usd"]) for t in tokens)
+
+    def covers(k):
+        v = float(tokens[k]["value_usd"])
+        return v >= min_fee_usd - (total - v) * bps / 10_000
+
+    pref = [a for _s, a in PREFERRED_MIN_FEE.get(chain_id, [])]
+    by_addr = {str(t["address"]).lower(): k for k, t in enumerate(tokens)}
+    for addr in pref:  # (a)
+        k = by_addr.get(addr)
+        if k is not None and tokens[k].get("fee_on_transfer") is not True and covers(k):
+            return k, "a"
+    ok = [k for k, t in enumerate(tokens)  # (b); (c) excluye FOT y no verificados
+          if t.get("fee_on_transfer") is False and str(t["address"]).lower() not in pref and covers(k)]
+    if ok:
+        return max(ok, key=lambda k: float(tokens[k]["value_usd"])), "b"
+    raise NotViableOnEthereum(NOT_VIABLE_ETH)

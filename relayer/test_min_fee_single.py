@@ -10,7 +10,7 @@ TKB = '0x00000000000000000000000000000000000000B2'
 
 def _scan_multi(usds):
     addrs = [USDC, TKA, TKB]
-    return {'tokens': [{'address': addrs[i], 'symbol': f'T{i}', 'decimals': 6, 'price_usd': 1,
+    return {'tokens': [{'address': addrs[i], 'symbol': f'T{i}', 'decimals': 6, 'price_usd': 1, 'fee_on_transfer': False,
                         'balance': str(int(u * 10**6))} for i, u in enumerate(usds)], 'nfts': []}
 
 

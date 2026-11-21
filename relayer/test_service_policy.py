@@ -28,13 +28,13 @@ class _Cfg:
 def scan_env(monkeypatch):
     monkeypatch.setattr(S, 'config_c', _Cfg)
     monkeypatch.setattr(S, 'w3', types.SimpleNamespace(eth=types.SimpleNamespace(gas_price=10**9)))
-    monkeypatch.setattr(S, 'assets', lambda: {'tokens': [{'address': USDC, 'decimals': 6, 'price_usd': 1}]})
+    monkeypatch.setattr(S, 'assets', lambda: {'tokens': [{'address': USDC, 'decimals': 6, 'price_usd': 1, 'fee_on_transfer': False}]})
     monkeypatch.setattr(S, 'check_policy', lambda q: None)
     return monkeypatch
 
 
 def _scan(usd):
-    return {'tokens': [{'address': USDC, 'symbol': 'USDC', 'decimals': 6, 'price_usd': 1, 'balance': str(int(usd * 10**6))}],
+    return {'tokens': [{'address': USDC, 'symbol': 'USDC', 'decimals': 6, 'price_usd': 1, 'fee_on_transfer': False, 'balance': str(int(usd * 10**6))}],
             'nfts': []}
 
 

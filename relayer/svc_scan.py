@@ -108,7 +108,14 @@ def quote(s, gas=1_500_000):
     # minimo de Ethereum (#718 p.3): UN solo token (el de mayor valor) lleva minFee, el resto 0.
     # Su minFee cubre solo lo que falte tras el tramo del resto, de modo que la comision total es
     # max(tramo, gas x1.5) y no se multiplica por el numero de tokens. Acotado a su saldo.
-    big = max(range(len(toks)), key=lambda k: toks[k][4]) if toks else -1
+    big = -1
+    if plan and plan.min_fee_usd > 0 and toks:
+        try:  # #731: USDC/WETH/DAI/USDT > mayor valor sin comision al transferir > nunca FOT
+            big, _rule = P.pick_min_fee_token(CHAIN_ID, [{'address': t['address'], 'value_usd': u,
+                                              'fee_on_transfer': t.get('fee_on_transfer')}
+                                             for (t, _b, _d, _p, u) in toks], plan.min_fee_usd, bps)
+        except P.NotViableOnEthereum as e:
+            ok, why = False, str(e)
     rest_tier_usd = sum((bal * bps // 10000) / 10**dec * px
                         for k, (_, bal, dec, px, _) in enumerate(toks) if k != big)
     lines, fee_usd = [], 0.0
