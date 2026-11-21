@@ -77,8 +77,8 @@ def render(html: str) -> str:
     html = _replace(html, "tokens", (f'\n<details class="info" id="tokens"><summary>Supported tokens on Base '
                                      f'({len(toks)})</summary><p class="small">{syms}</p></details>\n'))
     pairs = faq_pairs(html)
-    if len(pairs) != 10:
-        raise SystemExit(f"gen_portada: se esperaban 10 preguntas FAQ, hay {len(pairs)}")
+    if len(pairs) != 11:
+        raise SystemExit(f"gen_portada: se esperaban 11 preguntas FAQ, hay {len(pairs)}")
     ld = {"@context": "https://schema.org", "@type": "FAQPage",
           "mainEntity": [{"@type": "Question", "name": q,
                           "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in pairs]}
