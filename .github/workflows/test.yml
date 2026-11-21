@@ -43,6 +43,15 @@ jobs:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Run Forge build
+        run: |
+          forge --version
+          forge build
 
       - name: Install relayer deps
         working-directory: relayer
@@ -53,4 +62,4 @@ jobs:
 
       - name: Run pytest
         working-directory: relayer
-        run: .venv/bin/python -m pytest -q -p no:cacheprovider
+        run: .venv/bin/python -m pytest -q -rs -p no:cacheprovider
