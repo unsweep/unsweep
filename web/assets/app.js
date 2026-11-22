@@ -69,10 +69,23 @@
       } catch (e) { show($('scanOut'), 'Scan failed: ' + e.message, 'err'); }
       return;
     }
-    show($('scanOut'), 'Scanning Base mainnet... (can take ~30 s)');
+    // #1152/#1175: indicador por fases y tiempo real transcurrido. /api/scan es un unico POST sin
+    // progreso en servidor: la fase mostrada es orientativa (por tiempo); NO se muestra contador ni porcentaje.
+    const scanProg = (function () {
+      const t0 = Date.now();
+      const tick = function () {
+        const el = Math.floor((Date.now() - t0) / 1000); let phase;
+        if (el < 3) phase = 'Checking balances and delegation';
+        else if (el < 30) phase = 'Scanning approval history on Base';
+        else phase = 'Still scanning (long histories take longer)';
+        show($('scanOut'), phase + '… ' + el + ' s elapsed');
+      };
+      tick(); const h = setInterval(tick, 1000);
+      return { stop: function () { clearInterval(h); } };
+    })();
     try {
       if (!st.cfg) st.cfg = await api('config');
-      const s = await api('scan', { address: a });
+      let s; try { s = await api('scan', { address: a }); } finally { scanProg.stop(); }
       st.scan = s;
       const out = ['Address: ' + s.address, 'ETH: ' + E.formatEther(BigInt(s.eth_wei)), 'Nonce: ' + s.nonce,
         'EIP-7702 delegation: ' + (s.delegation7702 || 'none')];

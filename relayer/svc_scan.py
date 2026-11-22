@@ -88,40 +88,124 @@ def _ap_call(fn):
     raise ApprovalsError('rpc rate limited (HTTP 429)' if rl else 'rpc unavailable')
 
 
-def live_approvals(addr):
+# #1152: eth_getLogs de approvals contra un RPC publico que acepta rangos de 2000 bloques
+# filtrando por 'address' = contratos de assets_<chain>.json. Alchemy Free (BASE_RPC_URL) limita
+# getLogs a 10 bloques (HTTP 400) y el respaldo publico sin filtro devolvia 429.
+# El resto de llamadas (allowance/isApprovedForAll, saldos) siguen en el RPC actual.
+APPROVAL_LOGS_RPC = {
+    8453: 'https://base-rpc.publicnode.com',
+    42161: 'https://arbitrum-one-rpc.publicnode.com',  # parametrizado; NO activo (publicnode exige token para 2000 bloques en Arbitrum)
+}
+APPROVAL_LOGS_ENABLED = {8453}
+LOGS_ADDR_GROUP = 10  # publicnode: 'A maximum of 10 addresses is allowed' (HTTP 403)
+CHUNK_RETRIES = 1
+CHUNK_BACKOFF_S = 0.5
+_LOGS_W3 = {}
+
+
+def _logs_w3(chain_id=None):
+    """Web3 del RPC de logs de approvals para la red, o None si la red no esta activada."""
+    cid = CHAIN_ID if chain_id is None else chain_id
+    if cid not in APPROVAL_LOGS_ENABLED or cid not in APPROVAL_LOGS_RPC:
+        return None
+    if cid not in _LOGS_W3:
+        _LOGS_W3[cid] = Web3(Web3.HTTPProvider(APPROVAL_LOGS_RPC[cid], request_kwargs={'timeout': 20}))
+    return _LOGS_W3[cid]
+
+
+def _asset_contracts(a=None):
+    a = assets() if a is None else a
+    out = []
+    for t in list(a.get('tokens', [])) + list(a.get('nfts', [])):
+        c = Web3.to_checksum_address(t['address'])
+        if c not in out:
+            out.append(c)
+    return out
+
+
+def plan_chunks(head, lookback=None, chunk=None):
+    """Rangos [frm, to] inclusivos que cubren (head-lookback .. head) en trozos de 'chunk' bloques."""
+    lookback = APPROVAL_LOOKBACK if lookback is None else lookback
+    chunk = LOG_CHUNK if chunk is None else chunk
+    start, out = max(0, head - lookback), []
+    frm = start
+    while frm <= head:
+        to = min(head, frm + chunk - 1)
+        out.append((frm, to))
+        frm = to + 1
+    return out
+
+
+def _get_logs_retry(p, flt, sleep=None):
+    """get_logs con UN reintento tras backoff corto. Error visible y sin URL."""
+    import time
+    sleep = time.sleep if sleep is None else sleep
+    last = None
+    for i in range(CHUNK_RETRIES + 1):
+        try:
+            return p.eth.get_logs(flt)
+        except Exception as e:
+            last = e
+            log.warning('approvals logs chunk try %d: %s', i + 1, type(e).__name__)
+            if i < CHUNK_RETRIES:
+                sleep(CHUNK_BACKOFF_S * (i + 1))
+    raise ApprovalsError('rpc rate limited (HTTP 429)' if _is_429(last) else 'rpc unavailable')
+
+
+def live_approvals(addr, progress=None):
     out, seen = [], set()
-    head = _ap_call(lambda p: p.eth.block_number)
+    lp = _logs_w3()
     owner_topic = '0x' + '0' * 24 + addr[2:].lower()
-    start = max(0, head - APPROVAL_LOOKBACK)
+    if lp is not None:
+        try:
+            head = lp.eth.block_number
+        except Exception:
+            head = _ap_call(lambda p: p.eth.block_number)
+        contracts = _asset_contracts()
+        groups = [contracts[i:i + LOGS_ADDR_GROUP] for i in range(0, len(contracts), LOGS_ADDR_GROUP)] or [[]]
+    else:
+        head = _ap_call(lambda p: p.eth.block_number)
+        groups = [None]  # red sin RPC de logs activado: comportamiento anterior (sin filtro address)
+    chunks = plan_chunks(head)
+    total = len(chunks) * 2 * len(groups)
+    n = 0
     for topic in (T_APPROVAL, T_APPROVAL_ALL):
-        frm = start
-        while frm <= head:
-            to = min(head, frm + LOG_CHUNK - 1)
-            flt = {'fromBlock': frm, 'toBlock': to, 'topics': [topic, owner_topic]}
-            logs = _ap_call(lambda p, f=flt: p.eth.get_logs(f))
-            for lg in logs:
-                if len(lg['topics']) < 3:
-                    continue
-                spender = Web3.to_checksum_address('0x' + h0x(lg['topics'][2])[-40:])
-                key = (lg['address'], spender, topic)
-                if key in seen:
-                    continue
-                seen.add(key)
-                try:
-                    if topic == T_APPROVAL_ALL:
-                        c = _ap_providers()[0].eth.contract(address=lg['address'], abi=ERC721)
-                        if c.functions.isApprovedForAll(addr, spender).call():
-                            out.append({'token': lg['address'], 'spender': spender, 'type': 'ApprovalForAll'})
-                    else:
-                        c = _ap_providers()[0].eth.contract(address=lg['address'], abi=ERC20)
-                        amt = c.functions.allowance(addr, spender).call()
-                        if amt > 0:
-                            out.append({'token': lg['address'], 'spender': spender, 'type': 'ERC20', 'amount': str(amt)})
-                except Exception as e:
-                    if _is_429(e):
-                        raise ApprovalsError('rpc rate limited (HTTP 429)') from None
-                    # ERC-721 Approval (3 topics indexados) u otros: se ignoran
-            frm = to + 1
+        for frm, to in chunks:
+            for g in groups:
+                flt = {'fromBlock': frm, 'toBlock': to, 'topics': [topic, owner_topic]}
+                if g is not None:
+                    if not g:
+                        n += 1
+                        continue
+                    flt['address'] = g
+                    logs = _get_logs_retry(lp, flt)
+                else:
+                    logs = _ap_call(lambda p, f=flt: p.eth.get_logs(f))
+                n += 1
+                if progress:
+                    progress(n, total)
+                for lg in logs:
+                    if len(lg['topics']) < 3:
+                        continue
+                    spender = Web3.to_checksum_address('0x' + h0x(lg['topics'][2])[-40:])
+                    key = (lg['address'], spender, topic)
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    try:
+                        if topic == T_APPROVAL_ALL:
+                            c = _ap_providers()[0].eth.contract(address=lg['address'], abi=ERC721)
+                            if c.functions.isApprovedForAll(addr, spender).call():
+                                out.append({'token': lg['address'], 'spender': spender, 'type': 'ApprovalForAll'})
+                        else:
+                            c = _ap_providers()[0].eth.contract(address=lg['address'], abi=ERC20)
+                            amt = c.functions.allowance(addr, spender).call()
+                            if amt > 0:
+                                out.append({'token': lg['address'], 'spender': spender, 'type': 'ERC20', 'amount': str(amt)})
+                    except Exception as e:
+                        if _is_429(e):
+                            raise ApprovalsError('rpc rate limited (HTTP 429)') from None
+                        # ERC-721 Approval (3 topics indexados) u otros: se ignoran
     return out
 
 
