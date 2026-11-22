@@ -24,8 +24,7 @@ INDEX = ROOT / "web" / "index.html"
 POLICY = ROOT / "relayer" / "policy.py"
 
 # ORDEN #1258: Base y Arbitrum operativos para rescate; Ethereum en solo lectura (en gen:top).
-TOP_TMPL = ('<p class="notice" id="mainnetNotice"><span id="capLine">When every second matters. Base and Arbitrum mainnet: rescue is live. '
-            'We will never DM you first and never ask for your seed phrase.</span></p>')
+TOP_TMPL = ('<p class="notice" id="mainnetNotice"><span id="capLine">Security notice: We will never DM you first or ask for your seed phrase.</span></p>')
 CAP_TMPL = ('<p class="small muted" id="capNote">*Eligibility limit per rescue, not a guarantee of recovery. Rescues above {hv} get automatic extra safety '
             'checks (a few seconds more).</p>\n'
             '<p class="small muted" id="daggerNote">†Verified tokens: {nb} on Base, {na} on Arbitrum. Other ERC-20 tokens in your wallet '

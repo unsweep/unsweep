@@ -18,8 +18,7 @@ def test_portada_generada_por_pipeline():
     assert r.returncode == 0, r.stdout + r.stderr
 
 
-LITERAL_956 = ("When every second matters. Base and Arbitrum mainnet: rescue is live. "
-               "We will never DM you first and never ask for your seed phrase.")
+LITERAL_956 = "Security notice: We will never DM you first or ask for your seed phrase."
 
 
 def _texto(s):
@@ -57,7 +56,7 @@ def test_orden_portada():
     assert body.index('id="btnScan"') < body.index('id="faq"')
     assert body.index('id="btnScan"') < body.index('id="contracts"') < body.index('id="guides"') < body.index("<footer>")
     intro = re.search(r'<p class="intro">(.*?)</p>', INDEX, re.S).group(1)
-    assert "\n" not in intro and len(intro) < 120
+    assert "\n" not in intro and len(intro) < 150
 
 
 def test_contratos_una_sola_vez():
@@ -84,10 +83,9 @@ def test_tokens_plegables_desde_assets():
 def test_orden1258_arbitrum():
     # subtitulo literal
     intro = re.search(r'<p class="intro">(.*?)</p>', INDEX, re.S).group(1)
-    assert _texto(intro) == "Rescue tokens left in a hacked wallet, even if a sweeper bot drains every deposit."
+    assert _texto(intro) == "Rescue tokens left in a hacked wallet, even if a sweeper bot drains every deposit. When every second matters."
     # gen:top: Base y Arbitrum operativos, Ethereum solo lectura
     top = INDEX.split("<!--gen:top-->", 1)[1].split("<!--/gen:top-->", 1)[0]
-    assert "Base and Arbitrum mainnet: rescue is live" in top
     assert 'id="ethNote"' not in INDEX
     # desplegable Arbitrum desde assets_42161.json (N=12) con nota de deteccion automatica
     toks = json.loads((ROOT / "relayer" / "data" / "assets_42161.json").read_text())
