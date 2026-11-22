@@ -160,4 +160,4 @@ def test_wizard_1194():
     # (3) scan con spinner y contador
     import pathlib
     js = (pathlib.Path(__file__).resolve().parent.parent / 'web/assets/app.js').read_text()
-    assert 'function runScan' in js and 'b.disabled = true' in js and 'spinner' in js and "' s'" in js
+    assert 'function runScan' in js and 'b.disabled = true' in js and 'spinner' in js and ' s elapsed' in js

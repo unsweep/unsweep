@@ -217,8 +217,8 @@
     const b = $('btnScan'); if (b.disabled) return;
     const label = b.textContent, t0 = Date.now();
     b.disabled = true; b.setAttribute('aria-busy', 'true');
-    const paint = function () { b.textContent = ''; const sp = document.createElement('span'); sp.className = 'spinner'; sp.setAttribute('aria-hidden', 'true'); b.appendChild(sp); b.appendChild(document.createTextNode(' Scanning… ' + Math.floor((Date.now() - t0) / 1000) + ' s')); };
-    paint(); const h = setInterval(paint, 1000);
+    const paint = function () { b.textContent = ''; const sp = document.createElement('span'); sp.className = 'spinner'; sp.setAttribute('aria-hidden', 'true'); b.appendChild(sp); b.appendChild(document.createTextNode(' Scanning\u2026')); };
+    paint(); const h = null;
     try { await scanImpl(); } finally { clearInterval(h); b.disabled = false; b.removeAttribute('aria-busy'); b.textContent = label; }
   }
   $('btnToStep2').addEventListener('click', () => {
