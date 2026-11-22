@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Malicious EIP-7702 delegation: how to detect it and how to revoke or mitigate it | UNSWEEP</title>
+<meta name="description" content="What a malicious EIP-7702 delegation is, how to recognise the 0xef0100 delegation indicator in a wallet's code, and how a delegation can be cleared by delegating to the zero address, with its limits.">
+<meta name="referrer" content="no-referrer">
+<link rel="canonical" href="https://unsweep.com/guides/eip-7702-malicious-delegation.html">
+<link rel="stylesheet" href="/assets/style.css"></head><body><main class="guide">
+<p class="small"><a href="/">UNSWEEP</a> &rsaquo; Guides</p>
+<h1>Malicious EIP-7702 delegation: how to detect it and how to revoke or mitigate it</h1>
+<p class="warn">This guide is informational. Funds already moved out of a compromised wallet cannot be recovered. Revoking a delegation only protects what is still in the wallet, and only if the private key is not also in the attacker's hands.</p>
+<p>Check whether an address has a delegation set with the free, read-only diagnostic: <a href="https://unsweep.com/">https://unsweep.com/</a> (no keys, no signatures).</p>
+
+<h2>What an EIP-7702 delegation is</h2>
+<p><a href="https://eips.ethereum.org/EIPS/eip-7702">EIP-7702</a> (&ldquo;Set Code for EOAs&rdquo;, status: Final) lets a normal wallet (an externally-owned account) point to contract code. It adds a transaction type <code>SET_CODE_TX_TYPE = 0x04</code> with an <code>authorization_list</code> of tuples <code>[chain_id, address, nonce, y_parity, r, s]</code>. When an authorization is processed, the specification says: &ldquo;Set the code of <code>authority</code> to be <code>0xef0100 || address</code>. This is a delegation indicator.&rdquo;</p>
+<p>The authorization is signed by the wallet's own key: &ldquo;Let authority = ecrecover(msg, y_parity, r, s)&rdquo;, where &ldquo;msg = keccak(MAGIC || rlp([chain_id, address, nonce]))&rdquo; and <code>MAGIC = 0x05</code>. After that, calls to the wallet run the code at the delegated <code>address</code>.</p>
+
+<h2>What makes a delegation malicious</h2>
+<p>A delegation is malicious when the delegated code serves someone other than the owner, for example code that lets a third party move the wallet's tokens or that forwards incoming funds elsewhere. This can happen if the owner is tricked into signing an authorization, or if an attacker who already has the private key signs one. Because the delegation stays in the account's code, it keeps acting on anything that later arrives in the wallet.</p>
+<p>The chain ID inside an authorization matters. The specification requires the node to &ldquo;verify the chain ID is 0 or the ID of the current chain&rdquo;, so an authorization signed with <code>chain_id = 0</code> is accepted on any chain where EIP-7702 is active, not just one (<a href="https://eips.ethereum.org/EIPS/eip-7702">EIP-7702 &ndash; Specification</a>).</p>
+
+<h2>How to detect it</h2>
+<p>A wallet with no delegation has no code. A delegated wallet's code is exactly the delegation indicator: the 3-byte prefix <code>0xef0100</code> followed by the 20-byte delegated address. The specification notes that <code>EXTCODESIZE</code> returns <code>23</code>, &ldquo;the size of <code>0xef0100 || address</code>&rdquo; (<a href="https://eips.ethereum.org/EIPS/eip-7702">EIP-7702 &ndash; Delegation indicator</a>).</p>
+<ul>
+<li>Code is empty: no delegation is set.</li>
+<li>Code starts with <code>0xef0100</code> and is 23 bytes long: a delegation is set; the last 20 bytes are the address it points to.</li>
+<li>If you did not knowingly set that delegation, treat the wallet as compromised.</li>
+</ul>
+<p>This check is read-only and needs no keys. The <a href="https://unsweep.com/">free diagnostic</a> performs it for you.</p>
+
+<h2>How to revoke or mitigate it</h2>
+<p><strong>Revoke:</strong> the specification defines a reset: if the authorization's <code>address</code> is <code>0x0000000000000000000000000000000000000000</code>, the delegation is cleared instead of set, and the account's code returns to empty (<a href="https://eips.ethereum.org/EIPS/eip-7702">EIP-7702 &ndash; Behavior</a>). The owner signs this new authorization with the wallet's key, locally, and each processed authorization increases the wallet's nonce: &ldquo;Increase the nonce of authority by one.&rdquo; A revocation applies to the chain where it is processed, so check every chain on which the wallet is used.</p>
+<p><strong>Limits:</strong> if the attacker also has the private key, they can sign a new delegation after you clear it. In that case revoking alone does not secure the wallet:</p>
+<ul>
+<li>Move whatever is still in the wallet to a new wallet whose key has never been exposed.</li>
+<li>Do not send ETH for gas into the compromised wallet (see <a href="/guides/sweeper-bot-hacked-wallet.html">why gas deposits get swept</a>).</li>
+<li>Stop using the old key. Never paste a private key or seed phrase into any website.</li>
+</ul>
+<p>Start by checking the address: <a href="https://unsweep.com/">https://unsweep.com/</a>.</p>
+<p class="small">Related: <a href="/guides/eip-7702-sweeper/">EIP-7702 sweeper delegation</a> &middot; <a href="/guides/revoke-approvals/">Revoke token approvals</a> &middot; <a href="/guides/compromised-wallet-checklist/">Compromised wallet checklist</a></p>
+<p class="small">Source: <a href="https://eips.ethereum.org/EIPS/eip-7702">EIP-7702: Set Code for EOAs</a> &middot; <a href="https://ethereum.org/en/developers/docs/accounts/">ethereum.org Accounts</a></p>
+</main></body></html>
