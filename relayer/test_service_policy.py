@@ -134,14 +134,14 @@ def _send(chain_id, q, balance=4 * 10**15):
 
 
 def test_mainnet_only_base_enabled(relay_env):
-    """#81=B: 8453 aceptada; 1, 42161 y cualquier otra mainnet siguen rechazadas."""
+    """#81=B + #125=A: 8453 aceptada (y 42161 activa); 1 y cualquier otra mainnet siguen rechazadas."""
     _, _, q, _ = relay_env
     eth, rc = _send(8453, q)
     assert rc['status'] == 1 and len(eth.sent) == 1
-    assert R.ACTIVE_MAINNETS == {8453}
+    assert R.ACTIVE_MAINNETS == {8453, 42161}
 
 
-@pytest.mark.parametrize('chain_id', [1, 42161, 10, 137, 56])
+@pytest.mark.parametrize('chain_id', [1, 10, 137, 56])
 def test_other_mainnets_rejected(relay_env, chain_id):
     _, _, q, _ = relay_env
     eth = _Eth(); eth.chain_id = chain_id

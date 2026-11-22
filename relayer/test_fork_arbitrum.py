@@ -164,10 +164,27 @@ def test_reverting_token_excluded(fork):
     assert rc.status == 1 and usdc.functions.balanceOf(safe.address).call() == amount - amount * 1500 // 10_000
 
 
-def test_arbitrum_still_blocked_in_send_rescue(fork):
+def test_arbitrum_active_but_send_rescue_fail_closed(fork):
+    # #125=A: 42161 activa en mainnet; Ethereum (1) sigue bloqueada (#81=B)
     w3 = fork
-    assert 42161 not in R.ACTIVE_MAINNETS  # sin E2E real, el relayer no envia en 42161
+    assert 42161 in R.ACTIVE_MAINNETS and 1 not in R.ACTIVE_MAINNETS
     v = Account.create()
     auth = R.sign_auth(v.key, 42161, F.USDC, 0)
-    with pytest.raises(P.PolicyError, match='no habilitada'):
-        R.send_rescue(w3, E.SPONSOR, v.address, auth, b'', E.GOOD)
+    sponsor = Account.from_key(E.SPONSOR).address
+    n0 = w3.eth.get_transaction_count(sponsor, 'pending')
+    # #234/#1130 endurecido: 42161 supera la puerta de cadena y la POLITICA bloquea antes de enviar (fail-closed)
+    sent = []
+    real_send = w3.eth.send_raw_transaction
+    w3.eth.send_raw_transaction = lambda raw: sent.append(raw) or (_ for _ in ()).throw(
+        AssertionError('send_raw_transaction no debe llamarse'))
+    try:
+        with pytest.raises(P.PolicyError) as ei:
+            R.send_rescue(w3, E.SPONSOR, v.address, auth, b'', E.GOOD)
+    finally:
+        w3.eth.send_raw_transaction = real_send
+    msg = str(ei.value)
+    print('send_rescue_42161_bloqueo:', msg)
+    assert type(ei.value) is P.PolicyError  # no RaceAbort ni error generico
+    assert 'no habilitada' not in msg  # 42161 ya esta activa: el bloqueo es de politica, no de cadena
+    assert sent == []  # nunca se intento enviar
+    assert w3.eth.get_transaction_count(sponsor, 'pending') == n0  # 0 tx enviadas
