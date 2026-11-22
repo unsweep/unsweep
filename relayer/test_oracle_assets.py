@@ -136,3 +136,14 @@ def test_assets_8453_16_symbols_16_feeds_coherent():
         assert quote == f['quote'] and quote in ('USD', 'ETH')
         assert int(f['heartbeat']) > 0 and int(f['decimals']) == (8 if quote == 'USD' else 18)
     assert d['eth_usd_feed']['pair'] == 'ETH / USD'
+
+
+def test_assets_42161_native_usdc_feeds_verified():
+    d = json.loads((Path(__file__).parent / 'data' / 'assets_42161.json').read_text())
+    assert d['chainId'] == 42161
+    addrs = {t['address'].lower() for t in d['tokens']}
+    assert '0xaf88d065e77c8cc2239327c5edb3a432268e5831' in addrs  # USDC nativo
+    assert '0xff970a61a04b1ca14834a43f5de4533ebddb5cc8' not in addrs  # USDC.e excluido
+    for f in [d['eth_usd_feed']] + [t['feed'] for t in d['tokens']]:
+        assert f['aggregator'].startswith('0x') and int(f['aggregator'], 16) != 0
+        assert int(f['heartbeat']) > 0 and int(f['decimals']) == (8 if f['quote'] == 'USD' else 18)
