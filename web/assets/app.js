@@ -34,11 +34,12 @@
   function fmt(amount, dec) { try { return E.formatUnits(BigInt(amount), Number(dec)); } catch (e) { return String(amount); } }
 
   // ---------- STEP 1: scan (public address only) ----------
-  $('btnScan').addEventListener('click', async () => {
+  $('btnScan').addEventListener('click', () => { runScan(); });
+  async function scanImpl() {
     const a = addr($('victim').value);
     if (!a) return show($('scanOut'), 'Invalid address.', 'err');
     const chain = ($('chain') && $('chain').value) || 'testnet';
-    $('step2').hidden = true; $('step3').hidden = true;
+    goStep(1); $('btnToStep2').hidden = true;
     if (chain === 'ethereum') {
       st.scan = null; // rescue is never enabled on mainnet
       show($('scanOut'), 'Read-only check on ' + (chain === 'base' ? 'Base' : 'Ethereum') + ' mainnet...');
@@ -77,7 +78,7 @@
         const el = Math.floor((Date.now() - t0) / 1000); let phase;
         if (el < 3) phase = 'Checking balances and delegation';
         else if (el < 30) phase = 'Scanning approval history on Base';
-        else phase = 'Still scanning (long histories take longer)';
+        else phase = ['Still scanning (long histories take longer)', 'Reading older approval logs', 'Cross-checking open approvals'][Math.floor(el / 5) % 3];
         show($('scanOut'), phase + '… ' + el + ' s elapsed');
       };
       tick(); const h = setInterval(tick, 1000);
@@ -95,9 +96,9 @@
       for (const ap of (s.approvals || [])) out.push('Live approval: ' + ap.token + ' -> ' + ap.spender + ' (revoke recommended)');
       show($('scanOut'), out, 'ok');
       renderExtras(s.extras || []);
-      if (s.rescuable) $('step2').hidden = false;
+      if (s.rescuable) $('btnToStep2').hidden = false;
     } catch (e) { show($('scanOut'), 'Scan failed: ' + e.message, 'err'); }
-  });
+  }
 
   // ---------- STEP 2: simulation ----------
   // @@typed-begin (pure; evaluated by relayer/test_typehash_parity.py)
@@ -122,7 +123,7 @@
     if (!safe || !st.scan) return show($('quoteOut'), 'Invalid safe address.', 'err');
     if (safe === st.scan.address) return show($('quoteOut'), 'The safe wallet must be different.', 'err');
     show($('quoteOut'), 'Simulating...');
-    $('step3').hidden = true;
+    $('step3').hidden = true; $('btnToStep3').hidden = true;
     try {
       const r = await api('quote', { address: st.scan.address, safe: safe, extras: checkedExtras() });
       const q = r.quote; st.quote = q; st.safe = safe; st.scan = r.scan;
@@ -138,7 +139,7 @@
       if (!q.policy_ok) { out.push('Not eligible: ' + q.policy_reason); return show($('quoteOut'), out, 'err'); }
       if (q.lines.length === 0) { out.push('Nothing to rescue.'); return show($('quoteOut'), out, 'err'); }
       show($('quoteOut'), out, 'ok');
-      $('step3').hidden = false; loadTurnstile();
+      $('btnToStep3').hidden = false;
     } catch (e) { show($('quoteOut'), 'Simulation failed: ' + e.message, 'err'); }
   });
 
@@ -201,5 +202,37 @@
     } finally {
       st.tsToken = null; if (window.turnstile) { try { window.turnstile.reset('#ts'); } catch (e) { /* noop */ } }
     }
+  });
+  // #1194: wizard (only the active step visible; completed steps collapsed with Edit)
+  function goStep(n) {
+    for (let i = 1; i <= 3; i++) {
+      const sec = $('step' + i), body = $('step' + i + 'Body'), done = $('step' + i + 'Done');
+      if (sec) sec.hidden = i > n;
+      if (body) body.hidden = i !== n;
+      if (done) done.hidden = !(i < n);
+    }
+    const s = $('step' + n); if (s && s.scrollIntoView) s.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  }
+  async function runScan() {
+    const b = $('btnScan'); if (b.disabled) return;
+    const label = b.textContent, t0 = Date.now();
+    b.disabled = true; b.setAttribute('aria-busy', 'true');
+    const paint = function () { b.textContent = ''; const sp = document.createElement('span'); sp.className = 'spinner'; sp.setAttribute('aria-hidden', 'true'); b.appendChild(sp); b.appendChild(document.createTextNode(' Scanning… ' + Math.floor((Date.now() - t0) / 1000) + ' s')); };
+    paint(); const h = setInterval(paint, 1000);
+    try { await scanImpl(); } finally { clearInterval(h); b.disabled = false; b.removeAttribute('aria-busy'); b.textContent = label; }
+  }
+  $('btnToStep2').addEventListener('click', () => {
+    $('step1Sum').textContent = 'Wallet ' + (st.scan ? st.scan.address : '') + ' (' + ($('chain') ? $('chain').value : '') + ')';
+    goStep(2);
+  });
+  $('btnToStep3').addEventListener('click', () => {
+    $('step2Sum').textContent = 'Destination ' + (st.safe || '');
+    goStep(3); loadTurnstile();
+  });
+  $('edit1').addEventListener('click', () => goStep(1));
+  $('edit2').addEventListener('click', () => goStep(2));
+  $('pkToggle').addEventListener('click', () => {
+    const i = $('pk'), t = $('pkToggle'), vis = i.type === 'password';
+    i.type = vis ? 'text' : 'password'; t.textContent = vis ? 'Hide' : 'Show'; t.setAttribute('aria-pressed', vis ? 'true' : 'false');
   });
 })();

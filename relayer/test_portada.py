@@ -49,7 +49,8 @@ def test_nota_asterisco_bajo_formulario():
             'safety checks (a few seconds more).</p>')
     assert INDEX.count(nota) == 1 and INDEX.count('id="capNote"') == 1
     body = INDEX.split("<body>", 1)[1]
-    assert body.index('id="btnScan"') < body.index('id="capNote"') < body.index('id="step2"')
+    # #1194: notas fuera del flujo, debajo de la tarjeta (tras step3, antes de FAQ)
+    assert body.index('id="step3"') < body.index('id="notes"') < body.index('id="capNote"') < body.index('id="faq"')
     assert "10,000 USD get" not in INDEX and "up to $10,000 per rescue" not in INDEX
 
 
@@ -63,8 +64,9 @@ def test_orden_portada():
 
 def test_contratos_una_sola_vez():
     for a in (DELEGATE, CONFIG):
-        assert INDEX.count(a) == 2  # texto del enlace + href, una sola aparicion visible
-        assert INDEX.count(f'href="https://basescan.org/address/{a}#code"') == 1
+        extra = 1 if a == DELEGATE else 0  # #1194: enlace al contrato tambien en el paso 3
+        assert INDEX.count(a) == 2 + extra
+        assert INDEX.count(f'href="https://basescan.org/address/{a}#code"') == 1 + extra
     assert INDEX.count('href="https://github.com/unsweep/unsweep"') == 1
     sec = INDEX.split('id="contracts"', 1)[1].split("</section>", 1)[0]
     assert DELEGATE in sec and CONFIG in sec and "github.com/unsweep/unsweep" in sec
@@ -132,3 +134,26 @@ def test_appjs_humano_ethereum_solo_lectura():
     assert "if (chain === 'ethereum') {" in APPJS
     assert "if (chain === 'base' || chain === 'ethereum') {" not in APPJS
     assert re.search(r"Ethereum mainnet: read-only check", APPJS)
+
+
+def test_wizard_1194():
+    body = INDEX.split('<body', 1)[1]
+    # (1) wizard: cuerpos y resumenes colapsados con Edit y botones Continue
+    for i in ('step1Body', 'step2Body', 'step1Done', 'step2Done', 'edit1', 'edit2', 'btnToStep2', 'btnToStep3'):
+        assert INDEX.count(f'id="{i}"') == 1, i
+    assert 'Continue to Step 2 &rarr;' in INDEX or 'Continue to Step 2 →' in INDEX or 'Continue to Step 2 ->' in INDEX
+    assert 'Continue to Rescue &rarr;' in INDEX or 'Continue to Rescue →' in INDEX or 'Continue to Rescue ->' in INDEX
+    assert 'id="step3Body"' not in INDEX  # paso final: no se colapsa
+    # (2) notas fuera del flujo
+    assert body.index('id="step3"') < body.index('id="notes"') < body.index('id="faq"')
+    # (4) destino nuevo y limpio
+    assert INDEX.count('id="destNote"') == 1
+    # (5) password con ver/ocultar, enlaces de verificacion, DevTools, sin option D
+    assert 'type="password"' in INDEX and INDEX.count('id="pkToggle"') == 1
+    assert 'github.com/unsweep/unsweep/blob/main/web/assets/app.js' in INDEX
+    assert 'DevTools' in INDEX and INDEX.count('id="devtoolsNote"') == 1
+    assert 'option D' not in INDEX and 'coming soon' not in INDEX
+    # (3) scan con spinner y contador
+    import pathlib
+    js = (pathlib.Path(__file__).resolve().parent.parent / 'web/assets/app.js').read_text()
+    assert 'function runScan' in js and 'b.disabled = true' in js and 'spinner' in js and "' s'" in js

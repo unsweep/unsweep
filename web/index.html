@@ -9,8 +9,10 @@
 <p class="notice" id="mainnetNotice"><span id="capLine">Base mainnet: rescue is live (16+ ERC-20 tokens†, up to $100,000* per rescue). Ethereum: free read-only check. Your compromised key never leaves your browser. We will never DM you first and never ask for your seed phrase.</span></p>
 <!--/gen:top-->
 
-<section id="step1">
+<section id="step1" class="step">
 <h2>Step 1 &middot; Check your wallet</h2>
+<div class="stepDone" id="step1Done" hidden><span class="small" id="step1Sum"></span> <button type="button" class="edit" id="edit1">Edit</button></div>
+<div class="stepBody" id="step1Body">
 <div class="form">
 <div class="field">
 <label for="chain">Network</label>
@@ -31,6 +33,50 @@
 <p class="small" id="extrasWarn"><strong>Unverified tokens, no guarantee, may include scam tokens</strong></p>
 <div id="extrasList"></div>
 </div>
+<button id="btnToStep2" class="primary next" type="button" hidden>Continue to Step 2 &rarr;</button>
+</div>
+</section>
+
+<section id="step2" class="step" hidden>
+<h2>Step 2 &middot; Simulation: what you receive and the fee</h2>
+<div class="stepDone" id="step2Done" hidden><span class="small" id="step2Sum"></span> <button type="button" class="edit" id="edit2">Edit</button></div>
+<div class="stepBody" id="step2Body">
+<p id="destNote">Enter a <strong>new, clean destination wallet</strong>: a fresh address whose key was never exposed and that is <strong>not</strong> the compromised wallet. All rescued assets are sent there.</p>
+<div class="form">
+<div class="field">
+<label for="safe">New clean destination address</label>
+<input id="safe" type="text" placeholder="0x... new clean wallet address" autocomplete="off" spellcheck="false">
+</div>
+<button id="btnQuote" class="primary">Simulate</button>
+</div>
+<div id="quoteOut" class="out">
+</div>
+<button id="btnToStep3" class="primary next" type="button" hidden>Continue to Rescue &rarr;</button>
+</div>
+</section>
+
+<section id="step3" class="step" hidden>
+<h2>Step 3 &middot; Sign locally and rescue</h2>
+<ul class="small list">
+<li>Your key is used <strong>only inside this browser tab</strong>, in memory, to sign. It is never sent, stored or logged. Only signatures go to our relayer.</li>
+<li>Seed phrases (12/24 words) are <strong>rejected</strong>. Paste only the 64-hex private key of the <em>compromised</em> wallet.</li>
+<li id="verifyLinks">Verify before you paste: the <a href="https://github.com/unsweep/unsweep/blob/main/web/assets/app.js">signing code on GitHub</a> and the <a href="https://basescan.org/address/0x38bcF425bC4d13624734e09376F2fafc799fA8c8#code">delegate contract on Basescan</a>.</li>
+<li id="devtoolsNote">Advanced: open your browser DevTools (Network tab) while rescuing to confirm the key is never sent; only signatures are posted.</li>
+</ul>
+<div class="form">
+<div class="field wide">
+<label for="pk">Compromised wallet private key</label>
+<div class="pkrow"><input id="pk" type="password" placeholder="private key of the COMPROMISED wallet (0x + 64 hex)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"><button type="button" class="edit" id="pkToggle" aria-controls="pk" aria-pressed="false">Show</button></div>
+</div>
+<div id="ts">
+</div>
+<button id="btnRescue" class="primary">Sign locally &amp; rescue</button>
+</div>
+<div id="rescueOut" class="out">
+</div>
+</section>
+
+<section id="notes" class="notes">
 <!--gen:cap-->
 <p class="small muted" id="capNote">*Rescues above $10,000 get automatic extra safety checks (a few seconds more).</p>
 <p class="small muted" id="daggerNote">†16 verified tokens. Other ERC-20 tokens in the wallet can be included, unverified and with no guarantee.</p>
@@ -39,40 +85,6 @@
 <summary>What does this check?</summary>
 <p class="small">The mainnet check shows: EIP-7702 delegation and its target contract, nonce, native balance, main ERC-20 balances and ERC-20 approvals granted by direct transactions in the last 90 days that are still open. It cannot see approvals granted by off-chain signatures (permits). Results are cached for 10 minutes.</p>
 </details>
-</section>
-
-<section id="step2" hidden>
-<h2>Step 2 &middot; Simulation: what you receive and the fee</h2>
-<p>Enter the <strong>safe wallet</strong> that will receive the assets.</p>
-<div class="form">
-<div class="field">
-<label for="safe">Safe wallet address</label>
-<input id="safe" type="text" placeholder="0x... safe wallet address" autocomplete="off" spellcheck="false">
-</div>
-<button id="btnQuote" class="primary">Simulate</button>
-</div>
-<div id="quoteOut" class="out">
-</div>
-</section>
-
-<section id="step3" hidden>
-<h2>Step 3 &middot; Sign locally and rescue</h2>
-<ul class="small list">
-<li>Your key is used <strong>only inside this browser tab</strong>, in memory, to sign. It is never sent, stored or logged. Only signatures go to our relayer.</li>
-<li>Seed phrases (12/24 words) are <strong>rejected</strong>. Paste only the 64-hex private key of the <em>compromised</em> wallet.</li>
-<li>Prefer offline signing? Open this page offline in a separate tab (option D, coming soon).</li>
-</ul>
-<div class="form">
-<div class="field">
-<label for="pk">Compromised wallet private key</label>
-<input id="pk" type="password" placeholder="private key of the COMPROMISED wallet (0x + 64 hex)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-</div>
-<div id="ts">
-</div>
-<button id="btnRescue" class="primary">Sign locally &amp; rescue</button>
-</div>
-<div id="rescueOut" class="out">
-</div>
 </section>
 
 <section id="faq">
