@@ -110,7 +110,7 @@ def test_api_rescue_comprueba_antes_de_precios():
     fn = next(n for n in ast.walk(ast.parse(src))
               if isinstance(n, ast.AsyncFunctionDef) and n.name == 'api_rescue')
     seg = ast.get_source_segment(src, fn)
-    i_seq, i_scan, i_quote = seg.index('SEQ.check(w3, CHAIN_ID)'), seg.index('scan(victim)'), seg.index('quote(s)')
+    i_seq, i_scan, i_quote = seg.index('SEQ.check(w3, CHAIN_ID)'), seg.index('scan(victim)'), seg.index('quote(s')
     assert i_seq < i_scan < i_quote
 
 
