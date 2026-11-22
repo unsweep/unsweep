@@ -1,0 +1,168 @@
+{
+ "chainId": 42161,
+ "block": 526338005,
+ "rpc": "alchemy (ARB_RPC_URL_2)",
+ "heartbeat_source": [
+  "https://docs.chain.link/data-feeds/price-feeds/addresses?network=arbitrum",
+  "https://reference-data-directory.vercel.app/feeds-ethereum-mainnet-arbitrum-1.json"
+ ],
+ "sequencer_uptime_feed": {
+  "address": "0xFdB631F5EE196F0ed6FAa767959853A9F217697D",
+  "url": "https://docs.chain.link/data-feeds/l2-sequencer-feeds"
+ },
+ "tokens": [
+  {
+   "symbol": "USDC",
+   "token": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+   "token_decimals_onchain": 6,
+   "feed": "0x50834F3163758fcC1Df9973b6e91f0F0F0434aD3",
+   "feed_pair": "USDC / USD",
+   "feed_decimals_onchain": 8,
+   "updatedAt": 1795294627,
+   "age_s_at_check": 108,
+   "heartbeat_s": 255
+  },
+  {
+   "symbol": "USDT",
+   "token": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
+   "token_decimals_onchain": 6,
+   "feed": "0x3f3f5dF88dC9F13eac63DF89EC16ef6e7E25DdE7",
+   "feed_pair": "USDT / USD",
+   "feed_decimals_onchain": 8,
+   "updatedAt": 1795294468,
+   "age_s_at_check": 267,
+   "heartbeat_s": 255
+  },
+  {
+   "symbol": "DAI",
+   "token": "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+   "token_decimals_onchain": 18,
+   "feed": "0xc5C8E77B397E531B8EC06BFb0048328B30E9eCfB",
+   "feed_pair": "DAI / USD",
+   "feed_decimals_onchain": 8,
+   "updatedAt": 1795279616,
+   "age_s_at_check": 15119,
+   "heartbeat_s": 86400
+  },
+  {
+   "symbol": "WETH",
+   "token": "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
+   "token_decimals_onchain": 18,
+   "feed": "0x639Fe6ab55C921f74e7fac1ee960C0B6293ba612",
+   "feed_pair": "ETH / USD",
+   "feed_decimals_onchain": 8,
+   "updatedAt": 1795294588,
+   "age_s_at_check": 147,
+   "heartbeat_s": 1755
+  },
+  {
+   "symbol": "cbETH",
+   "token": "0x1DEBd73E752bEaF79865Fd6446b0c970EaE7732f",
+   "token_decimals_onchain": 18,
+   "feed": "0xa668682974E3f121185a3cD94f00322beC674275",
+   "feed_pair": "CBETH / ETH",
+   "feed_decimals_onchain": 18,
+   "updatedAt": 1795208461,
+   "age_s_at_check": 86274,
+   "heartbeat_s": 86400
+  },
+  {
+   "symbol": "LINK",
+   "token": "0xf97f4df75117a78c1A5a0DBb814Af92458539FB4",
+   "token_decimals_onchain": 18,
+   "feed": "0x86E53CF1B870786351Da77A57575e79CB55812CB",
+   "feed_pair": "LINK / USD",
+   "feed_decimals_onchain": 8,
+   "updatedAt": 1795293775,
+   "age_s_at_check": 960,
+   "heartbeat_s": 1755
+  },
+  {
+   "symbol": "GHO",
+   "token": "0x7dfF72693f6A4149b17e7C6314655f6A9F7c8B33",
+   "token_decimals_onchain": 18,
+   "feed": "0x3c786e934F23375Ca345C9b8D5aD54838796E8e7",
+   "feed_pair": "GHO / USD",
+   "feed_decimals_onchain": 8,
+   "updatedAt": 1795208613,
+   "age_s_at_check": 86122,
+   "heartbeat_s": 86400
+  },
+  {
+   "symbol": "tBTC",
+   "token": "0x7E2a1eDeE171C5B19E6c54D73752396C0A572594",
+   "token_decimals_onchain": 18,
+   "feed": "0xE808488e8627F6531bA79a13A9E0271B39abEb1C",
+   "feed_pair": "TBTC / USD",
+   "feed_decimals_onchain": 8,
+   "updatedAt": 1795290675,
+   "age_s_at_check": 4060,
+   "heartbeat_s": 86400
+  },
+  {
+   "symbol": "sUSDe",
+   "token": "0x211Cc4DD073734dA055fbF44a2b4667d5E5fE5d2",
+   "token_decimals_onchain": 18,
+   "feed": "0xf2215b9c35b1697B5f47e407c917a40D055E68d7",
+   "feed_pair": "sUSDe / USD",
+   "feed_decimals_onchain": 8,
+   "updatedAt": 1795229938,
+   "age_s_at_check": 64797,
+   "heartbeat_s": 86400
+  },
+  {
+   "symbol": "COMP",
+   "token": "0x354A6dA3fcde098F8389cad84b0182725c6C91dE",
+   "token_decimals_onchain": 18,
+   "feed": "0xe7C53FFd03Eb6ceF7d208bC4C13446c76d1E5884",
+   "feed_pair": "COMP / USD",
+   "feed_decimals_onchain": 8,
+   "updatedAt": 1795293313,
+   "age_s_at_check": 1422,
+   "heartbeat_s": 3600
+  },
+  {
+   "symbol": "wstETH",
+   "token": "0x5979D7b546E38E414F7E9822514be443A4800529",
+   "token_decimals_onchain": 18,
+   "feed": "0xb523AE262D20A936BC152e6023996e46FDC2A95D",
+   "feed_pair": "WSTETH / ETH",
+   "feed_decimals_onchain": 18,
+   "updatedAt": 1795210903,
+   "age_s_at_check": 83832,
+   "heartbeat_s": 86400
+  },
+  {
+   "symbol": "weETH",
+   "token": "0x35751007a407ca6FEFfE80b3cB397736D2cf4dbe",
+   "token_decimals_onchain": 18,
+   "feed": "0xE141425bc1594b8039De6390db1cDaf4397EA22b",
+   "feed_pair": "weETH / ETH",
+   "feed_decimals_onchain": 18,
+   "updatedAt": 1795294495,
+   "age_s_at_check": 240,
+   "heartbeat_s": 86400
+  },
+  {
+   "symbol": "ETH(eth_usd_feed)",
+   "token": null,
+   "token_decimals_onchain": null,
+   "feed": "0x639Fe6ab55C921f74e7fac1ee960C0B6293ba612",
+   "feed_pair": "ETH / USD",
+   "feed_decimals_onchain": 8,
+   "updatedAt": 1795294588,
+   "age_s_at_check": 147,
+   "heartbeat_s": 1755
+  }
+ ],
+ "warnings": [
+  "USDC y USDT heartbeat 255 s: rondas observadas cada ~270 s (USDC 1795294897->1795295167; USDT age 258 s en bloque 526338837). Con oracle._check_age estricto hay ~15 s/ronda fail-closed. Requisito previo al E2E: reintento o margen documentado. No se cambia el c\u00f3digo en #1011."
+ ],
+ "descartes": {
+  "cbBTC": "Directorio Chainlink Arbitrum solo con entradas RefPrice/NAV sin proxyAddress: sin feed de precio verificable on-chain",
+  "AERO": "Feed AERO/USD 0x0B2aB7AE5276F6f466f8e62953138B106dD19A63 existe pero token oficial en 42161 en tokenlist Uniswap: NO",
+  "EURC": "Descartado en #1019 (sin contrato oficial EURC de Circle verificado en Arbitrum One); tokenlist 42161: [('EURC', '0x863708032B5c328e11aBcbC0DF9D79C71Fc52a48')]",
+  "WELL": "Sin feed en el directorio Chainlink de Arbitrum",
+  "USDC.e": "Excluido por mandato: solo USDC nativo 0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
+ }
+}
