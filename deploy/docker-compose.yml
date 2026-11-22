@@ -29,6 +29,33 @@ services:
     networks:
       x402:
         aliases: [unsweep-relayer]
+  relayer-arb:
+    # #125=A (#1011 F v12): Arbitrum One 42161, mismos topes #1011/#1012 (ops_guard 0.005 ETH fail-closed). Sin 'ports'.
+    build: ../relayer
+    container_name: unsweep-relayer-arb
+    restart: always
+    user: "1000:1000"
+    env_file: /opt/aire/unsweep-relayer.env
+    environment:
+      UNSWEEP_CHAIN_ID: "42161"
+      # deployments/mainnet.txt: CREATE2, misma direccion en Base y Arbitrum One (verificado en Arbiscan)
+      UNSWEEP_DELEGATE: "0x38bcF425bC4d13624734e09376F2fafc799fA8c8"
+      UNSWEEP_CONFIG: "0x56a345661e3999F2b20f1E069aAC14097Fa0D118"
+      # RPC publico oficial de Arbitrum One (sin secretos en el repo)
+      UNSWEEP_RPC: "https://arb1.arbitrum.io/rpc"
+      UNSWEEP_PG: "host=/var/run/postgresql dbname=unsweep user=tecnoclic"
+    volumes:
+      - ..:/app:ro
+      - ../relayer/data:/app/relayer/data
+      - /var/run/postgresql:/var/run/postgresql
+    expose: ["8787"]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    networks:
+      x402:
+        aliases: [unsweep-relayer-arb]
 networks:
   x402:
     name: x402-netcheck_default
