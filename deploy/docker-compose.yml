@@ -47,6 +47,8 @@ services:
     volumes:
       - ..:/app:ro
       - ../relayer/data:/app/relayer/data
+      # #1195: lista OFAC compartida Base/Arbitrum (host, solo lectura); relayer/data/ofac_eth.json es symlink versionado a /ofac/ofac_eth.json
+      - /opt/aire/unsweep-ofac:/ofac:ro
       - /var/run/postgresql:/var/run/postgresql
     expose: ["8787"]
     read_only: true
