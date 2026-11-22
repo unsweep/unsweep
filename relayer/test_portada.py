@@ -18,7 +18,7 @@ def test_portada_generada_por_pipeline():
     assert r.returncode == 0, r.stdout + r.stderr
 
 
-LITERAL_956 = ("Base mainnet: rescue is live (16+ ERC-20 tokens†, up to $100,000* per rescue). "
+LITERAL_956 = ("Base and Arbitrum mainnet: rescue is live (ERC-20 tokens†, up to $100,000* per rescue). "
                "Ethereum: free read-only check. Your compromised key never leaves your browser. "
                "We will never DM you first and never ask for your seed phrase.")
 
@@ -81,6 +81,30 @@ def test_tokens_plegables_desde_assets():
     assert m and int(m.group(1)) == len(toks)
     assert m.group(2).split(", ") == [t["symbol"] for t in toks]
     assert INDEX.count("Supported tokens on Base") == 1
+
+
+def test_orden1258_arbitrum():
+    # subtitulo literal
+    intro = re.search(r'<p class="intro">(.*?)</p>', INDEX, re.S).group(1)
+    assert _texto(intro) == "Rescue tokens left in a hacked wallet, even if a sweeper bot drains every deposit."
+    # gen:top: Base y Arbitrum operativos, Ethereum solo lectura
+    top = INDEX.split("<!--gen:top-->", 1)[1].split("<!--/gen:top-->", 1)[0]
+    assert "Base and Arbitrum mainnet: rescue is live" in top
+    assert "Ethereum: free read-only check" in top
+    assert 'id="ethNote"' not in INDEX
+    # desplegable Arbitrum desde assets_42161.json (N=12) con nota de deteccion automatica
+    toks = json.loads((ROOT / "relayer" / "data" / "assets_42161.json").read_text())
+    toks = toks.get("tokens", toks) if isinstance(toks, dict) else toks
+    assert len(toks) == 12
+    m = re.search(r'<details class="info" id="tokensArb"><summary>Supported tokens on Arbitrum \((\d+)\)</summary>'
+                  r'<p class="small">(.*?)</p><p class="small muted">(.*?)</p></details>', INDEX)
+    assert m and int(m.group(1)) == 12
+    assert m.group(2).split(", ") == [t["symbol"] for t in toks]
+    assert "Other ERC-20 tokens found in your wallet are detected automatically" in m.group(3)
+    assert INDEX.count("Supported tokens on Arbitrum") == 1
+    # selector de red y app.js
+    assert re.search(r'<option value="arbitrum"[^>]*>', INDEX)
+    assert "/arb/api/" in APPJS and "arbitrum: 42161" in APPJS
 
 
 def test_faq_10_y_jsonld_coherente():

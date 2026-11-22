@@ -23,14 +23,16 @@ ROOT = Path(__file__).resolve().parent.parent
 INDEX = ROOT / "web" / "index.html"
 POLICY = ROOT / "relayer" / "policy.py"
 
-TOP_TMPL = ('<p class="notice" id="mainnetNotice"><span id="capLine">Base mainnet: rescue is live '
-            '({n}+ ERC-20 tokens†, up to {cap}* per rescue). Ethereum: free read-only check. '
-            'Your compromised key never leaves your browser. We will never DM you first and '
+# ORDEN #1258: Base y Arbitrum operativos para rescate; Ethereum en solo lectura (en gen:top).
+TOP_TMPL = ('<p class="notice" id="mainnetNotice"><span id="capLine">Base and Arbitrum mainnet: rescue is live '
+            '(ERC-20 tokens†, up to {cap}* per rescue). '
+            'Ethereum: free read-only check. Your compromised key never leaves your browser. We will never DM you first and '
             'never ask for your seed phrase.</span></p>')
 CAP_TMPL = ('<p class="small muted" id="capNote">*Rescues above {hv} get automatic extra safety '
             'checks (a few seconds more).</p>\n'
-            '<p class="small muted" id="daggerNote">†16 verified tokens. Other ERC-20 tokens in your wallet '
+            '<p class="small muted" id="daggerNote">†Verified tokens: {nb} on Base, {na} on Arbitrum. Other ERC-20 tokens in your wallet '
             'are detected automatically during the scan so you can select them to attempt rescue (unverified, no guarantee).</p>')
+CHAINS = ((8453, "Base", "tokens"), (42161, "Arbitrum", "tokensArb"))
 
 
 def _const(name: str) -> float:
@@ -40,11 +42,11 @@ def _const(name: str) -> float:
     return float(m.group(1).replace("_", ""))
 
 
-def _assets():
-    cands = [p for p in ROOT.glob("**/assets_8453.json")
+def _assets(chain: int = 8453):
+    cands = [p for p in ROOT.glob(f"**/assets_{chain}.json")
              if ".venv" not in p.parts and "node_modules" not in p.parts and ".git" not in p.parts]
     if len(cands) != 1:
-        raise SystemExit(f"gen_portada: se esperaba 1 assets_8453.json, hay {len(cands)}")
+        raise SystemExit(f"gen_portada: se esperaba 1 assets_{chain}.json, hay {len(cands)}")
     doc = json.loads(cands[0].read_text())
     toks = doc.get("tokens", doc) if isinstance(doc, dict) else doc
     return toks
@@ -72,15 +74,18 @@ def _replace(html: str, key: str, body: str) -> str:
 
 def render(html: str) -> str:
     cap, hv = _const("CAP_INITIAL_USD"), _const("HIGH_VALUE_USD")
-    toks = _assets()
-    html = _replace(html, "top", "\n" + TOP_TMPL.format(n=len(toks), cap=usd(cap)) + "\n")
-    html = _replace(html, "cap", "\n" + CAP_TMPL.format(hv=usd(hv)) + "\n")
-    syms = ", ".join(htmlmod.escape(t["symbol"]) for t in toks)
-    html = _replace(html, "tokens", (f'\n<details class="info" id="tokens"><summary>Supported tokens on Base '
-                                     f'({len(toks)})</summary><p class="small">{syms}</p>'
-                                     f'<p class="small muted">Other ERC-20 tokens found in your wallet are detected automatically '
-                                     f'during the scan so you can select them to attempt rescue (unverified, no guarantee, same fee). '
-                                     f'NFTs are not rescued yet.</p></details>\n'))
+    toks = {c: _assets(c) for c, _n, _i in CHAINS}
+    html = _replace(html, "top", "\n" + TOP_TMPL.format(cap=usd(cap)) + "\n")
+    html = _replace(html, "cap", "\n" + CAP_TMPL.format(hv=usd(hv), nb=len(toks[8453]), na=len(toks[42161])) + "\n")
+    blocks = []
+    for c, name, did in CHAINS:
+        syms = ", ".join(htmlmod.escape(t["symbol"]) for t in toks[c])
+        blocks.append(f'<details class="info" id="{did}"><summary>Supported tokens on {name} '
+                      f'({len(toks[c])})</summary><p class="small">{syms}</p>'
+                      f'<p class="small muted">Other ERC-20 tokens found in your wallet are detected automatically '
+                      f'during the scan so you can select them to attempt rescue (unverified, no guarantee, same fee). '
+                      f'NFTs are not rescued yet.</p></details>')
+    html = _replace(html, "tokens", "\n" + "\n".join(blocks) + "\n")
     pairs = faq_pairs(html)
     if len(pairs) != 11:
         raise SystemExit(f"gen_portada: se esperaban 11 preguntas FAQ, hay {len(pairs)}")

@@ -9,8 +9,11 @@
     el.className = 'out' + (cls ? ' ' + cls : '');
     for (const l of [].concat(lines)) { const p = document.createElement('div'); p.textContent = l; el.appendChild(p); }
   }
+  // ORDEN #1258: Arbitrum (42161) se sirve en /arb/api/ (unsweep-relayer-arb); Base y Ethereum read-only en /api/.
+  const CHAIN_IDS = { base: 8453, arbitrum: 42161 };
+  function apiBase() { return ($('chain') && $('chain').value === 'arbitrum') ? '/arb/api/' : '/api/'; }
   async function api(path, body) {
-    const r = await fetch('/api/' + path, body ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) } : {});
+    const r = await fetch(apiBase() + path, body ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) } : {});
     let j = null; try { j = await r.json(); } catch (e) { /* noop */ }
     if (!r.ok) throw new Error((j && j.detail) ? String(j.detail) : ('HTTP ' + r.status));
     return j;
@@ -65,7 +68,7 @@
         for (const ap of aps) out.push('Open approval: ' + (ap.symbol || ap.token) + ' -> spender ' + ap.spender + (ap.unlimited ? ' (unlimited)' : '') + ' - see /guides/revoke-approvals/');
         const am = m.approvalsMeta || {};
         if (!complete) out.push('Approvals listed above may be partial (' + (am.txScanned || 0) + ' recent transactions checked).');
-        out.push('Ethereum mainnet: read-only check. Rescue is currently live on Base mainnet (16 ERC-20 tokens).');
+        out.push('Ethereum mainnet: read-only check. Rescue is currently live on Base mainnet (16 verified ERC-20 tokens) and Arbitrum mainnet (12 verified ERC-20 tokens).');
         show($('scanOut'), out, complete ? 'ok' : 'err');
       } catch (e) { show($('scanOut'), 'Scan failed: ' + e.message, 'err'); }
       return;
@@ -85,7 +88,10 @@
       return { stop: function () { clearInterval(h); } };
     })();
     try {
-      if (!st.cfg) st.cfg = await api('config');
+      if (!st.cfg || st.cfgChain !== chain) {
+        st.cfg = await api('config'); st.cfgChain = chain;
+        if (CHAIN_IDS[chain] && Number(st.cfg.chainId) !== CHAIN_IDS[chain]) { st.cfg = null; st.cfgChain = null; scanProg.stop(); return show($('scanOut'), 'Network mismatch from server. Please reload the page and try again.', 'err'); }
+      }
       let s; try { s = await api('scan', { address: a }); } finally { scanProg.stop(); }
       st.scan = s;
       const out = ['Address: ' + s.address, 'ETH: ' + E.formatEther(BigInt(s.eth_wei)), 'Nonce: ' + s.nonce,
