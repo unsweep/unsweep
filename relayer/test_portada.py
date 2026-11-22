@@ -18,8 +18,8 @@ def test_portada_generada_por_pipeline():
     assert r.returncode == 0, r.stdout + r.stderr
 
 
-LITERAL_956 = ("Base and Arbitrum mainnet: rescue is live (ERC-20 tokens†, up to $100,000* per rescue). "
-               "Ethereum: free read-only check. Your compromised key never leaves your browser. "
+LITERAL_956 = ("When every second matters. Base and Arbitrum mainnet: rescue is live (ERC-20 tokens†, up to $100,000* per rescue). "
+               "Ethereum: free read-only check. Your compromised key never leaves your browser: it signs locally and only the signed payload is sent (check DevTools > Network). "
                "We will never DM you first and never ask for your seed phrase.")
 
 
@@ -45,7 +45,7 @@ def test_frase_seguridad_no_repetida_bajo_scan():
 
 
 def test_nota_asterisco_bajo_formulario():
-    nota = ('<p class="small muted" id="capNote">*Rescues above $10,000 get automatic extra '
+    nota = ('<p class="small muted" id="capNote">*Eligibility limit per rescue, not a guarantee of recovery. Rescues above $10,000 get automatic extra '
             'safety checks (a few seconds more).</p>')
     assert INDEX.count(nota) == 1 and INDEX.count('id="capNote"') == 1
     body = INDEX.split("<body>", 1)[1]

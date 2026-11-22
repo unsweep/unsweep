@@ -6,7 +6,7 @@
 <h1>UNSWEEP</h1>
 <p class="intro">Rescue tokens left in a hacked wallet, even if a sweeper bot drains every deposit.</p>
 <!--gen:top-->
-<p class="notice" id="mainnetNotice"><span id="capLine">Base and Arbitrum mainnet: rescue is live (ERC-20 tokens†, up to $100,000* per rescue). Ethereum: free read-only check. Your compromised key never leaves your browser. We will never DM you first and never ask for your seed phrase.</span></p>
+<p class="notice" id="mainnetNotice"><span id="capLine">When every second matters. Base and Arbitrum mainnet: rescue is live (ERC-20 tokens†, up to $100,000* per rescue). Ethereum: free read-only check. Your compromised key never leaves your browser: it signs locally and only the signed payload is sent (check DevTools > Network). We will never DM you first and never ask for your seed phrase.</span></p>
 <!--/gen:top-->
 
 <section id="step1" class="step">
@@ -62,7 +62,7 @@
 <li>Your key is used <strong>only inside this browser tab</strong>, in memory, to sign. It is never sent, stored or logged. Only signatures go to our relayer.</li>
 <li>Seed phrases (12/24 words) are <strong>rejected</strong>. Paste only the 64-hex private key of the <em>compromised</em> wallet.</li>
 <li id="verifyLinks">Verify before you paste: the <a href="https://github.com/unsweep/unsweep/blob/main/web/assets/app.js">signing code on GitHub</a> and the <a href="https://basescan.org/address/0x38bcF425bC4d13624734e09376F2fafc799fA8c8#code">delegate contract on Basescan</a>.</li>
-<li id="devtoolsNote">Verify in DevTools -> Network tab: only the signed payload is sent, key never leaves this tab.</li>
+<li id="devtoolsNote">Signed locally: your key is used only inside this browser tab. Verify in DevTools -> Network tab: only the signed payload is sent, key never leaves this tab.</li>
 </ul>
 <div class="form">
 <div class="field wide">
@@ -79,7 +79,7 @@
 
 <section id="notes" class="notes">
 <!--gen:cap-->
-<p class="small muted" id="capNote">*Rescues above $10,000 get automatic extra safety checks (a few seconds more).</p>
+<p class="small muted" id="capNote">*Eligibility limit per rescue, not a guarantee of recovery. Rescues above $10,000 get automatic extra safety checks (a few seconds more).</p>
 <p class="small muted" id="daggerNote">†Verified tokens: 16 on Base, 12 on Arbitrum. Other ERC-20 tokens in your wallet are detected automatically during the scan so you can select them to attempt rescue (unverified, no guarantee).</p>
 <!--/gen:cap-->
 <details class="info">
