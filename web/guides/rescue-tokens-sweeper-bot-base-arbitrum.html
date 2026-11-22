@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>How to rescue tokens from a wallet with a sweeper bot on Base and Arbitrum, step by step | UNSWEEP</title>
+<meta name="description" content="Step-by-step rescue of ERC-20 tokens from a wallet drained by a sweeper bot on Base (16 verified tokens) and Arbitrum (12 verified tokens): check, simulate, sign locally. Ethereum is read-only.">
+<meta name="referrer" content="no-referrer">
+<link rel="canonical" href="https://unsweep.com/guides/rescue-tokens-sweeper-bot-base-arbitrum.html">
+<link rel="stylesheet" href="/assets/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "How to rescue tokens from a wallet with a sweeper bot on Base and Arbitrum, step by step", "description": "Step-by-step rescue of ERC-20 tokens from a wallet drained by a sweeper bot on Base (16 verified tokens) and Arbitrum (12 verified tokens): check, simulate, sign locally. Ethereum is read-only.", "url": "https://unsweep.com/guides/rescue-tokens-sweeper-bot-base-arbitrum.html", "mainEntityOfPage": "https://unsweep.com/guides/rescue-tokens-sweeper-bot-base-arbitrum.html", "dateModified": "2026-11-22", "inLanguage": "en", "publisher": {"@type": "Organization", "name": "UNSWEEP", "url": "https://unsweep.com/"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "HowTo", "name": "How to rescue tokens from a wallet with a sweeper bot on Base and Arbitrum", "description": "Base: 16 verified tokens. Arbitrum: 12 verified tokens. Other ERC-20 tokens may be detected, but without any guarantee. Ethereum: read-only diagnostic (no rescue). Funds already taken cannot be recovered, and NFTs are not rescued.", "step": [{"@type": "HowToStep", "position": 1, "name": "Step 1 - Check your wallet", "text": "Open the free diagnostic at https://unsweep.com/ and enter the compromised address. This step is read-only: no keys and no signatures. It shows what is detected on Base and Arbitrum (and, on Ethereum, a read-only view).", "url": "https://unsweep.com/"}, {"@type": "HowToStep", "position": 2, "name": "Step 2 - Simulation: what you receive and the fee", "text": "Review the simulation: which tokens would be moved, what the destination wallet would receive and the fee. If anything looks wrong, stop here; nothing has been signed.", "url": "https://unsweep.com/"}, {"@type": "HowToStep", "position": 3, "name": "Step 3 - Sign locally and rescue", "text": "Sign locally and submit. The rescue is designed to move the tokens in a single transaction, so the compromised wallet never sits holding gas that a sweeper bot could take first. Success is not guaranteed.", "url": "https://unsweep.com/"}]}</script>
+</head><body><main class="guide">
+<p class="small"><a href="/">UNSWEEP</a> &rsaquo; Guides</p>
+<h1>How to rescue tokens from a wallet with a sweeper bot on Base and Arbitrum, step by step</h1>
+<p class="warn">This guide is informational. Funds already taken from a compromised wallet cannot be recovered, NFTs are not rescued, and no rescue is guaranteed to succeed.</p>
+<div id="scope" class="warn"><p><strong>Current scope of UNSWEEP:</strong> Base: 16 verified tokens. Arbitrum: 12 verified tokens. Other ERC-20 tokens may be detected, but without any guarantee. Ethereum: read-only diagnostic only (no rescue). Funds already taken cannot be recovered, and NFTs are not rescued. See <a href="/guides/what-can-and-cannot-be-rescued.html">what can and cannot be rescued</a> and the <a href="/guides/rescue-tokens-sweeper-bot-base-arbitrum.html">step-by-step rescue guide</a>. Start with the <a href="/">free diagnostic</a>.</p></div>
+<h2>Before you start</h2>
+<ul><li>You need control of the compromised wallet&rsquo;s private key, because step 3 is signed locally with it.</li><li>You need a separate, safe destination wallet that the attacker has never had access to.</li><li>Do not send gas (ETH) to the compromised wallet first: a sweeper bot usually takes it. See <a href="/guides/sweeper-bot-hacked-wallet.html">why sending gas is risky</a>.</li></ul>
+<h2>Step 1 &middot; Check your wallet</h2>
+<p>Open the free diagnostic at <a href="/">https://unsweep.com/</a> and enter the compromised address. This step is read-only: no keys and no signatures. It shows what is detected on Base and Arbitrum (and, on Ethereum, a read-only view).</p>
+<h2>Step 2 &middot; Simulation: what you receive and the fee</h2>
+<p>Review the simulation: which tokens would be moved, what the destination wallet would receive and the fee. If anything looks wrong, stop here; nothing has been signed.</p>
+<h2>Step 3 &middot; Sign locally and rescue</h2>
+<p>Sign locally and submit. The rescue is designed to move the tokens in a single transaction, so the compromised wallet never sits holding gas that a sweeper bot could take first. Success is not guaranteed.</p>
+<h2>Eligibility limit</h2>
+<p>A limit of 100,000 USD applies to eligibility for a rescue. It is an eligibility limit, not a guarantee: it does not promise that any amount will be rescued or that a rescue will succeed.</p>
+<h2>After the rescue</h2>
+<p>Treat the compromised wallet as permanently unsafe and stop using it. If the wallet has a malicious EIP-7702 delegation, read <a href="/guides/eip-7702-malicious-delegation.html">how to detect and mitigate it</a>.</p>
+<p><a href="/">Start with the free diagnostic &rarr;</a></p>
+<p class="small">Related guides: <a href="/guides/sweeper-bot-hacked-wallet.html">Sweeper bot on a hacked wallet</a> &middot; <a href="/guides/eip-7702-malicious-delegation.html">Malicious EIP-7702 delegation</a> &middot; <a href="/guides/rescue-tokens-sweeper-bot-base-arbitrum.html">Step-by-step rescue</a> &middot; <a href="/guides/what-can-and-cannot-be-rescued.html">What can and cannot be rescued</a></p>
+</main></body></html>
