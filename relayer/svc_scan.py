@@ -94,9 +94,13 @@ def _ap_call(fn):
 # El resto de llamadas (allowance/isApprovedForAll, saldos) siguen en el RPC actual.
 APPROVAL_LOGS_RPC = {
     8453: 'https://base-rpc.publicnode.com',
-    42161: 'https://arbitrum-one-rpc.publicnode.com',  # parametrizado; NO activo (publicnode exige token para 2000 bloques en Arbitrum)
+    # #1195 v12f PASO 0: arb1 con UA explicito -> HTTP 200 con chunk 2000 y address = assets_42161 (507 logs).
+    # publicnode exige token para 2000 bloques en Arbitrum (HTTP 403) y arb1 rechaza el UA Python-urllib.
+    42161: 'https://arb1.arbitrum.io/rpc',
 }
-APPROVAL_LOGS_ENABLED = {8453}
+APPROVAL_LOGS_ENABLED = {8453, 42161}
+# User-Agent explicito por red (solo donde hace falta; Base sin cambios).
+APPROVAL_LOGS_UA = {42161: 'curl/8.5.0'}
 LOGS_ADDR_GROUP = 10  # publicnode: 'A maximum of 10 addresses is allowed' (HTTP 403)
 CHUNK_RETRIES = 1
 CHUNK_BACKOFF_S = 0.5
@@ -109,7 +113,10 @@ def _logs_w3(chain_id=None):
     if cid not in APPROVAL_LOGS_ENABLED or cid not in APPROVAL_LOGS_RPC:
         return None
     if cid not in _LOGS_W3:
-        _LOGS_W3[cid] = Web3(Web3.HTTPProvider(APPROVAL_LOGS_RPC[cid], request_kwargs={'timeout': 20}))
+        kw = {'timeout': 20}
+        if cid in APPROVAL_LOGS_UA:
+            kw['headers'] = {'User-Agent': APPROVAL_LOGS_UA[cid], 'Content-Type': 'application/json'}
+        _LOGS_W3[cid] = Web3(Web3.HTTPProvider(APPROVAL_LOGS_RPC[cid], request_kwargs=kw))
     return _LOGS_W3[cid]
 
 
