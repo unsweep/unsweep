@@ -77,7 +77,7 @@ def test_tokens_plegables_desde_assets():
     toks = json.loads((ROOT / "relayer" / "data" / "assets_8453.json").read_text())
     toks = toks.get("tokens", toks) if isinstance(toks, dict) else toks
     m = re.search(r'<details class="info" id="tokens"><summary>Supported tokens on Base \((\d+)\)</summary>'
-                  r'<p class="small">(.*?)</p></details>', INDEX)
+                  r'<p class="small">(.*?)</p>', INDEX)
     assert m and int(m.group(1)) == len(toks)
     assert m.group(2).split(", ") == [t["symbol"] for t in toks]
     assert INDEX.count("Supported tokens on Base") == 1

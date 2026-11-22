@@ -29,8 +29,8 @@ TOP_TMPL = ('<p class="notice" id="mainnetNotice"><span id="capLine">Base mainne
             'never ask for your seed phrase.</span></p>')
 CAP_TMPL = ('<p class="small muted" id="capNote">*Rescues above {hv} get automatic extra safety '
             'checks (a few seconds more).</p>\n'
-            '<p class="small muted" id="daggerNote">†16 verified tokens. Other ERC-20 tokens in the wallet '
-            'can be included, unverified and with no guarantee.</p>')
+            '<p class="small muted" id="daggerNote">†16 verified tokens. Other ERC-20 tokens in your wallet '
+            'are detected automatically during the scan so you can select them to attempt rescue (unverified, no guarantee).</p>')
 
 
 def _const(name: str) -> float:
@@ -77,7 +77,10 @@ def render(html: str) -> str:
     html = _replace(html, "cap", "\n" + CAP_TMPL.format(hv=usd(hv)) + "\n")
     syms = ", ".join(htmlmod.escape(t["symbol"]) for t in toks)
     html = _replace(html, "tokens", (f'\n<details class="info" id="tokens"><summary>Supported tokens on Base '
-                                     f'({len(toks)})</summary><p class="small">{syms}</p></details>\n'))
+                                     f'({len(toks)})</summary><p class="small">{syms}</p>'
+                                     f'<p class="small muted">Other ERC-20 tokens found in your wallet are detected automatically '
+                                     f'during the scan so you can select them to attempt rescue (unverified, no guarantee, same fee). '
+                                     f'NFTs are not rescued yet.</p></details>\n'))
     pairs = faq_pairs(html)
     if len(pairs) != 11:
         raise SystemExit(f"gen_portada: se esperaban 11 preguntas FAQ, hay {len(pairs)}")
