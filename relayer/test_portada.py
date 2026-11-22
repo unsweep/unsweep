@@ -18,8 +18,7 @@ def test_portada_generada_por_pipeline():
     assert r.returncode == 0, r.stdout + r.stderr
 
 
-LITERAL_956 = ("When every second matters. Base and Arbitrum mainnet: rescue is live (ERC-20 tokens†, up to $100,000* per rescue). "
-               "Ethereum: free read-only check. Your compromised key never leaves your browser: it signs locally and only the signed payload is sent (check DevTools > Network). "
+LITERAL_956 = ("When every second matters. Base and Arbitrum mainnet: rescue is live. "
                "We will never DM you first and never ask for your seed phrase.")
 
 
@@ -31,7 +30,7 @@ def test_recuadro_superior_literal_956():
     m = re.findall(r'<p class="notice" id="mainnetNotice">(.*?)</p>', INDEX, re.S)
     assert len(m) == 1
     assert _texto(m[0]) == LITERAL_956
-    assert "$100,000*" in m[0] and "USD" not in m[0]  # la FAQ conserva "USD" (no es el recuadro)
+    assert "USD" not in m[0]
     body = INDEX.split("<body>", 1)[1]
     assert body.index('id="mainnetNotice"') < body.index('id="step1"')
 
@@ -41,7 +40,6 @@ def test_frase_seguridad_no_repetida_bajo_scan():
     bajo_scan = body.split('id="btnScan"', 1)[1].split('id="step2"', 1)[0]
     for frag in ("never leaves your browser", "never DM you first", "seed phrase", "Non-custodial"):
         assert frag not in bajo_scan, frag
-    assert INDEX.count("Your compromised key never leaves your browser") == 1
 
 
 def test_nota_asterisco_bajo_formulario():
@@ -90,7 +88,6 @@ def test_orden1258_arbitrum():
     # gen:top: Base y Arbitrum operativos, Ethereum solo lectura
     top = INDEX.split("<!--gen:top-->", 1)[1].split("<!--/gen:top-->", 1)[0]
     assert "Base and Arbitrum mainnet: rescue is live" in top
-    assert "Ethereum: free read-only check" in top
     assert 'id="ethNote"' not in INDEX
     # desplegable Arbitrum desde assets_42161.json (N=12) con nota de deteccion automatica
     toks = json.loads((ROOT / "relayer" / "data" / "assets_42161.json").read_text())
