@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rescue tokens from a hacked wallet on Arbitrum | UNSWEEP</title>
+<meta name="description" content="Rescue ERC-20 tokens left in a hacked wallet on Arbitrum One (12 verified tokens) without funding it with ETH. Non-custodial, no guarantee.">
+<meta name="referrer" content="no-referrer">
+<link rel="canonical" href="https://unsweep.com/guides/rescue-tokens-hacked-wallet-arbitrum.html">
+<link rel="stylesheet" href="/assets/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "TechArticle", "headline": "Rescue tokens from a hacked wallet on Arbitrum", "description": "Rescue ERC-20 tokens left in a hacked wallet on Arbitrum One (12 verified tokens) without funding it with ETH. Non-custodial, no guarantee.", "url": "https://unsweep.com/guides/rescue-tokens-hacked-wallet-arbitrum.html", "datePublished": "2026-11-22", "dateModified": "2026-11-22", "inLanguage": "en", "author": {"@type": "Organization", "name": "UNSWEEP", "url": "https://unsweep.com/"}, "publisher": {"@type": "Organization", "name": "UNSWEEP", "url": "https://unsweep.com/"}}, {"@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Which tokens can be rescued on Arbitrum?", "acceptedAnswer": {"@type": "Answer", "text": "12 verified tokens: USDC, USDT, DAI, WETH, cbETH, LINK, GHO, tBTC, sUSDe, COMP, wstETH, weETH. Other ERC-20 tokens may be detected, without guarantee."}}, {"@type": "Question", "name": "Are the contracts the same as on Base?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. They are deployed with CREATE2 at the same addresses on Base and Arbitrum."}}, {"@type": "Question", "name": "Can funds already stolen be recovered?", "acceptedAnswer": {"@type": "Answer", "text": "No. A rescue only applies to tokens still in the wallet."}}, {"@type": "Question", "name": "Is success guaranteed?", "acceptedAnswer": {"@type": "Answer", "text": "No. It depends on the state of the wallet and the network; check the simulation before signing."}}]}]}</script>
+</head><body><main class="guide">
+<p class="small"><a href="/">UNSWEEP</a> &rsaquo; Guides</p>
+<h1>Rescue tokens from a hacked wallet on Arbitrum</h1>
+<p class="warn">UNSWEEP will never DM you first or ask for your seed phrase or private key. This page is informational; nothing on it is a guarantee of success.</p>
+<p>On Arbitrum One (chain id 42161) the problem is the same: the attacker holds the key, so any ETH sent for gas is swept and the tokens stay stuck.</p>
+<h2>Verified tokens on Arbitrum</h2>
+<p>12 verified tokens: USDC, USDT, DAI, WETH, cbETH, LINK, GHO, tBTC, sUSDe, COMP, wstETH, weETH. Other ERC-20 tokens may be detected by the scan and can be selected to attempt a rescue at the same fee percentage, without guarantee.</p>
+<h2>Steps</h2>
+<ol><li>Stop sending ETH to the compromised address.</li><li>Create a new wallet on a trusted device to use as the safe destination.</li><li>Select Arbitrum in the <a href="/">free diagnostic</a> and enter the public address.</li><li>Review the simulation: amounts you will receive and the fee.</li><li>Sign locally. A relayer submits the EIP-7702 transaction and pays the gas.</li></ol>
+<h2>Verify the contracts</h2>
+<p>Both contracts are deployed with CREATE2 at the same address on Base and Arbitrum: delegate <code>0x38bcF425bC4d13624734e09376F2fafc799fA8c8</code>, config <code>0x56a345661e3999F2b20f1E069aAC14097Fa0D118</code>. You can check them on <a href="https://arbiscan.io/address/0x38bcF425bC4d13624734e09376F2fafc799fA8c8">Arbiscan</a> and in the <a href="https://github.com/unsweep/unsweep">repository</a>.</p>
+<p class="small">Scope: Base: 16 verified tokens. Arbitrum: 12 verified tokens. Other ERC-20 tokens may be detected, without guarantee. Ethereum: read-only diagnostic only (no rescue). Funds already taken cannot be recovered and NFTs are not rescued.</p>
+<h2>FAQ</h2>
+<h3>Which tokens can be rescued on Arbitrum?</h3>
+<p>12 verified tokens: USDC, USDT, DAI, WETH, cbETH, LINK, GHO, tBTC, sUSDe, COMP, wstETH, weETH. Other ERC-20 tokens may be detected, without guarantee.</p>
+<h3>Are the contracts the same as on Base?</h3>
+<p>Yes. They are deployed with CREATE2 at the same addresses on Base and Arbitrum.</p>
+<h3>Can funds already stolen be recovered?</h3>
+<p>No. A rescue only applies to tokens still in the wallet.</p>
+<h3>Is success guaranteed?</h3>
+<p>No. It depends on the state of the wallet and the network; check the simulation before signing.</p>
+<p><a href="/">Check your wallet with the free diagnostic &rarr;</a> &middot; <a href="/guides/rescue-tokens-sweeper-bot-base-arbitrum.html">Step-by-step rescue guide</a></p>
+<p class="small">Related guides: <a href="/guides/why-eth-for-gas-gets-stolen-immediately.html">Why ETH sent for gas gets stolen immediately</a> &middot; <a href="/guides/rescue-usdc-weth-hacked-metamask-base.html">Rescue USDC and WETH from a hacked wallet on Base</a> &middot; <a href="/guides/sweeper-bot-vs-eip-7702-delegation.html">Sweeper bot vs malicious EIP-7702 delegation</a> &middot; <a href="/guides/how-to-check-if-wallet-has-sweeper-bot.html">How to check if a wallet has a sweeper bot</a> &middot; <a href="/guides/what-to-do-first-5-minutes-after-wallet-hack.html">What to do in the first 5 minutes after a wallet hack</a> &middot; <a href="/guides/sweeper-bot-hacked-wallet.html">Sweeper bot on a hacked wallet</a> &middot; <a href="/guides/eip-7702-malicious-delegation.html">Malicious EIP-7702 delegation</a> &middot; <a href="/guides/rescue-tokens-sweeper-bot-base-arbitrum.html">Step-by-step rescue</a> &middot; <a href="/guides/what-can-and-cannot-be-rescued.html">What can and cannot be rescued</a> <br>MetaMask is a trademark of its owner, referenced descriptively; UNSWEEP is not affiliated with MetaMask or Consensys.</p>
+</main></body></html>
