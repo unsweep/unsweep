@@ -1,22 +1,22 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sweeper bot on a hacked wallet: why gas disappears and how a one-transaction rescue works | UNSWEEP</title>
-<meta name="description" content="What a sweeper bot is, why any ETH you send for gas to a compromised wallet is drained, and how remaining tokens can be moved with a single transaction signed locally, where another account pays the gas (EIP-7702).">
+<title>Sweeper bot on a hacked wallet: why sending gas is risky and how a one-transaction rescue works | UNSWEEP</title>
+<meta name="description" content="What a sweeper bot is, why ETH you send for gas to a compromised wallet is at risk of being taken, and how remaining tokens can be moved with a single transaction signed locally, where another account pays the gas (EIP-7702).">
 <meta name="referrer" content="no-referrer">
 <link rel="canonical" href="https://unsweep.com/guides/sweeper-bot-hacked-wallet.html">
 <link rel="stylesheet" href="/assets/style.css"></head><body><main class="guide">
 <p class="small"><a href="/">UNSWEEP</a> &rsaquo; Guides</p>
-<h1>Sweeper bot on a hacked wallet: why gas disappears and how a one-transaction rescue works</h1>
+<h1>Sweeper bot on a hacked wallet: why sending gas is risky and how a one-transaction rescue works</h1>
 <p class="warn">This guide is informational. Funds already moved out of a compromised wallet cannot be recovered. A rescue can only try to move assets that are still in the wallet, and it is not guaranteed to succeed.</p>
 <p>Check any address first with the free, read-only diagnostic: <a href="https://unsweep.com/">https://unsweep.com/</a> (no keys, no signatures).</p>
 
 <h2>What a sweeper bot is</h2>
 <p>A wallet (an externally-owned account, EOA) is controlled by whoever has its private key. Ethereum's documentation describes an EOA as &ldquo;controlled by anyone with the private keys&rdquo; and says the private key &ldquo;is what you use to sign transactions, so it grants you custody over the funds associated with your account&rdquo; (<a href="https://ethereum.org/en/developers/docs/accounts/">ethereum.org &ndash; Accounts</a>).</p>
-<p>When an attacker obtains that key, the attacker can sign transactions from the wallet exactly as the owner can. A <em>sweeper bot</em> is an automated program run by the attacker that watches the compromised address and signs a transfer out as soon as value arrives. The network cannot tell the owner and the attacker apart: both hold a valid key.</p>
+<p>When an attacker obtains that key, the attacker can sign transactions from the wallet exactly as the owner can. A <em>sweeper bot</em> is an automated program run by the attacker that watches the compromised address and tries to sign a transfer out as soon as value arrives. The network cannot tell the owner and the attacker apart: both hold a valid key.</p>
 
-<h2>Why any gas deposit is drained</h2>
+<h2>Why sending gas to a compromised wallet is risky</h2>
 <p>Every transaction must pay a fee in ETH. Per Ethereum's documentation: &ldquo;Gas fees have to be paid in Ethereum's native currency, ether (ETH)&rdquo;, and the sender is &ldquo;the externally owned account that sends the transaction, pays for gas&rdquo; (<a href="https://ethereum.org/en/developers/docs/gas/">ethereum.org &ndash; Gas</a>).</p>
-<p>So to move tokens out of the wallet in the usual way, the owner must first send ETH to it. That ETH is exactly what the sweeper is waiting for. The attacker can also bid for ordering: &ldquo;tips allow users to outbid others for priority within the same block&rdquo; and &ldquo;a higher tip can make it more likely that your transaction will get into the next block&rdquo; (<a href="https://ethereum.org/en/developers/docs/gas/">ethereum.org &ndash; Gas</a>). In practice, the deposit is moved out before the owner's token transfer can use it. Sending more ETH just feeds the bot.</p>
+<p>So to move tokens out of the wallet in the usual way, the owner must first send ETH to it. That ETH is exactly what the sweeper is waiting for. The attacker can also bid for ordering: &ldquo;tips allow users to outbid others for priority within the same block&rdquo; and &ldquo;a higher tip can make it more likely that your transaction will get into the next block&rdquo; (<a href="https://ethereum.org/en/developers/docs/gas/">ethereum.org &ndash; Gas</a>). A higher tip improves the chance of earlier inclusion; it does not guarantee that the attacker's transfer runs first or instantly. Even so, any ETH that lands in the wallet can be spent by whoever holds the key, so the attacker may take it before the owner's token transfer uses it. That is why sending ETH for gas to a swept wallet is not recommended.</p>
 
 <h2>How a one-transaction rescue works</h2>
 <p>The idea is to never put ETH in the compromised wallet. <a href="https://eips.ethereum.org/EIPS/eip-7702">EIP-7702</a> (status: Final) lists among its motivations:</p>
@@ -28,7 +28,7 @@
 <ol>
 <li>The owner of the compromised wallet signs an authorization <strong>locally</strong>, on their own device. The private key is never shared or uploaded.</li>
 <li>A separate, clean account submits the type-<code>0x04</code> transaction and pays the gas. The compromised wallet receives no ETH, so there is nothing for the sweeper to take.</li>
-<li>Inside that single atomic transaction, the delegated code moves the remaining tokens to a safe address chosen by the owner. If the transaction fails, it reverts as a whole.</li>
+<li>Inside that single atomic transaction, the delegated code moves the remaining tokens to a safe address chosen by the owner. If execution fails, the token transfers in it are undone, but an authorization that was already processed is not rolled back: the wallet can remain delegated even after a failed rescue, so a failed attempt is not evidence that the wallet has no delegation. Check the wallet's code again afterwards (<a href="https://eips.ethereum.org/EIPS/eip-7702#behavior">EIP-7702 &ndash; Behavior</a>).</li>
 </ol>
 <p>Limits to be aware of: the attacker still holds the key and can sign their own transactions, including their own authorizations, so the outcome is a race that is not guaranteed. This only works on networks where EIP-7702 is active, and only for assets that are still in the wallet.</p>
 
