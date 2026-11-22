@@ -152,6 +152,10 @@ def test_wizard_1194():
     assert 'type="password"' in INDEX and INDEX.count('id="pkToggle"') == 1
     assert 'github.com/unsweep/unsweep/blob/main/web/assets/app.js' in INDEX
     assert 'DevTools' in INDEX and INDEX.count('id="devtoolsNote"') == 1
+    # #1195: literales exactos de #1194
+    assert 'Destination wallet (must be a NEW, clean wallet you control - never the compromised one)' in INDEX
+    assert 'Verify in DevTools -> Network tab: only the signed payload is sent, key never leaves this tab' in INDEX
+    assert 'option D, coming soon' not in INDEX
     assert 'option D' not in INDEX and 'coming soon' not in INDEX
     # (3) scan con spinner y contador
     import pathlib

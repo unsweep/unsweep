@@ -44,7 +44,7 @@
 <p id="destNote">Enter a <strong>new, clean destination wallet</strong>: a fresh address whose key was never exposed and that is <strong>not</strong> the compromised wallet. All rescued assets are sent there.</p>
 <div class="form">
 <div class="field">
-<label for="safe">New clean destination address</label>
+<label for="safe">Destination wallet (must be a NEW, clean wallet you control - never the compromised one)</label>
 <input id="safe" type="text" placeholder="0x... new clean wallet address" autocomplete="off" spellcheck="false">
 </div>
 <button id="btnQuote" class="primary">Simulate</button>
@@ -61,7 +61,7 @@
 <li>Your key is used <strong>only inside this browser tab</strong>, in memory, to sign. It is never sent, stored or logged. Only signatures go to our relayer.</li>
 <li>Seed phrases (12/24 words) are <strong>rejected</strong>. Paste only the 64-hex private key of the <em>compromised</em> wallet.</li>
 <li id="verifyLinks">Verify before you paste: the <a href="https://github.com/unsweep/unsweep/blob/main/web/assets/app.js">signing code on GitHub</a> and the <a href="https://basescan.org/address/0x38bcF425bC4d13624734e09376F2fafc799fA8c8#code">delegate contract on Basescan</a>.</li>
-<li id="devtoolsNote">Advanced: open your browser DevTools (Network tab) while rescuing to confirm the key is never sent; only signatures are posted.</li>
+<li id="devtoolsNote">Verify in DevTools -> Network tab: only the signed payload is sent, key never leaves this tab.</li>
 </ul>
 <div class="form">
 <div class="field wide">
