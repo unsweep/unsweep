@@ -59,3 +59,5 @@ button.next{margin-top:.8em}
 @keyframes spin{to{transform:rotate(360deg)}}
 button:disabled{opacity:.7;cursor:progress}
 .pkwarn{border:2px solid #c40000;background:#fde8e8;color:#7a0000;padding:12px 14px;border-radius:8px;margin:12px 0;font-weight:600;line-height:1.45}
+#pkConfirmRow label{display:flex;align-items:flex-start;gap:8px;line-height:1.4}
+#pkConfirmRow input[type=checkbox]{width:auto;min-width:0;flex:0 0 auto;padding:0;margin:3px 0 0;border:0;background:none}
