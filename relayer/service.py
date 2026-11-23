@@ -216,7 +216,11 @@ async def api_rescue(req: Request):
             P.record_case(CHAIN_ID, q.rescued_usd, q.fee_usd, 'ok' if ok else 'revert', txh)
         record('rescue', 'mined' if ok else 'reverted', None, len(rescue_t[2]), len(rescue_t[3]), txh)
         return {'txHash': txh, 'status': 'success' if ok else 'reverted', 'gasUsed': int(rc['gasUsed']),
-                'explorer': f'https://sepolia.basescan.org/tx/{txh}'}
+                'explorer': {
+                    8453: f'https://basescan.org/tx/{txh}',
+                    42161: f'https://arbiscan.io/tx/{txh}',
+                    84532: f'https://sepolia.basescan.org/tx/{txh}',
+                }.get(CHAIN_ID, f'https://basescan.org/tx/{txh}')}
     except O.OracleError:
         raise  # fail-closed -> 503 via exception_handler (antes que PolicyError: es subclase)
     except (PolicyError, RaceAbort) as e:

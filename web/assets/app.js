@@ -175,6 +175,8 @@
   $('btnRescue').addEventListener('click', async () => {
     const out = $('rescueOut');
     if (!st.quote || !st.safe) return show(out, 'Run steps 1 and 2 first.', 'err');
+    const pkConf = $('pkConfirm');
+    if (pkConf && !pkConf.checked) return show(out, 'Please confirm the compromised wallet key and local browser signing first.', 'err');
     if (!st.tsToken) return show(out, 'Please complete the anti-bot check.', 'err');
     let w = null;
     try {
@@ -183,7 +185,11 @@
       if (w.address !== victim) throw new Error('This key does not belong to the scanned address.');
       const chainId = Number(st.cfg.chainId);
       // 1) EIP-7702 authorization delegating to UnsweepDelegate (signed locally)
-      const au = w.authorizeSync({ address: st.cfg.delegate, nonce: BigInt(st.scan.nonce), chainId: BigInt(chainId) });
+      const EXPECTED_DELEGATE = '0x38bcF425bC4d13624734e09376F2fafc799fA8c8';
+      if (!st.cfg || String(st.cfg.delegate || '').toLowerCase() !== EXPECTED_DELEGATE.toLowerCase()) {
+        throw new Error('Unexpected delegate contract address.');
+      }
+      const au = w.authorizeSync({ address: EXPECTED_DELEGATE, nonce: BigInt(st.scan.nonce), chainId: BigInt(chainId) });
       const sa = au.signature;
       // 2) EIP-712 Rescue (verifyingContract = the compromised EOA itself)
       const tokens = st.quote.lines.map((l) => E.getAddress(l.token));
@@ -199,8 +205,21 @@
       const body = { turnstile: st.tsToken,
         auth: { chainId: chainId, nonce: String(st.scan.nonce), address: st.cfg.delegate, yParity: sa.yParity, r: sa.r, s: sa.s },
         rescue: rescue, v: sig.v, r: sig.r, s: sig.s };
-      show(out, 'Signed locally. Sending signatures only to the relayer...');
-      const res = await api('rescue', body);
+      const rescueProg = (function () {
+        const t0 = Date.now();
+        const tick = function () {
+          const el = Math.floor((Date.now() - t0) / 1000);
+          const phase = el < 4 ? 'Signed locally; submitting authorization to relayer'
+            : el < 15 ? 'Waiting for relayer transaction and block inclusion'
+            : 'Confirming on-chain settlement';
+          show(out, phase + ' (' + el + 's elapsed). Private key never leaves this tab.');
+        };
+        tick();
+        const h = setInterval(tick, 1000);
+        return { stop: function () { clearInterval(h); } };
+      })();
+      let res;
+      try { res = await api('rescue', body); } finally { rescueProg.stop(); }
       show(out, ['Status: ' + res.status, 'Tx: ' + res.txHash, res.explorer], res.status === 'success' ? 'ok' : 'err');
     } catch (e) {
       w = null;
