@@ -17,3 +17,13 @@
 - Borradores Reddit: NO publicados por AIRE; decision del humano segun normas de cada subreddit.
 - Sin push (no requerido). Ingresos en cadena atribuibles a esta orden: ninguno registrado (contenido SEO, efecto no medible aun).
 - Estado: ESPERA PASIVA, sin abrir misiones nuevas.
+
+## 2026-11-23T20:22Z ORDEN #1638 UX UNSWEEP Fase 1: COMPLETADA
+- Commit ecded4ec8923ba7bccbdd0bbf5ee1a8b027dd393 en origin/main (padre dbc2d66).
+- #pkConfirm bajo #btnRescue (texto exacto); #btnRescue disabled por defecto; el change de #pkConfirm solo sincroniza disabled.
+- #step4: fases firmando/enviando/confirmando y resultado Status, Tx hash y enlace basescan.org/tx/<hash>; goStep 1-4 (RangeError fuera de rango), goStep(4) colapsa 1-3 y hace scrollIntoView.
+- Tests: 144 passed (139 + 5 nuevos en relayer/test_ux_1638.py) con projects/unsweep/.venv. test_wizard_1194 actualizado: el paso final no colapsable es ahora step4.
+- SRI app.js sha384-nO7yAD6Dromyo7gEltJyU9Ru/c3/vSdykD1R/7Z3aeSWktcctd7y6mqtb0qoIwRm (coincide con lo servido). style.css no tiene atributo integrity y no ha cambiado.
+- Deploy: deploy_static exit 0 (backup /opt/aire/backups/unsweep-static/20261123T202216Z), deploy_relayer exit 0 (rollback unsweep-relayer:rollback-dbc2d664).
+- Produccion: sha256 de index, app.js y style.css iguales al commit; /api/health 200 (chainId 8453).
+- Logs: logs/fase1_1638_deploy.log, logs/fase1_1638_verify.log. Ingresos en cadena atribuibles: ninguno registrado.
