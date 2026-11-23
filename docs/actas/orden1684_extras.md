@@ -52,3 +52,31 @@ Cambia `relayer/svc_scan.py` (+68 líneas) y añade `relayer/test_extras_1684.py
 - Decisión humana sobre el despliegue de Arbitrum y la lista OFAC.
 - Priorizar tokens no spam o subir el tope `exs[:50]`.
 - Verificar en vivo la fee en especie con una dirección que tenga un token listado más un extra.
+
+## Evidencias de verificación (2026-11-23, UTC)
+
+### Paso 1: acta en main
+- Commit `39b62a4d43f58f70b1a7e5e9af941fb9aadd2d79` pusheado a origin/main (LOCAL=REMOTE).
+
+### Paso 2: producción Base (un único POST)
+- RPC usado para balanceOf: host `base-mainnet.g.alchemy.com` (clave no mostrada).
+- Holder `0x7d4fcf1c7e7e63d07fe79a2232f2f2e682fbd356`, token BRETT `0x532f27101965dd16442E59d40670FaF5eBB142E4`.
+- balanceOf en el bloque 61434788 = `1132146478956862397409` (> 0).
+- `POST https://unsweep.com/api/scan` con `chain=base` a las 23:42:12Z: **HTTP 200** en 0,70 s, sin 429 y en un solo intento. `block=61434788`, `cached=false`, `status=complete`, `readOnly=true`.
+- La respuesta incluye BRETT con `listed:false` y `balanceRaw=1132146478956862397409`, **idéntico a balanceOf**. También aparece BASED `0x07d1…dffb` con `listed:false`.
+- Journal de `unsweep-relayer` desde T0: **0** líneas con `WARNING extras no disponibles: HTTPError`.
+- **HALLAZGO (desvío del criterio):** en `service.py:/api/scan`, si `chain` pertenece a `MAINNET_CHAINS`, la petición se enruta a `svc_mainnet.scan_mainnet`, que es de solo lectura. Su respuesta **no contiene las claves `extras`, `value_usd` ni quote/fee**. El fix a09d323 actúa en `svc_scan.scan` y `scan_extras` (rama sin `chain`, la del flujo de rescate). Con `chain=base` no es posible observar `extras[]`, `value_usd=0` ni la fee en especie. No se hizo un segundo POST para respetar la orden de una sola llamada. Para verificarlo hay que hacer un POST sin `chain` (ruta `scan`) o un `/api/quote` en una orden posterior.
+
+### Paso 3: unsweep-relayer-arb (solo lectura)
+- w3 = `UNSWEEP_RPC` → host público `arb1.arbitrum.io`. No hay RPC Alchemy propio para Arbitrum.
+- `alchemy_getTokenBalances` → HTTP 200 con `error.code=-32601` ("method does not exist/is not available"). **Causa: método no soportado por el RPC público.** No es un problema de cuota ni un 429.
+- Journal de arb desde 2026-11-23: **0** WARNING. Es un fallo silencioso, porque `.get('result')` devuelve None y extras=[].
+- Rama `fix-extras-1684-arb` @ `92bdd0aac7bbe0dea3da87a05a4e5e7f9f702f4b` (worktree tmp/arb1684), equivalente a a09d323. **No desplegada.** OFAC sin tocar.
+- Tests ejecutados en un contenedor efímero (`docker run --rm --network none`, imagen unsweep-relayer-arb, sin variables de entorno): `test_extras_1684.py` **7/7 passed**. Suite completa: 134 passed, 9 skipped, 10 errors.
+- Control con main a09d323 en las mismas condiciones: 139 passed y **los mismos 10 errors** (e2e, extras_fork, typehash y digest_parity). Causa común: `FileNotFoundError: /.foundry/bin/anvil` (falta anvil en la imagen). Es un error del entorno, **no una regresión** de la rama.
+- Pendiente de la decisión #145.
+
+### Paso 4: timer de métricas
+- `unsweep-funnel.timer` LastTriggerUSec = **2026-11-23 23:56:18 UTC** (primer disparo automático). Next: 2026-11-24 23:55:44 UTC.
+- `unsweep-funnel.service`: Result=**success**, ExecMainStatus=**0**, salida a las 23:56:20.
+- `tmp/metrics/metrics/2026-11-23.json` regenerado a las 23:56:20 (15003 B). tmp/metrics no se ha borrado y no se ha ejecutado `worktree prune`.
