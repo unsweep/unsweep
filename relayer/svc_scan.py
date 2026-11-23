@@ -1,5 +1,9 @@
 """UNSWEEP M2b escaner y simulacion (neto y comision). Solo lectura; nunca firma."""
 import os
+import time
+import urllib.parse
+
+import requests
 from web3 import Web3
 
 from relayer import Quote, PolicyError, check_policy
@@ -273,6 +277,65 @@ def _safe_sym(x):
     return ''.join(ch for ch in str(x or '') if ch.isalnum())[:12]
 
 
+
+class ExtrasError(Exception):
+    """#1684: fallo de descubrimiento de extras con motivo concreto (sin URL)."""
+
+
+_ALCHEMY_HOSTS = {8453: 'base-mainnet.g.alchemy.com', 42161: 'arb-mainnet.g.alchemy.com'}
+EXTRAS_RETRIES = 3
+EXTRAS_BACKOFF = 0.5
+
+
+def _extras_url():
+    """#1684: alchemy_getTokenBalances NO existe en RPC publicos (w3). Usa UNSWEEP_EXTRAS_RPC si existe;
+    si no, la clave Alchemy de BASE_RPC_URL con el host de la cadena actual. None si no hay Alchemy."""
+    u = os.environ.get('UNSWEEP_EXTRAS_RPC', '').strip().strip('"').strip("'")
+    if u:
+        return u
+    b = os.environ.get('BASE_RPC_URL', '').strip().strip('"').strip("'")
+    host = _ALCHEMY_HOSTS.get(CHAIN_ID)
+    if not b or not host:
+        return None
+    pu = urllib.parse.urlparse(b)
+    if 'alchemy.com' not in pu.netloc or not pu.path.strip('/'):
+        return None
+    return 'https://' + host + pu.path
+
+
+def _extras_rpc(method, params, _post=None, _sleep=time.sleep):
+    """JSON-RPC al endpoint Alchemy de extras; 429 -> reintento con backoff; error -> ExtrasError con motivo."""
+    url = _extras_url()
+    if not url:
+        raise ExtrasError('sin endpoint Alchemy para chain %s (alchemy_getTokenBalances no existe en el RPC publico)' % CHAIN_ID)
+    post = _post or (lambda u, j: requests.post(u, json=j, timeout=15))
+    body = {'jsonrpc': '2.0', 'id': 1, 'method': method, 'params': params}
+    for i in range(EXTRAS_RETRIES + 1):
+        try:
+            r = post(url, body)
+        except Exception as e:
+            raise ExtrasError('red: %s' % type(e).__name__)
+        code = getattr(r, 'status_code', 0)
+        if code == 429 and i < EXTRAS_RETRIES:
+            _sleep(EXTRAS_BACKOFF * 2 ** i)
+            continue
+        try:
+            j = r.json()
+        except Exception:
+            j = {}
+        err = j.get('error') if isinstance(j, dict) else None
+        if code != 200 or err or 'result' not in j:
+            msg = (err or {}).get('message', '') if isinstance(err, dict) else ''
+            ecode = (err or {}).get('code', '') if isinstance(err, dict) else ''
+            raise ExtrasError(('HTTP %s jsonrpc %s %s' % (code, ecode, msg)).strip()[:200])
+        return j['result']
+    raise ExtrasError('HTTP 429 tras %d reintentos' % EXTRAS_RETRIES)
+
+
+def _extras_reason(e):
+    return str(e) if isinstance(e, ExtrasError) else type(e).__name__
+
+
 ERC20_META = [{'name': 'decimals', 'type': 'function', 'stateMutability': 'view', 'inputs': [], 'outputs': [{'type': 'uint8'}]},
               {'name': 'symbol', 'type': 'function', 'stateMutability': 'view', 'inputs': [], 'outputs': [{'type': 'string'}]}]
 
@@ -281,10 +344,9 @@ def scan_extras(addr):
     """#985: ERC-20 fuera de assets -> unverified, value_usd 0. Fail-soft: cualquier error -> []."""
     try:
         allowed = O.allowlist(assets())
-        rpc = lambda m, p: w3.provider.make_request(m, p).get('result')
-        exs = EX.discover_extras(rpc, addr, allowed)
+        exs = EX.discover_extras(_extras_rpc, addr, allowed)
     except Exception as e:
-        log.warning('extras no disponibles: %s', type(e).__name__)
+        log.warning('extras no disponibles: %s', _extras_reason(e))
         return []
     for e in exs[:50]:
         c = w3.eth.contract(address=e['address'], abi=ERC20_META)
