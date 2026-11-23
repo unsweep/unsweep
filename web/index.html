@@ -71,8 +71,9 @@
 </div>
 <div id="ts">
 </div>
-<div class="field wide"><label class="small"><input type="checkbox" id="pkConfirm" required> I confirm this is the private key of the compromised wallet and understand signing happens locally in this browser tab.</label></div>
-<button id="btnRescue" class="primary">Sign locally &amp; rescue</button>
+<div class="pkwarn" role="alert" id="pkWarn"><strong>&#9888; STOP AND READ:</strong> paste ONLY the private key of the <u>compromised</u> wallet you scanned in step 1. <strong>NEVER</strong> paste the key of your safe wallet and <strong>NEVER</strong> a seed phrase (12/24 words). UNSWEEP will never ask for them. The key is used only inside this browser tab to sign and is never sent.</div>
+<div class="field wide"><label class="small"><input type="checkbox" id="pkConfirm" required> I confirm this is ONLY the private key of the compromised wallet (not my safe wallet, not a seed phrase) and that signing happens locally in this browser tab.</label></div>
+<button id="btnRescue" class="primary" disabled>Sign locally &amp; rescue</button>
 </div>
 <div id="rescueOut" class="out">
 </div>
@@ -132,5 +133,5 @@
 </footer>
 </main>
 <script src="/assets/ethers.min.js" integrity="sha384-KFwRTLOjI5Dog4WciwSIbBrTqUp4Vm/9/yBF5Yt1z/eWZO382zoD8B3/1EYSCXfv"></script>
-<script src="/assets/app.js" integrity="sha384-3pUy15ryp32ovUKQigf4KYCjaMysdMk+RyKcOxMHSNwl3ZwSpVLyeCWbsfc3ppyk"></script>
+<script src="/assets/app.js" integrity="sha384-3fo9t6pYo5RsqLBwFKnajXIu5ssKGj6at7Ox8urzkaxzoNlYMIPECo8LAUKj2Gvj"></script>
 </body></html>

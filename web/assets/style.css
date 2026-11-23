@@ -58,3 +58,4 @@ button.next{margin-top:.8em}
 .spinner{display:inline-block;width:.9em;height:.9em;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:spin .8s linear infinite;vertical-align:-.1em}
 @keyframes spin{to{transform:rotate(360deg)}}
 button:disabled{opacity:.7;cursor:progress}
+.pkwarn{border:2px solid #c40000;background:#fde8e8;color:#7a0000;padding:12px 14px;border-radius:8px;margin:12px 0;font-weight:600;line-height:1.45}

@@ -172,6 +172,8 @@
   }
   function randNonce() { const b = new Uint32Array(2); crypto.getRandomValues(b); return ((BigInt(b[0]) << 32n) | BigInt(b[1])).toString(); }
 
+  // Fase1: btnRescue stays disabled until the compromised-key confirmation is ticked
+  (function () { const c = $('pkConfirm'), b = $('btnRescue'); if (!c || !b) return; const sync = function () { b.disabled = !c.checked; }; c.addEventListener('change', sync); sync(); })();
   $('btnRescue').addEventListener('click', async () => {
     const out = $('rescueOut');
     if (!st.quote || !st.safe) return show(out, 'Run steps 1 and 2 first.', 'err');
@@ -186,7 +188,7 @@
       const chainId = Number(st.cfg.chainId);
       // 1) EIP-7702 authorization delegating to UnsweepDelegate (signed locally)
       const EXPECTED_DELEGATE = '0x38bcF425bC4d13624734e09376F2fafc799fA8c8';
-      if (!st.cfg || String(st.cfg.delegate || '').toLowerCase() !== EXPECTED_DELEGATE.toLowerCase()) {
+      if (!st.cfg || st.cfg.delegate !== EXPECTED_DELEGATE) {
         throw new Error('Unexpected delegate contract address.');
       }
       const au = w.authorizeSync({ address: EXPECTED_DELEGATE, nonce: BigInt(st.scan.nonce), chainId: BigInt(chainId) });
