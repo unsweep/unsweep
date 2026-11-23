@@ -58,6 +58,8 @@
 
 <section id="step3" class="step" hidden>
 <h2>Step 3 &middot; Sign locally and rescue</h2>
+<div class="stepDone" id="step3Done" hidden><span class="small" id="step3Sum">Signed locally; rescue submitted.</span> <button type="button" class="edit" id="edit3">Edit</button></div>
+<div class="stepBody" id="step3Body">
 <ul class="small list">
 <li>Your key is used <strong>only inside this browser tab</strong>, in memory, to sign. It is never sent, stored or logged. Only signatures go to our relayer.</li>
 <li>Seed phrases (12/24 words) are <strong>rejected</strong>. Paste only the 64-hex private key of the <em>compromised</em> wallet.</li>
@@ -72,10 +74,27 @@
 <div id="ts">
 </div>
 <div class="pkwarn" role="alert" id="pkWarn"><strong>&#9888; STOP AND READ:</strong> paste ONLY the private key of the <u>compromised</u> wallet you scanned in step 1. <strong>NEVER</strong> paste the key of your safe wallet and <strong>NEVER</strong> a seed phrase (12/24 words). UNSWEEP will never ask for them. The key is used only inside this browser tab to sign and is never sent.</div>
-<div class="field wide"><label class="small"><input type="checkbox" id="pkConfirm" required> I confirm this is ONLY the private key of the compromised wallet (not my safe wallet, not a seed phrase) and that signing happens locally in this browser tab.</label></div>
 <button id="btnRescue" class="primary" disabled>Sign locally &amp; rescue</button>
+<div class="field wide" id="pkConfirmRow"><label class="small"><input type="checkbox" id="pkConfirm" required> I confirm this is ONLY the compromised wallet key (not safe wallet or seed phrase) and signing happens locally here.</label></div>
 </div>
 <div id="rescueOut" class="out">
+</div>
+</div>
+</section>
+
+<section id="step4" class="step" hidden aria-live="polite">
+<h2>Step 4 &middot; Rescue progress</h2>
+<ol class="small list" id="step4Phases">
+<li id="phSign" data-state="pending">Signing locally (key stays in this tab)</li>
+<li id="phSend" data-state="pending">Sending signed payload to the relayer</li>
+<li id="phConfirm" data-state="pending">Confirming on-chain</li>
+</ol>
+<div id="step4Out" class="out" role="status">
+</div>
+<div id="step4Result" hidden>
+<p>Status: <strong id="resStatus"></strong></p>
+<p>Tx hash: <code id="resTx"></code></p>
+<p><a id="resLink" href="#" target="_blank" rel="noopener noreferrer">View transaction on Basescan</a></p>
 </div>
 </section>
 
@@ -133,5 +152,5 @@
 </footer>
 </main>
 <script src="/assets/ethers.min.js" integrity="sha384-KFwRTLOjI5Dog4WciwSIbBrTqUp4Vm/9/yBF5Yt1z/eWZO382zoD8B3/1EYSCXfv"></script>
-<script src="/assets/app.js" integrity="sha384-3fo9t6pYo5RsqLBwFKnajXIu5ssKGj6at7Ox8urzkaxzoNlYMIPECo8LAUKj2Gvj"></script>
+<script src="/assets/app.js" integrity="sha384-nO7yAD6Dromyo7gEltJyU9Ru/c3/vSdykD1R/7Z3aeSWktcctd7y6mqtb0qoIwRm"></script>
 </body></html>

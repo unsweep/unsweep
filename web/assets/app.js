@@ -174,6 +174,28 @@
 
   // Fase1: btnRescue stays disabled until the compromised-key confirmation is ticked
   (function () { const c = $('pkConfirm'), b = $('btnRescue'); if (!c || !b) return; const sync = function () { b.disabled = !c.checked; }; c.addEventListener('change', sync); sync(); })();
+  // #1638: step 4 live progress (phases: signing, sending, confirming) and final result
+  const PHASES = ['phSign', 'phSend', 'phConfirm'];
+  function setPhase(idx, msg) {
+    PHASES.forEach(function (id, k) { const li = $(id); if (li) li.setAttribute('data-state', k < idx ? 'done' : (k === idx ? 'active' : 'pending')); });
+    const o = $('step4Out'); if (o && msg) show(o, msg);
+  }
+  function txLink(chainId, hash, fallback) {
+    if (!/^0x[0-9a-fA-F]{64}$/.test(String(hash || ''))) return null;
+    if (Number(chainId) === 8453) return 'https://basescan.org/tx/' + hash;
+    return (typeof fallback === 'string' && /^https:\/\//.test(fallback)) ? fallback : null;
+  }
+  function showResult(res, chainId) {
+    PHASES.forEach(function (id) { const li = $(id); if (li) li.setAttribute('data-state', 'done'); });
+    const ok = res && res.status === 'success';
+    $('resStatus').textContent = String(res && res.status);
+    $('resTx').textContent = String(res && res.txHash);
+    const a = $('resLink'), href = txLink(chainId, res && res.txHash, res && res.explorer);
+    if (href) { a.href = href; a.hidden = false; a.textContent = Number(chainId) === 8453 ? 'View on basescan.org' : 'View transaction on explorer'; } else { a.hidden = true; }
+    $('step4Result').hidden = false;
+    show($('step4Out'), ok ? 'Rescue complete.' : 'Rescue finished with status: ' + String(res && res.status), ok ? 'ok' : 'err');
+    const s4 = $('step4'); if (s4 && s4.scrollIntoView) s4.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  }
   $('btnRescue').addEventListener('click', async () => {
     const out = $('rescueOut');
     if (!st.quote || !st.safe) return show(out, 'Run steps 1 and 2 first.', 'err');
@@ -181,7 +203,10 @@
     if (pkConf && !pkConf.checked) return show(out, 'Please confirm the compromised wallet key and local browser signing first.', 'err');
     if (!st.tsToken) return show(out, 'Please complete the anti-bot check.', 'err');
     let w = null;
+    let out4 = out;
     try {
+      goStep(4); out4 = $('step4Out') || out; $('step4Result').hidden = true;
+      setPhase(0, 'Signing locally. Private key never leaves this tab.');
       w = new E.Wallet(readKey());
       const victim = st.scan.address;
       if (w.address !== victim) throw new Error('This key does not belong to the scanned address.');
@@ -207,14 +232,14 @@
       const body = { turnstile: st.tsToken,
         auth: { chainId: chainId, nonce: String(st.scan.nonce), address: st.cfg.delegate, yParity: sa.yParity, r: sa.r, s: sa.s },
         rescue: rescue, v: sig.v, r: sig.r, s: sig.s };
+      setPhase(1, 'Sending signed payload to the relayer.');
       const rescueProg = (function () {
         const t0 = Date.now();
         const tick = function () {
           const el = Math.floor((Date.now() - t0) / 1000);
-          const phase = el < 4 ? 'Signed locally; submitting authorization to relayer'
-            : el < 15 ? 'Waiting for relayer transaction and block inclusion'
-            : 'Confirming on-chain settlement';
-          show(out, phase + ' (' + el + 's elapsed). Private key never leaves this tab.');
+          const idx = el < 4 ? 1 : 2;
+          const phase = idx === 1 ? 'Sending signed payload to the relayer' : 'Confirming on-chain (waiting for block inclusion)';
+          setPhase(idx, phase + ' (' + el + 's elapsed). Private key never leaves this tab.');
         };
         tick();
         const h = setInterval(tick, 1000);
@@ -222,17 +247,20 @@
       })();
       let res;
       try { res = await api('rescue', body); } finally { rescueProg.stop(); }
-      show(out, ['Status: ' + res.status, 'Tx: ' + res.txHash, res.explorer], res.status === 'success' ? 'ok' : 'err');
+      showResult(res, chainId);
     } catch (e) {
       w = null;
-      show(out, 'Rescue failed: ' + e.message, 'err');
+      show(out4, 'Rescue failed: ' + e.message, 'err');
     } finally {
       st.tsToken = null; if (window.turnstile) { try { window.turnstile.reset('#ts'); } catch (e) { /* noop */ } }
     }
   });
   // #1194: wizard (only the active step visible; completed steps collapsed with Edit)
+  const MAX_STEP = 4;
   function goStep(n) {
-    for (let i = 1; i <= 3; i++) {
+    n = Number(n);
+    if (!Number.isInteger(n) || n < 1 || n > MAX_STEP) throw new RangeError('goStep: step out of range 1-' + MAX_STEP);
+    for (let i = 1; i <= MAX_STEP; i++) {
       const sec = $('step' + i), body = $('step' + i + 'Body'), done = $('step' + i + 'Done');
       if (sec) sec.hidden = i > n;
       if (body) body.hidden = i !== n;
@@ -258,6 +286,7 @@
   });
   $('edit1').addEventListener('click', () => goStep(1));
   $('edit2').addEventListener('click', () => goStep(2));
+  $('edit3').addEventListener('click', () => goStep(3));
   $('pkToggle').addEventListener('click', () => {
     const i = $('pk'), t = $('pkToggle'), vis = i.type === 'password';
     i.type = vis ? 'text' : 'password'; t.textContent = vis ? 'Hide' : 'Show'; t.setAttribute('aria-pressed', vis ? 'true' : 'false');

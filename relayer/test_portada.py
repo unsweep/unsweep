@@ -162,7 +162,10 @@ def test_wizard_1194():
         assert INDEX.count(f'id="{i}"') == 1, i
     assert 'Continue to Step 2 &rarr;' in INDEX or 'Continue to Step 2 →' in INDEX or 'Continue to Step 2 ->' in INDEX
     assert 'Continue to Rescue &rarr;' in INDEX or 'Continue to Rescue →' in INDEX or 'Continue to Rescue ->' in INDEX
-    assert 'id="step3Body"' not in INDEX  # paso final: no se colapsa
+    # #1638: el paso final pasa a ser step4 (progreso/resultado); step3 ahora se colapsa con Edit
+    for i in ('step3Body', 'step3Done', 'edit3', 'step4'):
+        assert INDEX.count(f'id="{i}"') == 1, i
+    assert 'id="step4Body"' not in INDEX and 'id="step4Done"' not in INDEX  # paso final: no se colapsa
     # (2) notas fuera del flujo
     assert body.index('id="step3"') < body.index('id="notes"') < body.index('id="faq"')
     # (4) destino nuevo y limpio
