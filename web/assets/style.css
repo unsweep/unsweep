@@ -46,3 +46,15 @@ details.faq{margin:6px 0;padding:8px 12px;border:1px solid #30363d;border-radius
 details.faq summary{cursor:pointer;font-weight:600}
 details.faq p{margin:8px 0 0;line-height:1.5}
 section{margin-top:20px}
+
+/* #1194 wizard */
+.stepDone{display:flex;gap:.6em;align-items:center;flex-wrap:wrap;margin:.3em 0}
+.stepDone[hidden],.stepBody[hidden]{display:none}
+button.edit{font:inherit;font-weight:600;background:#238636;color:#ffffff;border:0;border-radius:6px;padding:.25em .8em;cursor:pointer;font-size:.9em}
+button.edit:hover{background:#2ea043}
+button.next{margin-top:.8em}
+.pkrow{display:flex;gap:.4em}.pkrow input{flex:1}
+.notes{margin-top:1em}
+.spinner{display:inline-block;width:.9em;height:.9em;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:spin .8s linear infinite;vertical-align:-.1em}
+@keyframes spin{to{transform:rotate(360deg)}}
+button:disabled{opacity:.7;cursor:progress}

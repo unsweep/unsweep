@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Why ETH sent for gas gets stolen immediately | UNSWEEP</title>
+<meta name="description" content="Why ETH sent to a hacked wallet for gas disappears within seconds, and how a sponsored EIP-7702 rescue avoids funding the wallet.">
+<meta name="referrer" content="no-referrer">
+<link rel="canonical" href="https://unsweep.com/guides/why-eth-for-gas-gets-stolen-immediately.html">
+<link rel="stylesheet" href="/assets/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "TechArticle", "headline": "Why ETH sent for gas gets stolen immediately", "description": "Why ETH sent to a hacked wallet for gas disappears within seconds, and how a sponsored EIP-7702 rescue avoids funding the wallet.", "url": "https://unsweep.com/guides/why-eth-for-gas-gets-stolen-immediately.html", "datePublished": "2026-11-22", "dateModified": "2026-11-22", "inLanguage": "en", "author": {"@type": "Organization", "name": "UNSWEEP", "url": "https://unsweep.com/"}, "publisher": {"@type": "Organization", "name": "UNSWEEP", "url": "https://unsweep.com/"}}, {"@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Why does my ETH disappear seconds after I send it?", "acceptedAnswer": {"@type": "Answer", "text": "Because the attacker holds the private key and an automated sweeper bot moves any incoming ETH out as soon as it appears."}}, {"@type": "Question", "name": "Can I beat the bot by paying a higher gas price?", "acceptedAnswer": {"@type": "Answer", "text": "It is not recommended. A higher tip makes earlier inclusion more likely but does not guarantee order, and the attacker can raise their bid with the same key."}}, {"@type": "Question", "name": "Can the stolen ETH be recovered?", "acceptedAnswer": {"@type": "Answer", "text": "No. Funds already moved out of the wallet cannot be recovered."}}, {"@type": "Question", "name": "How can tokens be moved without sending ETH?", "acceptedAnswer": {"@type": "Answer", "text": "With an EIP-7702 transaction the owner signs an authorization and another account submits and pays for the transaction, so the wallet does not need ETH. Success is not guaranteed."}}]}]}</script>
+</head><body><main class="guide">
+<p class="small"><a href="/">UNSWEEP</a> &rsaquo; Guides</p>
+<h1>Why ETH sent for gas gets stolen immediately</h1>
+<p class="warn">UNSWEEP will never DM you first or ask for your seed phrase or private key. This page is informational; nothing on it is a guarantee of success.</p>
+<p>If someone else holds the private key of your wallet, they can move any ETH that arrives. A wallet (EOA) is controlled by whoever has its private key (<a href="https://ethereum.org/en/developers/docs/accounts/">ethereum.org: Accounts</a>). Attackers often run a <em>sweeper bot</em>, an automated script that watches the address and broadcasts a transfer as soon as a balance appears.</p>
+<h2>Why the ETH is the bait</h2>
+<p>Moving tokens requires gas, and gas is paid in ETH by the account that sends the transaction (<a href="https://ethereum.org/en/developers/docs/gas/">ethereum.org: Gas</a>). So the owner sends ETH first. The bot detects the deposit and signs its own transfer with the same key, often with a higher priority tip. A higher tip makes earlier inclusion more likely but does not guarantee order.</p>
+<h2>Why racing the bot is not recommended</h2>
+<ul><li>The attacker holds the same key and can sign as many transactions as they want.</li><li>Ordering rules differ between networks.</li><li>Each failed attempt usually loses more ETH.</li></ul>
+<h2>The alternative: do not fund the wallet</h2>
+<p>With <a href="https://eips.ethereum.org/EIPS/eip-7702">EIP-7702</a>, the owner signs an authorization while a different account submits the transaction and pays the gas. The compromised wallet never needs to hold ETH. See the <a href="/guides/rescue-tokens-sweeper-bot-base-arbitrum.html">step-by-step rescue guide</a>. Success is not guaranteed and depends on the state of the wallet and the network.</p>
+<p class="small">Scope: Base: 16 verified tokens. Arbitrum: 12 verified tokens. Other ERC-20 tokens may be detected, without guarantee. Ethereum: read-only diagnostic only (no rescue). Funds already taken cannot be recovered and NFTs are not rescued.</p>
+<h2>FAQ</h2>
+<h3>Why does my ETH disappear seconds after I send it?</h3>
+<p>Because the attacker holds the private key and an automated sweeper bot moves any incoming ETH out as soon as it appears.</p>
+<h3>Can I beat the bot by paying a higher gas price?</h3>
+<p>It is not recommended. A higher tip makes earlier inclusion more likely but does not guarantee order, and the attacker can raise their bid with the same key.</p>
+<h3>Can the stolen ETH be recovered?</h3>
+<p>No. Funds already moved out of the wallet cannot be recovered.</p>
+<h3>How can tokens be moved without sending ETH?</h3>
+<p>With an EIP-7702 transaction the owner signs an authorization and another account submits and pays for the transaction, so the wallet does not need ETH. Success is not guaranteed.</p>
+<p><a href="/">Check your wallet with the free diagnostic &rarr;</a> &middot; <a href="/guides/rescue-tokens-sweeper-bot-base-arbitrum.html">Step-by-step rescue guide</a></p>
+<p class="small">Related guides: <a href="/guides/rescue-usdc-weth-hacked-metamask-base.html">Rescue USDC and WETH from a hacked wallet on Base</a> &middot; <a href="/guides/rescue-tokens-hacked-wallet-arbitrum.html">Rescue tokens from a hacked wallet on Arbitrum</a> &middot; <a href="/guides/sweeper-bot-vs-eip-7702-delegation.html">Sweeper bot vs malicious EIP-7702 delegation</a> &middot; <a href="/guides/how-to-check-if-wallet-has-sweeper-bot.html">How to check if a wallet has a sweeper bot</a> &middot; <a href="/guides/what-to-do-first-5-minutes-after-wallet-hack.html">What to do in the first 5 minutes after a wallet hack</a> &middot; <a href="/guides/sweeper-bot-hacked-wallet.html">Sweeper bot on a hacked wallet</a> &middot; <a href="/guides/eip-7702-malicious-delegation.html">Malicious EIP-7702 delegation</a> &middot; <a href="/guides/rescue-tokens-sweeper-bot-base-arbitrum.html">Step-by-step rescue</a> &middot; <a href="/guides/what-can-and-cannot-be-rescued.html">What can and cannot be rescued</a> <br>MetaMask is a trademark of its owner, referenced descriptively; UNSWEEP is not affiliated with MetaMask or Consensys.</p>
+</main></body></html>

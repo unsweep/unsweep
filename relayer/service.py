@@ -52,6 +52,16 @@ UNLISTED_MSG = ('token fuera de la lista soportada en esta red: %s. Puedes regis
                 'NUNCA incluyas claves privadas ni frases semilla)')
 
 
+EX_MAX = 20  # #985
+
+
+def _cs(t):
+    try:
+        return Web3.to_checksum_address(str(t))
+    except Exception:
+        return str(t)
+
+
 def check_allowlist(tokens):
     """Rechaza (PolicyError) cualquier token que no este en assets_<chain>.json."""
     allowed = O.allowlist(assets())
@@ -139,7 +149,8 @@ async def api_quote(req: Request):
     if victim == safe:
         raise HTTPException(400, 'la wallet segura debe ser distinta')
     s = scan(victim)
-    q, _ = quote(s)
+    s['safe'] = safe  # #985: destino de la simulacion de extras
+    q, _ = quote(s, extras=[str(x) for x in (b.get('extras') or [])][:EX_MAX])
     record('quote', 'ok' if q['policy_ok'] else 'rejected', q['policy_reason'], len(s['tokens']), len(s['nfts']))
     return {'scan': s, 'quote': q}
 
@@ -156,13 +167,23 @@ async def api_rescue(req: Request):
     try:
         auth, victim = build_auth(b['auth'])
         r = b['rescue']
-        check_allowlist(r.get('tokens', []))
+        listed_set = O.allowlist(assets())
+        req_extras = [str(t) for t in r.get('tokens', []) if _cs(t) not in listed_set]
+        check_allowlist([t for t in r.get('tokens', []) if _cs(t) in listed_set])
+        if len(req_extras) > EX_MAX:
+            raise PolicyError('demasiados tokens sin verificar (max %d)' % EX_MAX)
         safe = _addr(r['safe'])
         if safe == victim:
             raise PolicyError('la wallet segura debe ser distinta')
         screen(safe, victim)
         s = scan(victim)
-        _, q = quote(s)
+        s['safe'] = safe
+        _, q = quote(s, extras=req_extras or None)
+        if req_extras:  # #985: solo extras seleccionados por el servidor tras simular
+            q0, _ = quote(s, extras=req_extras)
+            sel = {_cs(l['token']) for l in q0['lines'] if l.get('unverified')}
+            if any(_cs(t) not in sel for t in req_extras):
+                raise PolicyError(q0.get('extras_reason') or 'token sin verificar excluido por simulacion')
         try:
             rescue_t = X.rescue_tuple(
                 safe, [(c['target'], int(c['value']), HexBytes(c['data'])) for c in r.get('calls', [])],
@@ -171,7 +192,7 @@ async def api_rescue(req: Request):
         except ValueError as e:
             raise PolicyError(str(e))
         data = delegate_c.encode_abi('rescue', args=[rescue_t, int(b['v']), HexBytes(b['r']), HexBytes(b['s'])])
-        qd, _ = quote(s)
+        qd, _ = quote(s, extras=req_extras or None)
         if not qd['policy_ok']:
             raise PolicyError(qd['policy_reason'] or 'rechazado por politica')
         if rescue_t[4] > qd['maxFeeBps']:

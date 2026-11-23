@@ -1,0 +1,188 @@
+{
+  "chainId": 42161,
+  "eth_usd_feed": {
+    "address": "0x639Fe6ab55C921f74e7fac1ee960C0B6293ba612",
+    "pair": "ETH / USD",
+    "quote": "USD",
+    "heartbeat": 1755,
+    "decimals": 8,
+    "aggregator": "0xd827123d014578c965f6c9d87a641ec05faa5501"
+  },
+  "tokens": [
+    {
+      "address": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+      "symbol": "USDC",
+      "decimals": 6,
+      "fee_on_transfer": false,
+      "feed": {
+        "address": "0x50834F3163758fcC1Df9973b6e91f0F0F0434aD3",
+        "pair": "USDC / USD",
+        "quote": "USD",
+        "heartbeat": 255,
+        "decimals": 8,
+        "aggregator": "0xb10cb22245d54f58c66ee65353fab5d94ca21a1c"
+      }
+    },
+    {
+      "address": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
+      "symbol": "USDT",
+      "decimals": 6,
+      "fee_on_transfer": false,
+      "feed": {
+        "address": "0x3f3f5dF88dC9F13eac63DF89EC16ef6e7E25DdE7",
+        "pair": "USDT / USD",
+        "quote": "USD",
+        "heartbeat": 255,
+        "decimals": 8,
+        "aggregator": "0x51dbd3c1d6e716a7f4c1b85cf1fa10ffc2b4329c"
+      }
+    },
+    {
+      "address": "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+      "symbol": "DAI",
+      "decimals": 18,
+      "fee_on_transfer": false,
+      "feed": {
+        "address": "0xc5C8E77B397E531B8EC06BFb0048328B30E9eCfB",
+        "pair": "DAI / USD",
+        "quote": "USD",
+        "heartbeat": 86400,
+        "decimals": 8,
+        "aggregator": "0xe8df13fa9d99ae5ac929a5250fda3b463c463622"
+      }
+    },
+    {
+      "address": "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
+      "symbol": "WETH",
+      "decimals": 18,
+      "fee_on_transfer": false,
+      "feed": {
+        "address": "0x639Fe6ab55C921f74e7fac1ee960C0B6293ba612",
+        "pair": "ETH / USD",
+        "quote": "USD",
+        "heartbeat": 1755,
+        "decimals": 8,
+        "aggregator": "0xd827123d014578c965f6c9d87a641ec05faa5501"
+      }
+    },
+    {
+      "address": "0x1DEBd73E752bEaF79865Fd6446b0c970EaE7732f",
+      "symbol": "cbETH",
+      "decimals": 18,
+      "fee_on_transfer": false,
+      "feed": {
+        "address": "0xa668682974E3f121185a3cD94f00322beC674275",
+        "pair": "CBETH / ETH",
+        "quote": "ETH",
+        "heartbeat": 86400,
+        "decimals": 18,
+        "aggregator": "0x907afb08a65e812b7eac9b588476776d66a6da48"
+      }
+    },
+    {
+      "address": "0xf97f4df75117a78c1A5a0DBb814Af92458539FB4",
+      "symbol": "LINK",
+      "decimals": 18,
+      "fee_on_transfer": false,
+      "feed": {
+        "address": "0x86E53CF1B870786351Da77A57575e79CB55812CB",
+        "pair": "LINK / USD",
+        "quote": "USD",
+        "heartbeat": 1755,
+        "decimals": 8,
+        "aggregator": "0x7ff6f0d5d216b9ba8e218633c18bc75ebf439671"
+      }
+    },
+    {
+      "address": "0x7dfF72693f6A4149b17e7C6314655f6A9F7c8B33",
+      "symbol": "GHO",
+      "decimals": 18,
+      "fee_on_transfer": false,
+      "feed": {
+        "address": "0x3c786e934F23375Ca345C9b8D5aD54838796E8e7",
+        "pair": "GHO / USD",
+        "quote": "USD",
+        "heartbeat": 86400,
+        "decimals": 8,
+        "aggregator": "0xa852e889ef8834e7a7b835a69713c4b0a19eb876"
+      }
+    },
+    {
+      "address": "0x7E2a1eDeE171C5B19E6c54D73752396C0A572594",
+      "symbol": "tBTC",
+      "decimals": 18,
+      "fee_on_transfer": false,
+      "feed": {
+        "address": "0xE808488e8627F6531bA79a13A9E0271B39abEb1C",
+        "pair": "TBTC / USD",
+        "quote": "USD",
+        "heartbeat": 86400,
+        "decimals": 8,
+        "aggregator": "0x076b0c94ef9a64d9dd0698b09e97b0adba773744"
+      }
+    },
+    {
+      "address": "0x211Cc4DD073734dA055fbF44a2b4667d5E5fE5d2",
+      "symbol": "sUSDe",
+      "decimals": 18,
+      "fee_on_transfer": false,
+      "feed": {
+        "address": "0xf2215b9c35b1697B5f47e407c917a40D055E68d7",
+        "pair": "sUSDe / USD",
+        "quote": "USD",
+        "heartbeat": 86400,
+        "decimals": 8,
+        "aggregator": "0x6ac813ffefc7a1898bfbd16276a406b59b3a422c"
+      }
+    },
+    {
+      "address": "0x354A6dA3fcde098F8389cad84b0182725c6C91dE",
+      "symbol": "COMP",
+      "decimals": 18,
+      "fee_on_transfer": false,
+      "feed": {
+        "address": "0xe7C53FFd03Eb6ceF7d208bC4C13446c76d1E5884",
+        "pair": "COMP / USD",
+        "quote": "USD",
+        "heartbeat": 3600,
+        "decimals": 8,
+        "aggregator": "0xf5b747bb3f7ecfd17503ac5e2084e43b7a828c5b"
+      }
+    },
+    {
+      "address": "0x5979D7b546E38E414F7E9822514be443A4800529",
+      "symbol": "wstETH",
+      "decimals": 18,
+      "fee_on_transfer": false,
+      "feed": {
+        "address": "0xb523AE262D20A936BC152e6023996e46FDC2A95D",
+        "pair": "WSTETH / ETH",
+        "quote": "ETH",
+        "heartbeat": 86400,
+        "decimals": 18,
+        "aggregator": "0xd099074f591cb41707fe8bb8bee16a7780fb96e5"
+      }
+    },
+    {
+      "address": "0x35751007a407ca6FEFfE80b3cB397736D2cf4dbe",
+      "symbol": "weETH",
+      "decimals": 18,
+      "fee_on_transfer": false,
+      "feed": {
+        "address": "0xE141425bc1594b8039De6390db1cDaf4397EA22b",
+        "pair": "weETH / ETH",
+        "quote": "ETH",
+        "heartbeat": 86400,
+        "decimals": 18,
+        "aggregator": "0xa0fd6fb063c851f39cf7d5e2cd72fad180d1fbd6"
+      }
+    }
+  ],
+  "nfts": [],
+  "_verified": {
+    "block": 526343130,
+    "block_ts": 1795296455,
+    "method": "eth_call proxy.aggregator()/decimals()/latestRoundData() + token decimals()/getCode",
+    "evidence": "artifacts/m1011c/paso1_onchain.json"
+  }
+}

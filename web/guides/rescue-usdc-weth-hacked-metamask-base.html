@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rescue USDC and WETH from a hacked wallet on Base | UNSWEEP</title>
+<meta name="description" content="How to rescue USDC and WETH left in a hacked wallet on Base without sending ETH for gas. Non-custodial, simulation before signing, no guarantee.">
+<meta name="referrer" content="no-referrer">
+<link rel="canonical" href="https://unsweep.com/guides/rescue-usdc-weth-hacked-metamask-base.html">
+<link rel="stylesheet" href="/assets/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "TechArticle", "headline": "Rescue USDC and WETH from a hacked wallet on Base", "description": "How to rescue USDC and WETH left in a hacked wallet on Base without sending ETH for gas. Non-custodial, simulation before signing, no guarantee.", "url": "https://unsweep.com/guides/rescue-usdc-weth-hacked-metamask-base.html", "datePublished": "2026-11-22", "dateModified": "2026-11-22", "inLanguage": "en", "author": {"@type": "Organization", "name": "UNSWEEP", "url": "https://unsweep.com/"}, "publisher": {"@type": "Organization", "name": "UNSWEEP", "url": "https://unsweep.com/"}}, {"@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Is UNSWEEP part of MetaMask?", "acceptedAnswer": {"@type": "Answer", "text": "No. UNSWEEP is not affiliated with, endorsed by or sponsored by MetaMask or Consensys. MetaMask is mentioned only as an example of a wallet app."}}, {"@type": "Question", "name": "Can USDC and WETH be rescued on Base?", "acceptedAnswer": {"@type": "Answer", "text": "Both are among the 16 verified tokens on Base. Whether a specific rescue succeeds depends on the state of the wallet and the network; it is not guaranteed."}}, {"@type": "Question", "name": "Do I need to send ETH to the hacked wallet?", "acceptedAnswer": {"@type": "Answer", "text": "No. Another account submits the EIP-7702 transaction and pays the gas."}}, {"@type": "Question", "name": "Will you ask for my seed phrase?", "acceptedAnswer": {"@type": "Answer", "text": "No. UNSWEEP never asks for a seed phrase and never DMs first. The diagnostic only needs the public address."}}, {"@type": "Question", "name": "What does it cost?", "acceptedAnswer": {"@type": "Answer", "text": "A success fee taken from the rescued tokens: 15% below 1,000 USD, 10% from 1,000 to 10,000 USD and 5% above 10,000 USD, shown in the simulation before signing."}}]}]}</script>
+</head><body><main class="guide">
+<p class="small"><a href="/">UNSWEEP</a> &rsaquo; Guides</p>
+<h1>Rescue USDC and WETH from a hacked wallet on Base</h1>
+<p class="warn">UNSWEEP will never DM you first or ask for your seed phrase or private key. This page is informational; nothing on it is a guarantee of success.</p>
+<p class="small">MetaMask is mentioned only descriptively, as an example of a common wallet app. UNSWEEP is not affiliated with, endorsed by or sponsored by MetaMask or Consensys. All trademarks belong to their respective owners.</p>
+<p>A common case: an account in a browser wallet app such as MetaMask has been compromised. ETH sent to it disappears, but USDC or WETH on Base is still there. The tokens stay because moving them requires gas, and the bot takes the ETH first (<a href="/guides/why-eth-for-gas-gets-stolen-immediately.html">why ETH for gas gets stolen</a>).</p>
+<h2>Before anything else</h2>
+<ol><li>Stop sending ETH to the compromised address.</li><li>Create a brand-new wallet, with a new seed phrase, on a device you trust. It will be the safe destination.</li><li>Run the free read-only diagnostic using only the <strong>public address</strong>: <a href="/">unsweep.com</a>.</li></ol>
+<h2>How the rescue works on Base</h2>
+<ul><li>USDC and WETH are among the 16 verified tokens on Base (USDC, USDT, DAI, WETH, cbETH, cbBTC, LINK, AERO, EURC, GHO, tBTC, sUSDe, COMP, WELL, wstETH, weETH).</li><li>Before signing, you review a simulation with the exact amounts you will receive and the fee.</li><li>The authorization is signed locally and the key never leaves your browser. A relayer submits the EIP-7702 transaction and pays the gas.</li><li>The tokens move to your safe address in a single atomic transaction. If it fails, the token transfers are reverted (see <a href="/guides/eip-7702-malicious-delegation.html">delegation guide</a>).</li></ul>
+<h2>Cost</h2>
+<p>A success fee taken from the rescued tokens in the same transaction: 15% below 1,000 USD, 10% from 1,000 to 10,000 USD and 5% above 10,000 USD. It is shown in the simulation.</p>
+<p class="small">Scope: Base: 16 verified tokens. Arbitrum: 12 verified tokens. Other ERC-20 tokens may be detected, without guarantee. Ethereum: read-only diagnostic only (no rescue). Funds already taken cannot be recovered and NFTs are not rescued.</p>
+<h2>FAQ</h2>
+<h3>Is UNSWEEP part of MetaMask?</h3>
+<p>No. UNSWEEP is not affiliated with, endorsed by or sponsored by MetaMask or Consensys. MetaMask is mentioned only as an example of a wallet app.</p>
+<h3>Can USDC and WETH be rescued on Base?</h3>
+<p>Both are among the 16 verified tokens on Base. Whether a specific rescue succeeds depends on the state of the wallet and the network; it is not guaranteed.</p>
+<h3>Do I need to send ETH to the hacked wallet?</h3>
+<p>No. Another account submits the EIP-7702 transaction and pays the gas.</p>
+<h3>Will you ask for my seed phrase?</h3>
+<p>No. UNSWEEP never asks for a seed phrase and never DMs first. The diagnostic only needs the public address.</p>
+<h3>What does it cost?</h3>
+<p>A success fee taken from the rescued tokens: 15% below 1,000 USD, 10% from 1,000 to 10,000 USD and 5% above 10,000 USD, shown in the simulation before signing.</p>
+<p><a href="/">Check your wallet with the free diagnostic &rarr;</a> &middot; <a href="/guides/rescue-tokens-sweeper-bot-base-arbitrum.html">Step-by-step rescue guide</a></p>
+<p class="small">Related guides: <a href="/guides/why-eth-for-gas-gets-stolen-immediately.html">Why ETH sent for gas gets stolen immediately</a> &middot; <a href="/guides/rescue-tokens-hacked-wallet-arbitrum.html">Rescue tokens from a hacked wallet on Arbitrum</a> &middot; <a href="/guides/sweeper-bot-vs-eip-7702-delegation.html">Sweeper bot vs malicious EIP-7702 delegation</a> &middot; <a href="/guides/how-to-check-if-wallet-has-sweeper-bot.html">How to check if a wallet has a sweeper bot</a> &middot; <a href="/guides/what-to-do-first-5-minutes-after-wallet-hack.html">What to do in the first 5 minutes after a wallet hack</a> &middot; <a href="/guides/sweeper-bot-hacked-wallet.html">Sweeper bot on a hacked wallet</a> &middot; <a href="/guides/eip-7702-malicious-delegation.html">Malicious EIP-7702 delegation</a> &middot; <a href="/guides/rescue-tokens-sweeper-bot-base-arbitrum.html">Step-by-step rescue</a> &middot; <a href="/guides/what-can-and-cannot-be-rescued.html">What can and cannot be rescued</a> <br>MetaMask is a trademark of its owner, referenced descriptively; UNSWEEP is not affiliated with MetaMask or Consensys.</p>
+</main></body></html>

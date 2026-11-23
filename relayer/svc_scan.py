@@ -7,6 +7,7 @@ import policy as P
 from svc_core import w3, abi, assets, log, CHAIN_ID, DELEGATE, CONFIG, ETH_USD
 import oracle as O
 from relayer import TESTNETS
+import extras as EX
 
 
 def _token_px(a, t):
@@ -87,40 +88,124 @@ def _ap_call(fn):
     raise ApprovalsError('rpc rate limited (HTTP 429)' if rl else 'rpc unavailable')
 
 
-def live_approvals(addr):
+# #1152: eth_getLogs de approvals contra un RPC publico que acepta rangos de 2000 bloques
+# filtrando por 'address' = contratos de assets_<chain>.json. Alchemy Free (BASE_RPC_URL) limita
+# getLogs a 10 bloques (HTTP 400) y el respaldo publico sin filtro devolvia 429.
+# El resto de llamadas (allowance/isApprovedForAll, saldos) siguen en el RPC actual.
+APPROVAL_LOGS_RPC = {
+    8453: 'https://base-rpc.publicnode.com',
+    42161: 'https://arbitrum-one-rpc.publicnode.com',  # parametrizado; NO activo (publicnode exige token para 2000 bloques en Arbitrum)
+}
+APPROVAL_LOGS_ENABLED = {8453}
+LOGS_ADDR_GROUP = 10  # publicnode: 'A maximum of 10 addresses is allowed' (HTTP 403)
+CHUNK_RETRIES = 1
+CHUNK_BACKOFF_S = 0.5
+_LOGS_W3 = {}
+
+
+def _logs_w3(chain_id=None):
+    """Web3 del RPC de logs de approvals para la red, o None si la red no esta activada."""
+    cid = CHAIN_ID if chain_id is None else chain_id
+    if cid not in APPROVAL_LOGS_ENABLED or cid not in APPROVAL_LOGS_RPC:
+        return None
+    if cid not in _LOGS_W3:
+        _LOGS_W3[cid] = Web3(Web3.HTTPProvider(APPROVAL_LOGS_RPC[cid], request_kwargs={'timeout': 20}))
+    return _LOGS_W3[cid]
+
+
+def _asset_contracts(a=None):
+    a = assets() if a is None else a
+    out = []
+    for t in list(a.get('tokens', [])) + list(a.get('nfts', [])):
+        c = Web3.to_checksum_address(t['address'])
+        if c not in out:
+            out.append(c)
+    return out
+
+
+def plan_chunks(head, lookback=None, chunk=None):
+    """Rangos [frm, to] inclusivos que cubren (head-lookback .. head) en trozos de 'chunk' bloques."""
+    lookback = APPROVAL_LOOKBACK if lookback is None else lookback
+    chunk = LOG_CHUNK if chunk is None else chunk
+    start, out = max(0, head - lookback), []
+    frm = start
+    while frm <= head:
+        to = min(head, frm + chunk - 1)
+        out.append((frm, to))
+        frm = to + 1
+    return out
+
+
+def _get_logs_retry(p, flt, sleep=None):
+    """get_logs con UN reintento tras backoff corto. Error visible y sin URL."""
+    import time
+    sleep = time.sleep if sleep is None else sleep
+    last = None
+    for i in range(CHUNK_RETRIES + 1):
+        try:
+            return p.eth.get_logs(flt)
+        except Exception as e:
+            last = e
+            log.warning('approvals logs chunk try %d: %s', i + 1, type(e).__name__)
+            if i < CHUNK_RETRIES:
+                sleep(CHUNK_BACKOFF_S * (i + 1))
+    raise ApprovalsError('rpc rate limited (HTTP 429)' if _is_429(last) else 'rpc unavailable')
+
+
+def live_approvals(addr, progress=None):
     out, seen = [], set()
-    head = _ap_call(lambda p: p.eth.block_number)
+    lp = _logs_w3()
     owner_topic = '0x' + '0' * 24 + addr[2:].lower()
-    start = max(0, head - APPROVAL_LOOKBACK)
+    if lp is not None:
+        try:
+            head = lp.eth.block_number
+        except Exception:
+            head = _ap_call(lambda p: p.eth.block_number)
+        contracts = _asset_contracts()
+        groups = [contracts[i:i + LOGS_ADDR_GROUP] for i in range(0, len(contracts), LOGS_ADDR_GROUP)] or [[]]
+    else:
+        head = _ap_call(lambda p: p.eth.block_number)
+        groups = [None]  # red sin RPC de logs activado: comportamiento anterior (sin filtro address)
+    chunks = plan_chunks(head)
+    total = len(chunks) * 2 * len(groups)
+    n = 0
     for topic in (T_APPROVAL, T_APPROVAL_ALL):
-        frm = start
-        while frm <= head:
-            to = min(head, frm + LOG_CHUNK - 1)
-            flt = {'fromBlock': frm, 'toBlock': to, 'topics': [topic, owner_topic]}
-            logs = _ap_call(lambda p, f=flt: p.eth.get_logs(f))
-            for lg in logs:
-                if len(lg['topics']) < 3:
-                    continue
-                spender = Web3.to_checksum_address('0x' + h0x(lg['topics'][2])[-40:])
-                key = (lg['address'], spender, topic)
-                if key in seen:
-                    continue
-                seen.add(key)
-                try:
-                    if topic == T_APPROVAL_ALL:
-                        c = _ap_providers()[0].eth.contract(address=lg['address'], abi=ERC721)
-                        if c.functions.isApprovedForAll(addr, spender).call():
-                            out.append({'token': lg['address'], 'spender': spender, 'type': 'ApprovalForAll'})
-                    else:
-                        c = _ap_providers()[0].eth.contract(address=lg['address'], abi=ERC20)
-                        amt = c.functions.allowance(addr, spender).call()
-                        if amt > 0:
-                            out.append({'token': lg['address'], 'spender': spender, 'type': 'ERC20', 'amount': str(amt)})
-                except Exception as e:
-                    if _is_429(e):
-                        raise ApprovalsError('rpc rate limited (HTTP 429)') from None
-                    # ERC-721 Approval (3 topics indexados) u otros: se ignoran
-            frm = to + 1
+        for frm, to in chunks:
+            for g in groups:
+                flt = {'fromBlock': frm, 'toBlock': to, 'topics': [topic, owner_topic]}
+                if g is not None:
+                    if not g:
+                        n += 1
+                        continue
+                    flt['address'] = g
+                    logs = _get_logs_retry(lp, flt)
+                else:
+                    logs = _ap_call(lambda p, f=flt: p.eth.get_logs(f))
+                n += 1
+                if progress:
+                    progress(n, total)
+                for lg in logs:
+                    if len(lg['topics']) < 3:
+                        continue
+                    spender = Web3.to_checksum_address('0x' + h0x(lg['topics'][2])[-40:])
+                    key = (lg['address'], spender, topic)
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    try:
+                        if topic == T_APPROVAL_ALL:
+                            c = _ap_providers()[0].eth.contract(address=lg['address'], abi=ERC721)
+                            if c.functions.isApprovedForAll(addr, spender).call():
+                                out.append({'token': lg['address'], 'spender': spender, 'type': 'ApprovalForAll'})
+                        else:
+                            c = _ap_providers()[0].eth.contract(address=lg['address'], abi=ERC20)
+                            amt = c.functions.allowance(addr, spender).call()
+                            if amt > 0:
+                                out.append({'token': lg['address'], 'spender': spender, 'type': 'ERC20', 'amount': str(amt)})
+                    except Exception as e:
+                        if _is_429(e):
+                            raise ApprovalsError('rpc rate limited (HTTP 429)') from None
+                        # ERC-721 Approval (3 topics indexados) u otros: se ignoran
     return out
 
 
@@ -152,7 +237,7 @@ def scan(addr):
             'nonce': w3.eth.get_transaction_count(addr, 'pending'),
             'delegation7702': deleg, 'delegatedToUnsweep': deleg == DELEGATE,
             'tokens': tokens, 'nfts': nfts, 'approvals': aps, 'approvalsError': ap_err,
-            'rescuable': bool(tokens or nfts)}
+            'rescuable': bool(tokens or nfts), 'extras': scan_extras(addr)}
 
 
 def _token_feeds(a, t):
@@ -177,7 +262,37 @@ def _high_value_items(toks):
     return items, O.eur_usd(w3, a)
 
 
-def quote(s, gas=1_500_000):
+def _safe_sym(x):
+    return ''.join(ch for ch in str(x or '') if ch.isalnum())[:12]
+
+
+ERC20_META = [{'name': 'decimals', 'type': 'function', 'stateMutability': 'view', 'inputs': [], 'outputs': [{'type': 'uint8'}]},
+              {'name': 'symbol', 'type': 'function', 'stateMutability': 'view', 'inputs': [], 'outputs': [{'type': 'string'}]}]
+
+
+def scan_extras(addr):
+    """#985: ERC-20 fuera de assets -> unverified, value_usd 0. Fail-soft: cualquier error -> []."""
+    try:
+        allowed = O.allowlist(assets())
+        rpc = lambda m, p: w3.provider.make_request(m, p).get('result')
+        exs = EX.discover_extras(rpc, addr, allowed)
+    except Exception as e:
+        log.warning('extras no disponibles: %s', type(e).__name__)
+        return []
+    for e in exs[:50]:
+        c = w3.eth.contract(address=e['address'], abi=ERC20_META)
+        try:
+            e['decimals'] = int(c.functions.decimals().call())
+        except Exception:
+            e['decimals'] = 18
+        try:
+            e['symbol'] = _safe_sym(c.functions.symbol().call())
+        except Exception:
+            e['symbol'] = ''
+    return exs[:50]
+
+
+def quote(s, gas=1_500_000, extras=None):
     """Cotizacion M4: tramos 15/10/5 %; en Ethereum minimo = gas x1.5 (va firmado como minFees)."""
     toks = []
     allowed = O.allowlist(assets())  # misma allowlist que scan y check_allowlist (rescate)
@@ -236,12 +351,34 @@ def quote(s, gas=1_500_000):
             ok, why = False, str(e)
         except Exception as e:  # fail-closed ante cualquier error del oraculo
             ok, why = False, 'precio no verificable (%s)' % type(e).__name__
-    has_min = any(l['minFee'] != '0' for l in lines)
+    # #985: extras sin garantia; no alteran rescued_usd, tope ni umbral (value_usd 0)
+    ex_reason, ex_gas, ex_lines = None, 0, []
+    if extras:
+        want = set()
+        for x in extras:
+            try:
+                want.add(Web3.to_checksum_address(str(x)))
+            except Exception:
+                pass
+        avail = [e for e in s.get('extras', []) if e['address'] in want]
+        if not ok:
+            ex_reason = 'cotizacion de listados no valida: extras excluidos'
+        else:
+            gp = w3.eth.gas_price
+            est = lambda tx: w3.eth.estimate_gas(tx)
+            call = lambda tx: w3.eth.call(tx)
+            sel, ex_reason = EX.select_extras((call, est), s['address'], s.get('safe') or s['address'], avail, len(toks),
+                                              fee_usd, gas, gp, _eth_usd())
+            ex_lines = EX.extra_lines(sel, bps)
+            ex_gas = sum(e['gas'] for e in sel)
+    lines = lines + ex_lines
+    has_min = any(l.get('minFee', '0') != '0' for l in lines)
     if not has_min:
-        for l in lines: l.pop('minFee')
+        for l in lines: l.pop('minFee', None)
     # sin datos de gas en la respuesta al usuario (gas interno)
     fee_pct = round(fee_usd / rescued_usd * 100, 2) if rescued_usd > 0 else 0.0
     return {'feeBps': bps, 'maxFeeBps': bps, 'lines': lines, 'nfts': n_nft,
             'rescued_usd': round(rescued_usd, 4), 'fee_usd': round(fee_usd, 4), 'fee_pct': fee_pct, 'policy_ok': ok, 'policy_reason': why,
             'extra_checks': P.needs_extra_checks(rescued_usd),
-            'breakdown': P.breakdown(lines, rescued_usd, fee_usd)}, q
+            'breakdown': P.breakdown([l for l in lines if not l.get('unverified')], rescued_usd, fee_usd),
+            'extras_reason': ex_reason, 'extras_note': EX.UNVERIFIED_NOTE if ex_lines else None}, q

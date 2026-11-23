@@ -1,0 +1,26 @@
+# UNSWEEP
+
+> Self-service tool to diagnose a compromised EVM wallet (for example one drained by a sweeper bot or with a malicious EIP-7702 delegation) and to rescue remaining ERC-20 tokens in a single locally signed transaction.
+
+## Scope by network
+- Base: rescue of 16 verified tokens.
+- Arbitrum: rescue of 12 verified tokens.
+- Other ERC-20 tokens: may be detected, without guarantee.
+- Ethereum: read-only diagnostic, no rescue.
+- Funds already taken cannot be recovered. NFTs are not rescued.
+- A 100,000 USD limit applies to eligibility; it is an eligibility limit, not a guarantee.
+
+## Free diagnostic
+- https://unsweep.com/ : free read-only diagnostic (no keys, no signatures)
+
+## Guides
+- https://unsweep.com/guides/sweeper-bot-hacked-wallet.html
+- https://unsweep.com/guides/eip-7702-malicious-delegation.html
+- https://unsweep.com/guides/rescue-tokens-sweeper-bot-base-arbitrum.html
+- https://unsweep.com/guides/what-can-and-cannot-be-rescued.html
+- https://unsweep.com/guides/why-eth-for-gas-gets-stolen-immediately.html
+- https://unsweep.com/guides/rescue-usdc-weth-hacked-metamask-base.html
+- https://unsweep.com/guides/rescue-tokens-hacked-wallet-arbitrum.html
+- https://unsweep.com/guides/sweeper-bot-vs-eip-7702-delegation.html
+- https://unsweep.com/guides/how-to-check-if-wallet-has-sweeper-bot.html
+- https://unsweep.com/guides/what-to-do-first-5-minutes-after-wallet-hack.html
