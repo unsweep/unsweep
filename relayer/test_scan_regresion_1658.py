@@ -32,8 +32,29 @@ def _fake(fail=(), balances=None):
             return {'transfers': []}
         if method == 'eth_getLogs':
             return []
+        if method == 'eth_call':  # #1658b: balanceOf de la lista, coherente con el indice simulado
+            bl = balances if balances is not None else [
+                {'contractAddress': USDC, 'tokenBalance': hex(5_000_000)},
+                {'contractAddress': BRETT, 'tokenBalance': hex(123 * 10**18)}]
+            to = params[0]['to'].lower()
+            return next((b['tokenBalance'] for b in bl if b['contractAddress'].lower() == to), '0x0')
         return None
     return rpc, calls
+
+
+def _post_from(rpc):
+    """#1658b: los lotes JSON-RPC (balanceOf de la lista) pasan por el mismo fake."""
+    def post(url, body, deadline, tries=5):
+        if isinstance(body, list):
+            out = []
+            for c in body:
+                try:
+                    out.append({'id': c['id'], 'result': rpc(url, c['method'], c['params'], deadline)})
+                except M.ScanError as e:
+                    out.append({'id': c['id'], 'error': {'message': str(e)}})
+            return out
+        return {'id': 1, 'result': rpc(url, body['method'], body['params'], deadline)}
+    return post
 
 
 @pytest.fixture(autouse=True)
@@ -47,6 +68,7 @@ def _iso(monkeypatch):
 def test_fallo_logs_429_tokens_conocidos_siguen_apareciendo(monkeypatch):
     rpc, _ = _fake(fail=('alchemy_getAssetTransfers', 'eth_getLogs'))
     monkeypatch.setattr(M, '_rpc', rpc)
+    monkeypatch.setattr(M, '_post', _post_from(rpc))
     r = M.scan_mainnet('base', ADDR)
     by = {t['contract'].lower(): t for t in r['tokens']}
     assert r['tokensTotalNonZero'] == 2 and r['tokens'] != []
@@ -59,6 +81,7 @@ def test_fallo_logs_429_tokens_conocidos_siguen_apareciendo(monkeypatch):
 def test_vacio_legitimo_sin_errores_es_complete(monkeypatch):
     rpc, _ = _fake(balances=[])
     monkeypatch.setattr(M, '_rpc', rpc)
+    monkeypatch.setattr(M, '_post', _post_from(rpc))
     r = M.scan_mainnet('base', ADDR)
     assert r['status'] == 'complete' and r['incompleteReasons'] == [] and r['tokens'] == []
 
@@ -66,6 +89,7 @@ def test_vacio_legitimo_sin_errores_es_complete(monkeypatch):
 def test_fallo_indice_tokens_es_visible_y_no_cacheado(monkeypatch):
     rpc, calls = _fake(fail=('alchemy_getTokenBalances',))
     monkeypatch.setattr(M, '_rpc', rpc)
+    monkeypatch.setattr(M, '_post', _post_from(rpc))
     r = M.scan_mainnet('base', ADDR)
     assert r['status'] == 'incomplete'
     assert any('token balances failed' in x for x in r['incompleteReasons'])
