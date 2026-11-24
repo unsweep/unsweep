@@ -24,14 +24,14 @@ Leyenda. HECHO = evidencia verificable (SHA en origin/main y ruta del acta). PEN
 | #1684 | 5. Re-escaneo del caso real con extras | PENDIENTE | depende de la dirección confirmada (INFERENCIA) | #144 |
 | #1690 | (1)+(2) UX de Step 1 en Base: extras en el recuadro y aviso de soporte | HECHO | cc76b70 (desplegado), acta fcbb44d `docs/actas/orden1690_parte1-2.md` (+ capturas a 375/1280 px) | ninguno |
 | #1690 | (3) Código, tests (182 passed) y despliegue en Base de /api/quote_manual | HECHO | 0d7338b; `docs/actas/orden1690/acta_parte3.md` (a)-(f) | ninguno |
-| #1690 | (3) Verificación local de un extra manual ACEPTADO | PENDIENTE (reclasificada) | 8c50a8c `docs/actas/orden1690/acta_parte3.md` (g)-(h), `verif_local.py/.json`. Corrección (memoria #1707): verif_local.py construye extras=[] sin ejecutar discover_extras. No acredita que BRETT no se descubriera para ese pool/bloque, así que la fila «CERRADA» de (h) queda sustituida por esta tabla | ninguno (necesita repetir la verificación ejecutando discover_extras, en otra misión) |
+| #1690 | (3) Verificación local de un extra manual ACEPTADO | HECHO (local) | 0aa69e1 `docs/actas/orden1690/acta_parte3.md` (i), `verif_extra_manual.json/.py`: discover_extras real no detecta BRETT en el pool 0xBA3F… (bloque 61451093); unverified=true, value_usd=0, fee_bps=500, gas 56429<120000; 4.º contrato → 400; tests 182 passed | ninguno |
 | #1690 | (3) Acreditación en producción de un extra manual aceptado | PENDIENTE | `docs/actas/orden1690/acta_parte3.md` (f), `quote_manual_brett.json`, `quote_manual_4.json` | #146 |
 | #1690 | Arbitrum (UX y extras) | PENDIENTE | `docs/actas/orden1690/acta_parte3.md` (h) | #145 |
 
-Resumen: 19 partes; 12 HECHO y 7 PENDIENTE. Bloqueos: #144 (2), #145 (2) y #146 (1). Pendientes sin bloqueo humano: #1658 (1c) y la verificación local de #1690 (3). Nota: la verificación de #1638 en navegador figura como NO_DISPONIBLE, porque la auditoría fue estática sobre los bytes servidos; no es una parte de la orden.
+Resumen: 19 partes; 13 HECHO y 6 PENDIENTE. Bloqueos: #144 (2), #145 (2) y #146 (1). Pendiente sin bloqueo humano: #1658 (1c). Nota: la verificación de #1638 en navegador figura como NO_DISPONIBLE, porque la auditoría fue estática sobre los bytes servidos; no es una parte de la orden.
 
 Siguiente paso por orden, condicionado al humano:
 - #1638: ninguno. Queda cerrada.
 - #1658: con la respuesta a #144, re-escanear la dirección y la red confirmadas. (1c) requiere su propia orden.
 - #1684: con #145=A, preparar la lista OFAC y desplegar el fix en relayer-arb. Con #144, re-escanear el caso.
-- #1690: con #146=A, una lectura en producción de /api/quote_manual. Rehacer la verificación local ejecutando discover_extras. Arbitrum, según #145.
+- #1690: con #146=A, una lectura en producción de /api/quote_manual. Arbitrum, según #145.
