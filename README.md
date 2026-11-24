@@ -4,7 +4,7 @@ Non-custodial rescue of ERC-20 tokens left in a compromised wallet (sweeper bot 
 
 Website: https://unsweep.com/ · Free read-only diagnostic: https://unsweep.com/
 
-> UNSWEEP never DMs first and never asks for a seed phrase or private key. Nothing here is a guarantee of success. Funds already moved out of a wallet cannot be recovered.
+> UNSWEEP never DMs first and never asks for a seed phrase. A rescue only uses the key of the already-compromised wallet, which you type yourself on unsweep.com and which never leaves your browser. Nothing here is a guarantee of success. Funds already moved out of a wallet cannot be recovered.
 
 <!-- UNSWEEP-TRUST-2A -->
 ## Symptoms this is for (plain words)
@@ -21,7 +21,7 @@ These usually mean a sweeper bot and/or a malicious EIP-7702 delegation controls
 - Basescan: https://basescan.org/address/0x38bcF425bC4d13624734e09376F2fafc799fA8c8#code
 
 ## Your key never leaves your browser
-The rescue transaction is signed 100% locally in your browser. Your private key is never sent to UNSWEEP or to any server. UNSWEEP never asks for a seed phrase.
+A rescue uses only the private key of the wallet that is already compromised (the attacker already has it), never your seed phrase and never the key of your safe wallet. It is signed 100% locally in your browser and the key is never sent to UNSWEEP or to any server; only signatures are sent. Proof: the exact signing code at https://github.com/unsweep/unsweep/blob/8d820edde5e120cbe86d965676af81f0b07d5537/web/assets/app.js#L240-L285 . Check it yourself: DevTools Network shows only signatures in the request to /api/rescue; the delegate contract 0x38bcF425bC4d13624734e09376F2fafc799fA8c8 is verified at https://basescan.org/address/0x38bcF425bC4d13624734e09376F2fafc799fA8c8#code ; UNSWEEP never writes to you first.
 
 ## We never DM you
 UNSWEEP never contacts anyone by DM, Telegram or Discord. Anyone who contacts you there claiming to be UNSWEEP is a scammer. The only contact is support@unsweep.com, and it only replies to emails you send.

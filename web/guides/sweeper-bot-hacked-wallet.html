@@ -37,7 +37,7 @@
 <h2>Before anything else</h2>
 <ul>
 <li>Never send ETH &ldquo;for gas&rdquo; to a wallet that is being swept.</li>
-<li>Never paste a private key or seed phrase into a website or share it with anyone. Ethereum's documentation: &ldquo;It is vital to keep your private keys safe and, as the name suggests, PRIVATE&rdquo; (<a href="https://ethereum.org/en/developers/docs/accounts/">ethereum.org &ndash; Accounts</a>).</li>
+<li>Never paste a seed phrase, or the key of a wallet that is still safe, into a website or share it with anyone. Ethereum's documentation: &ldquo;It is vital to keep your private keys safe and, as the name suggests, PRIVATE&rdquo; (<a href="https://ethereum.org/en/developers/docs/accounts/">ethereum.org &ndash; Accounts</a>).</li>
 <li>Treat the compromised key as permanently burned and use a new wallet afterwards.</li>
 </ul>
 <p>Start with the free diagnostic to see what is still in the wallet and whether a delegation is set: <a href="https://unsweep.com/">https://unsweep.com/</a>.</p>
@@ -50,7 +50,7 @@
 <p><strong>Sounds familiar?</strong> &ldquo;My funds disappear as soon as they arrive&rdquo; &middot; &ldquo;I can&rsquo;t pay for gas because the ETH is taken instantly&rdquo; &middot; &ldquo;My wallet was hacked and I can&rsquo;t get my tokens out&rdquo;.</p>
 <ul>
 <li><strong>Open source:</strong> <a href="https://github.com/unsweep/unsweep">github.com/unsweep/unsweep</a>. Rescue contract <code>0x38bcF425bC4d13624734e09376F2fafc799fA8c8</code>, source verified on Sourcify (exact match): <a href="https://repo.sourcify.dev/8453/0x38bcF425bC4d13624734e09376F2fafc799fA8c8">Base</a> &middot; <a href="https://repo.sourcify.dev/42161/0x38bcF425bC4d13624734e09376F2fafc799fA8c8">Arbitrum</a> &middot; <a href="https://basescan.org/address/0x38bcF425bC4d13624734e09376F2fafc799fA8c8#code">Basescan</a>.</li>
-<li><strong>Local signing:</strong> the rescue is signed 100% in your browser; your private key is never sent to UNSWEEP or any server. We never ask for a seed phrase.</li>
+<li><strong>Which key, and where it goes:</strong> a rescue uses only the private key of the wallet that is <em>already compromised</em>, the one the attacker already has. Never your seed phrase and never the key of your new safe wallet. The key signs 100% inside your browser and is never sent to UNSWEEP or any server; only signatures are sent (<a href="https://github.com/unsweep/unsweep/blob/8d820edde5e120cbe86d965676af81f0b07d5537/web/assets/app.js#L240-L285">see the exact signing code on GitHub</a>). Check it yourself: open DevTools &rarr; Network before signing, and see the <a href="https://basescan.org/address/0x38bcF425bC4d13624734e09376F2fafc799fA8c8#code">verified contract on Basescan</a>. UNSWEEP never writes to you first.</li>
 <li><strong>We never DM you:</strong> UNSWEEP never contacts anyone by DM, Telegram or Discord. Anyone who does is a scammer.</li>
 <li><strong>Cost:</strong> free diagnostic, no upfront payment. Success fee only if the rescue executes, taken from the rescued tokens in the same transaction: 15% (&lt;1,000 USD), 10% (1,000&ndash;10,000 USD), 5% (&gt;10,000 USD); hard 15% maximum in the contract; shown in a simulation before you sign.</li>
 <li><strong>Cannot rescue:</strong> funds already taken, NFTs, anything on Ethereum mainnet (read-only). Tokens outside the verified lists may be detected without guarantee. Nothing is guaranteed.</li>
