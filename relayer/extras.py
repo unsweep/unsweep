@@ -11,12 +11,20 @@ Reglas:
 - Comision de extras en especie al mismo bps, minFee 0.
 No modifica contratos ni firma nada.
 """
+import logging
+import time
+
 from web3 import Web3
+
+log = logging.getLogger(__name__)
 
 MAX_EXTRAS = 20
 EXTRA_GAS_LIMIT = 120_000
 UNVERIFIED_NOTE = 'Unverified tokens, no guarantee, may include scam tokens'
 SEL_TRANSFER = '0xa9059cbb'
+MAX_PAGES = 5  # #1646: tope duro de paginas pageKey
+MAX_TOKENS_SCANNED = 500  # #1646: tope duro de tokenBalances leidos
+EXTRAS_TIME_BUDGET = 20.0  # s totales; se comprueba antes de cada pagina
 
 
 def _word(x):
@@ -27,21 +35,46 @@ def transfer_data(to, amount):
     return SEL_TRANSFER + _word(Web3.to_checksum_address(to)) + _word(int(amount))
 
 
-def discover_extras(rpc, addr, allowed):
-    """rpc(method, params) -> result. allowed: set de checksum de assets_<chain>.json."""
+def discover_extras(rpc, addr, allowed, max_pages=None, max_tokens=None, time_budget=None, _now=None):
+    """rpc(method, params) -> result. allowed: set de checksum de assets_<chain>.json.
+    #1646/#559: pagina con pageKey (alchemy_getTokenBalances) con topes duros: max_pages paginas,
+    max_tokens tokenBalances leidos y time_budget segundos totales (se comprueba antes de cada pagina).
+    Alcanzar un tope NO es error: devuelve lo acumulado. Un error de rpc se propaga (fail-soft en scan_extras)."""
+    max_pages = MAX_PAGES if max_pages is None else max_pages
+    max_tokens = MAX_TOKENS_SCANNED if max_tokens is None else max_tokens
+    time_budget = EXTRAS_TIME_BUDGET if time_budget is None else time_budget
+    now = _now or time.monotonic
     addr = Web3.to_checksum_address(addr)
-    res = rpc('alchemy_getTokenBalances', [addr, 'erc20']) or {}
-    out, seen = [], set()
-    for tb in res.get('tokenBalances', []) or []:
-        try:
-            t = Web3.to_checksum_address(tb.get('contractAddress'))
-            bal = int(tb.get('tokenBalance') or '0x0', 16)
-        except Exception:
-            continue
-        if bal <= 0 or t in allowed or t in seen:
-            continue
-        seen.add(t)
-        out.append({'address': t, 'balance': str(bal), 'unverified': True, 'value_usd': 0, 'price_usd': 0})
+    t0 = now()
+    out, seen, key, scanned = [], set(), None, 0
+    for page in range(max_pages):
+        if page and now() - t0 >= time_budget:
+            log.warning('extras: presupuesto de tiempo %.0fs agotado tras %d paginas', time_budget, page)
+            break
+        params = [addr, 'erc20'] + ([{'pageKey': key}] if key else [])
+        res = rpc('alchemy_getTokenBalances', params) or {}
+        for tb in res.get('tokenBalances', []) or []:
+            if scanned >= max_tokens:
+                break
+            scanned += 1
+            try:
+                t = Web3.to_checksum_address(tb.get('contractAddress'))
+                bal = int(tb.get('tokenBalance') or '0x0', 16)
+            except Exception:
+                continue
+            if bal <= 0 or t in allowed or t in seen:
+                continue
+            seen.add(t)
+            out.append({'address': t, 'balance': str(bal), 'unverified': True, 'value_usd': 0, 'price_usd': 0})
+        key = res.get('pageKey')
+        if not key:
+            break
+        if scanned >= max_tokens:
+            log.warning('extras: tope de %d tokens alcanzado (quedan paginas)', max_tokens)
+            break
+    else:
+        if key:
+            log.warning('extras: tope de %d paginas alcanzado (quedan paginas)', max_pages)
     return out
 
 

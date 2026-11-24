@@ -80,3 +80,5 @@ Cambia `relayer/svc_scan.py` (+68 líneas) y añade `relayer/test_extras_1684.py
 - `unsweep-funnel.timer` LastTriggerUSec = **2026-11-23 23:56:18 UTC** (primer disparo automático). Next: 2026-11-24 23:55:44 UTC.
 - `unsweep-funnel.service`: Result=**success**, ExecMainStatus=**0**, salida a las 23:56:20.
 - `tmp/metrics/metrics/2026-11-23.json` regenerado a las 23:56:20 (15003 B). tmp/metrics no se ha borrado y no se ha ejecutado `worktree prune`.
+
+- #1646 (pageKey): discover_extras pagina con pageKey, topes duros 5 paginas/500 tokens/20 s, fail-soft intacto; test de 2 paginas OK y bateria 189 passed. Verificacion local solo lectura en Base (pool BRETT/WETH 0xBA3F945812a83471d709BCe9C3CA699A19FB46f7): BRETT NO aparece; con el tope de 5 paginas se leen 449 extras; BRETT (balanceOf>0, fuera de allowlist) esta en la pagina 9, posicion 859 de >900 tokens, y ademas scan_extras recorta a 50. La paginacion NO resuelve #1684 para este pool; NO desplegado. Alternativas (requieren decision): consulta dirigida alchemy_getTokenBalances(pool,[token]) o la ruta manual ya verificada en local (#1690).
