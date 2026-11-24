@@ -126,3 +126,79 @@ Secretos citados **solo por nombre**: `OPS_PK` (`relayer/service.py:28`) y `TURN
 HECHO: Medium 1 (C-1), Low 3 (C-2, W-6, R-4), Info 11 (C-3, C-4, C-5, W-1 a W-5, R-1 a R-3; 10 de ellas son controles positivos y C-5 es neutro). HIPOTESIS: Medium 1 (R-5, misma causa raíz que C-1). NO VERIFICADO: 2 bloques (W-7, R-6). Critical/High manuales: 0.
 
 Artefactos crudos en `docs/security/`: versions.txt, forge-build.txt, forge-test.txt, slither.txt, slither-full.txt, slither.json, aderyn-report.md.
+
+## 8. Verificación adicional 2026-11-24 (orden #2137)
+
+Base de la revisión: commit `218839ac328243c69c8c9253e2c11919cdd80b3f` (HEAD previo a esta sección). Todo en solo lectura. No se ha modificado ningún contrato ni el relayer.
+
+### 8.1 W-7: limpieza del input de clave (`#pk`) en el DOM — PARCIAL
+
+- HECHO `web/assets/app.js:203`: `el.value = ''; // the key never stays in the DOM`, dentro de `readKey()` (`app.js:201`), antes de validar el formato y antes de firmar.
+- HECHO `web/assets/app.js:245`: `w = new E.Wallet(readKey());`. El input se vacía al intentar firmar, así que queda limpio en el camino de firma y en los errores posteriores: formato inválido o seed phrase (`app.js:204-205`) y fallo de `/api/rescue` en el `catch` (`app.js:287-289`, que además hace `w = null`).
+- NO CUMPLE en las salidas anteriores a `readKey()`: los returns tempranos de `app.js:236`, `app.js:238` y `app.js:239` (faltan pasos 1-2, falta la confirmación o falta Turnstile) dejan la clave en el input.
+- NO CUMPLE al cancelar o editar: `app.js:323-325` (`edit1`/`edit2`/`edit3` → `goStep(n)`) no vacía `#pk`, y no hay manejador de `pagehide`/`beforeunload`. Los únicos usos de `$('pk')` son `app.js:202` y `app.js:327` (toggle Show/Hide).
+- OPINION (severidad Low): es la clave de una wallet ya comprometida y no sale del navegador, pero permanece en el DOM más tiempo del necesario. Mitigación sugerida, no aplicada en esta orden: vaciar `#pk` en los returns tempranos, en `goStep()` y en `pagehide`.
+
+### 8.2 R-5: acotar `minFees` en el relayer — PARCIAL (se mantiene el riesgo de C-1)
+
+- HECHO `relayer/eip712.py:44-45`: `maxFeeBps` acotado a `(0, MAX_FEE_BPS]` = `(0, 1500]`.
+- HECHO `relayer/service.py:232-233`: se rechaza si el `maxFeeBps` firmado supera al cotizado.
+- HECHO `relayer/policy.py:76-77`: en la cotización, la comisión total en USD no puede superar el 15 % de lo rescatado.
+- HECHO `relayer/svc_scan.py:399-400`: el `minFee` cotizado se limita al saldo (`mn = min(bal, int(need_usd / px * 10**dec) + 1)`).
+- NO CUMPLE: `relayer/eip712.py:46-47` solo valida la longitud de `minFees`. En el envío (`relayer/service.py:228-242`) no se comparan los valores de `minFees` firmados con los cotizados ni con un techo derivado de `MAX_FEE_BPS`.
+- Contrato `src/UnsweepDelegate.sol:204-207`: `if (fee < minFee) fee = minFee; if (fee > bal) fee = bal;`. `minFee` solo queda acotado por el saldo, no por `MAX_FEE_BPS`.
+- Conclusión: el techo del 15 % sobre `minFees` solo se aplica en la cotización. Una firma con `minFees` arbitrarios o un relayer con errores podría cobrar más del 15 %, hasta el saldo del token. Requiere la firma de la víctima, y la UI muestra la simulación antes de firmar. R-5 pasa de HIPOTESIS a HECHO, severidad Medium, misma causa raíz que C-1.
+
+### 8.3 R-6: rate_limited, ofac_update.py y exceptionRef — CUMPLE
+
+- HECHO `relayer/svc_core.py:130`: `def rate_limited(ip):`. HECHO `relayer/service.py:48-49`: `if rate_limited(_ip(req)): raise HTTPException(429, 'demasiadas peticiones')`.
+- HECHO `relayer/ofac_update.py` existe (1761 bytes): descarga la lista SDN (`:11-12`), extrae direcciones `Digital Currency Address - ETH` (`:17-21`), no sobrescribe si hay menos de 50 (`:22-23`), guarda `publish_date` y `fetched_at` (`:24-26`) y escribe de forma atómica con `os.replace` (`:28-31`). NO_DISPONIBLE: programación periódica (cron/systemd) y frescura de la lista en producción.
+- HECHO `relayer/service.py:241`: `exception_ref=str(b.get('exceptionRef', ''))[:64]`, que llega a `P.check_cap(...)` en `relayer/relayer.py:118`. HECHO `relayer/policy.py:111-119`: `check_cap` no usa `ref`; el límite `cap_usd(tr)` es duro, así que un `exceptionRef` enviado por el cliente no puede saltárselo.
+
+### 8.4 Bytecode en Arbitrum One frente a `forge build` en HEAD — COINCIDE (con immutables enmascaradas)
+
+- Direcciones tomadas del repo (`deployments/mainnet.txt`, `README.md`).
+- RPC público de solo lectura `https://arb1.arbitrum.io/rpc`, `eth_chainId` = `0xa4b1` (42161), `eth_getCode` en el bloque 527221874 (`0x1f6cc472`). Foundry 1.10.0, `forge build` exit 0.
+- Metodología igual que en Base (§4.4): sha256 y keccak256 del runtime completo y sin el sufijo CBOR, en bruto y con las posiciones de `immutableReferences` puestas a cero en el bytecode de la cadena.
+
+| Contrato | Variante | sha256 | keccak256 |
+|---|---|---|---|
+| UnsweepDelegate `0x38bcF425bC4d13624734e09376F2fafc799fA8c8` | local completo (6059 B) | `13fc6573f70e1b0f27b46e6d405c297b19bfd8c7e330193cdd6639d192f18f63` | `032492147403d9d46954e04540f72c9133f762286341d6c85d83b45787ef8405` |
+| | cadena en bruto | `20971ec7c28e7fd8e6e5959cfc03802d1b9f1bbd1413d84b3118dd8839841d68` | `9ad0a014d76b357321899bb3454001c0c746a6c06e3caf90550a7c12bb0b4f96` |
+| | cadena enmascarada | `13fc6573f70e1b0f27b46e6d405c297b19bfd8c7e330193cdd6639d192f18f63` | `032492147403d9d46954e04540f72c9133f762286341d6c85d83b45787ef8405` |
+| | local sin CBOR (6006 B) | `ab3760000d03a96896cc65c4cd520062da1011e7b740acd2914a75bcc3d3082a` | `d1c7a16412db57a0245175f0cdd79e80cce67ce144804f90340391d055da1f5d` |
+| | cadena sin CBOR en bruto | `225020b1fca229d6abe46a241a3b0c58adecec5b305f1ceb4cc9b317a16c2bd5` | `ac72e00018571b93a11e693c9ddc646030d8ebb8f1dce99aabd08008b76c0ece` |
+| | cadena sin CBOR enmascarada | `ab3760000d03a96896cc65c4cd520062da1011e7b740acd2914a75bcc3d3082a` | `d1c7a16412db57a0245175f0cdd79e80cce67ce144804f90340391d055da1f5d` |
+| UnsweepConfig `0x56a345661e3999F2b20f1E069aAC14097Fa0D118` | local completo (881 B) | `3bf179f13463bf684f190c783d12bf9f250525fa5d17f8e2c614162ddfb45485` | `214def2b66f8e5bd6b06170bae715cac54251aab849cbe02e223e73a328bf622` |
+| | cadena en bruto | `fc1ad05cb5a081a6274e2a8a1ee3cb08fb04202bbc00658a242457375f54c3f4` | `496a7d17f0c74bc2354cb4733d5641c538a13b24f41df754aa4a83c44d2f2629` |
+| | cadena enmascarada | `3bf179f13463bf684f190c783d12bf9f250525fa5d17f8e2c614162ddfb45485` | `214def2b66f8e5bd6b06170bae715cac54251aab849cbe02e223e73a328bf622` |
+| | local sin CBOR (828 B) | `31f8f53c5264aebcdfc4fbc88f92c1a83a25aff02b8c3b118e42318804599ed2` | `6f56c55fe3880d8073542fb474a0f3a05ae5928644ddfc9053ee6727670ae06c` |
+| | cadena sin CBOR en bruto | `dd88ede240d016f76278197f156454e891dc4a99136798c35d84bca6f15f99f6` | `23dc567052f8922eea2b12b2639e9a2f2123952a2cceb092d24ad29d80db39fa` |
+| | cadena sin CBOR enmascarada | `31f8f53c5264aebcdfc4fbc88f92c1a83a25aff02b8c3b118e42318804599ed2` | `6f56c55fe3880d8073542fb474a0f3a05ae5928644ddfc9053ee6727670ae06c` |
+
+- En bruto no coinciden; las diferencias son exclusivamente immutables:
+  - Delegate: 60 bytes distintos (rango 457-5711) = immutable `44128` en los offsets 445, 1004 y 5680, valor `0x56a345661e3999f2b20f1e069aac14097fa0d118` (dirección de UnsweepConfig, 20 B × 3).
+  - Config: 22 bytes distintos (rango 510-743) = immutable `43801` (offset 498), owner `0x7e26916f1ff93fcf6ccd7eaaa0561007783fda1b`, e immutable `43803` (offset 712), `0x05dc` = 1500 (feeBps).
+- Con las immutables enmascaradas, los dos contratos coinciden byte a byte, con y sin CBOR. Al ser idéntico el CBOR de metadatos, el código fuente compilado es equivalente al de HEAD.
+- Limitación: el exact_match en Sourcify para Arbitrum es una afirmación del README que no se ha vuelto a comprobar en esta orden.
+
+### 8.5 app.js en producción frente al repo — COINCIDE
+
+Consulta a las `2026-11-24T20:22:38Z`:
+
+```
+$ curl -s https://unsweep.com/assets/app.js | sha256sum
+85f9dce6162ec60f5a97386f61c785a57959038ad5423121e2373696bd1f9245  -
+$ sha256sum web/assets/app.js
+85f9dce6162ec60f5a97386f61c785a57959038ad5423121e2373696bd1f9245  web/assets/app.js
+```
+
+HTTP 200, 22163 bytes en los dos lados y `diff` vacío. Último commit que toca `web/assets/app.js`: `549205a0da8e4342021016a49f96693bd6a9db80`. Limitación: es una sola muestra, desde una IP y en un instante; un CDN o una caché podrían servir otro contenido a otros clientes.
+
+### 8.6 Recuento actualizado
+
+- R-5: de HIPOTESIS a HECHO (Medium, misma causa raíz que C-1).
+- W-7: PARCIAL (Low, severidad como OPINION).
+- R-6: CUMPLE; la programación de la lista OFAC en producción queda NO_DISPONIBLE.
+- El bytecode de Arbitrum y el app.js de producción coinciden con el repo.
+- Critical/High manuales: 0.

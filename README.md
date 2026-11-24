@@ -20,6 +20,22 @@ These usually mean a sweeper bot and/or a malicious EIP-7702 delegation controls
 - Source verified on Sourcify (exact match): Base https://repo.sourcify.dev/8453/0x38bcF425bC4d13624734e09376F2fafc799fA8c8 · Arbitrum https://repo.sourcify.dev/42161/0x38bcF425bC4d13624734e09376F2fafc799fA8c8
 - Basescan: https://basescan.org/address/0x38bcF425bC4d13624734e09376F2fafc799fA8c8#code
 
+## Security & verification
+
+- **Security evidence:** [docs/SECURITY_EVIDENCE.md](docs/SECURITY_EVIDENCE.md) - commit, tool versions, commands, results, manual review, and the dated re-check of 2026-11-24 (section 8).
+- **Foundry tests:** [test/](test/) (`Unsweep.t.sol`, `Hardening.t.sol`, `M4.t.sol`, `M4c.t.sol`). Reproduce with `forge build && forge test`.
+- **Deployment verification:**
+  - Base: [Basescan 0x38bcF425bC4d13624734e09376F2fafc799fA8c8](https://basescan.org/address/0x38bcF425bC4d13624734e09376F2fafc799fA8c8#code)
+  - Arbitrum One: [Arbiscan 0x38bcF425bC4d13624734e09376F2fafc799fA8c8](https://arbiscan.io/address/0x38bcF425bC4d13624734e09376F2fafc799fA8c8#code). On 2026-11-24, at block 527221874, the runtime bytecode matched `forge build` at HEAD byte for byte once immutables were masked ([evidence, section 8.4](docs/SECURITY_EVIDENCE.md)).
+- **Known limitations:** [docs/SECURITY_EVIDENCE.md, section 6 (Limitaciones)](docs/SECURITY_EVIDENCE.md#6-limitaciones). Open items include R-5 (Medium): the relayer only checks the length of `minFees`, not each value against a fee cap. Another is W-7 (Low): the key input is cleared when signing, but not on early validation returns or when you go back to edit. There has been no third-party audit.
+
+Check that the web app served in production is the code in this repo (both hashes must be identical):
+
+```bash
+curl -s https://unsweep.com/assets/app.js | sha256sum
+sha256sum web/assets/app.js
+```
+
 ## Your key never leaves your browser
 A rescue uses only the private key of the wallet that is already compromised (the attacker already has it), never your seed phrase and never the key of your safe wallet. It is signed 100% locally in your browser and the key is never sent to UNSWEEP or to any server; only signatures are sent. Proof: the exact signing code at https://github.com/unsweep/unsweep/blob/8d820edde5e120cbe86d965676af81f0b07d5537/web/assets/app.js#L240-L285 . Check it yourself: DevTools Network shows only signatures in the request to /api/rescue; the delegate contract 0x38bcF425bC4d13624734e09376F2fafc799fA8c8 is verified at https://basescan.org/address/0x38bcF425bC4d13624734e09376F2fafc799fA8c8#code ; UNSWEEP never writes to you first.
 
