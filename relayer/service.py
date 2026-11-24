@@ -18,6 +18,8 @@ from svc_core import (ETH_USD, assets, w3, abi, log, record, screen, turnstile_o
                       CHAIN_ID, DELEGATE, CONFIG, TURNSTILE_SECRET, TEST_SECRET, TURNSTILE_SITEKEY)
 from relayer import ACTIVE_MAINNETS
 from svc_scan import scan, quote, _eth_usd, config_c
+import manual as MAN
+from svc_manual import add_manual
 import oracle as O
 from fastapi.responses import JSONResponse
 from svc_mainnet import scan_mainnet, record_scan, ScanError, CHAINS as MAINNET_CHAINS
@@ -155,6 +157,35 @@ async def api_quote(req: Request):
     return {'scan': s, 'quote': q}
 
 
+@app.post('/api/quote_manual')
+async def api_quote_manual(req: Request):
+    """#1690 (3): cotizacion con 1-3 contratos ERC-20 anadidos a mano (misma tuberia de extras)."""
+    _guard(req)
+    b = await req.json()
+    victim, safe = _addr(b.get('address')), _addr(b.get('safe'))
+    if victim == safe:
+        raise HTTPException(400, 'la wallet segura debe ser distinta')
+    try:
+        contracts = MAN.parse_contracts(b.get('manual'))
+    except MAN.ManualInputError as e:
+        raise HTTPException(400, str(e))
+    if not contracts:
+        raise HTTPException(400, 'indica entre 1 y %d contratos' % MAN.MANUAL_MAX)
+    s = scan(victim)
+    s['safe'] = safe
+    enabled, why = MAN.manual_enabled(s)
+    if not enabled:  # sin token listado con valor: no se sondea ni se anade nada
+        record('quote_manual', 'rejected', why, len(s['tokens']), 0)
+        raise HTTPException(400, why)
+    acc, rej = await run_in_threadpool(add_manual, s, contracts)
+    chk = [str(x) for x in (b.get('extras') or [])][:EX_MAX]
+    want = (chk + [e['address'] for e in acc])[:EX_MAX]
+    q, _ = quote(s, extras=want or None)
+    record('quote_manual', 'ok' if q['policy_ok'] else 'rejected', q['policy_reason'], len(s['tokens']), len(acc))
+    return {'scan': s, 'quote': q, 'manual': {'enabled': enabled, 'disabled_reason': why,
+            'accepted': [e['address'] for e in acc], 'rejected': rej}}
+
+
 @app.post('/api/rescue')
 async def api_rescue(req: Request):
     _guard(req)
@@ -178,6 +209,9 @@ async def api_rescue(req: Request):
         screen(safe, victim)
         s = scan(victim)
         s['safe'] = safe
+        man = MAN.parse_contracts(r.get('manual'))  # #1690 (3): ManualInputError hereda de PolicyError
+        if man and MAN.manual_enabled(s)[0]:
+            add_manual(s, [m for m in man if m in set(_cs(t) for t in req_extras)])
         _, q = quote(s, extras=req_extras or None)
         if req_extras:  # #985: solo extras seleccionados por el servidor tras simular
             q0, _ = quote(s, extras=req_extras)

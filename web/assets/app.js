@@ -41,6 +41,10 @@
     }
     box.hidden = ul.childNodes.length === 0;
   }
+  // #1690 (3): manual ERC-20 contracts (max 3), only if Step 1 found a listed token with value; unchecked by default
+  function listedValueUsd(s) { let v = 0; for (const t of (s && s.tokens) || []) { const x = Number(t.balance) / Math.pow(10, Number(t.decimals || 18)) * Number(t.price_usd || 0); if (isFinite(x)) v += x; } return v; }
+  function renderManual(s) { const b = $('manualBox'); if (!b) return; const ok = listedValueUsd(s) > 0; b.hidden = !ok; $('manualCb').checked = false; if (!ok) $('manualContracts').value = ''; }
+  function manualContracts() { const b = $('manualBox'); if (!b || b.hidden || !$('manualCb').checked) return []; return $('manualContracts').value.split(/[\s,;]+/).map((x) => x.trim()).filter(Boolean); }
   function checkedExtras() { return Array.from(document.querySelectorAll('#extrasList .extraCb')).filter((c) => c.checked).map((c) => c.value); }
   function addr(v) { try { return E.getAddress(String(v).trim()); } catch (e) { return null; } }
   function fmt(amount, dec) { try { return E.formatUnits(BigInt(amount), Number(dec)); } catch (e) { return String(amount); } }
@@ -112,6 +116,7 @@
       show($('scanOut'), out, 'ok');
       attachResultExtras(s);
       renderExtras(s.extras || []);
+      renderManual(s);
       if (s.rescuable) $('btnToStep2').hidden = false;
     } catch (e) { show($('scanOut'), 'Scan failed: ' + e.message, 'err'); }
   }
@@ -141,11 +146,16 @@
     show($('quoteOut'), 'Simulating...');
     $('step3').hidden = true; $('btnToStep3').hidden = true;
     try {
-      const r = await api('quote', { address: st.scan.address, safe: safe, extras: checkedExtras() });
+      const man = manualContracts(); st.manual = man;
+      if (man.length > 3) return show($('quoteOut'), 'At most 3 manual contracts.', 'err');
+      const r = man.length ? await api('quote_manual', { address: st.scan.address, safe: safe, extras: checkedExtras(), manual: man })
+        : await api('quote', { address: st.scan.address, safe: safe, extras: checkedExtras() });
+      if (r.manual && r.manual.rejected && r.manual.rejected.length) st.manualRejected = r.manual.rejected;
       const q = r.quote; st.quote = q; st.safe = safe; st.scan = r.scan;
       const tierBps = Number(q.maxFeeBps != null ? q.maxFeeBps : q.feeBps); st.shownBps = tierBps;
       const out = ['Fee tier: ' + (tierBps / 100) + '% (maximum signed by you; taken in kind from the rescued tokens).'];
       for (const l of q.lines) out.push((l.unverified ? '[unverified] ' : '') + (l.symbol || l.token) + ': total ' + fmt(l.amount, l.decimals) + ' | fee ' + fmt(l.fee, l.decimals) + ' | you receive ' + fmt(l.net, l.decimals));
+      if (r.manual && r.manual.rejected) for (const x of r.manual.rejected) out.push('Manual contract rejected: ' + (x.address || x[0] || '') + ' - ' + (x.reason || x[1] || ''));
       if (checkedExtras().length && q.extras_reason) out.push('Unverified tokens excluded: ' + q.extras_reason);
       if (q.nfts > 0) out.push('NFTs found: ' + q.nfts + ' (NFT rescue is not enabled in this preview; they are excluded).');
       const netUsd = Math.max(0, Number(q.rescued_usd) - Number(q.fee_usd));
@@ -242,6 +252,7 @@
       const body = { turnstile: st.tsToken,
         auth: { chainId: chainId, nonce: String(st.scan.nonce), address: st.cfg.delegate, yParity: sa.yParity, r: sa.r, s: sa.s },
         rescue: rescue, v: sig.v, r: sig.r, s: sig.s };
+      if (st.manual && st.manual.length) body.rescue = Object.assign({}, rescue, { manual: st.manual }); // #1690 (3): not part of the signed EIP-712 message
       setPhase(1, 'Sending signed payload to the relayer.');
       const rescueProg = (function () {
         const t0 = Date.now();

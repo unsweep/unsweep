@@ -50,6 +50,15 @@
 <label for="safe">Destination wallet (must be a NEW, clean wallet you control - never the compromised one)</label>
 <input id="safe" type="text" placeholder="0x... new clean wallet address" autocomplete="off" spellcheck="false">
 </div>
+<div id="manualBox" hidden>
+<p class="extrasTitle"><strong>Add token contracts manually - optional</strong></p>
+<p class="small" id="manualWarn"><strong>Unverified tokens, no guarantee, may include scam tokens</strong></p>
+<div class="field">
+<label for="manualContracts">Up to 3 ERC-20 contract addresses (0x..., one per line or comma separated)</label>
+<textarea id="manualContracts" rows="3" autocomplete="off" spellcheck="false" placeholder="0x..."></textarea>
+</div>
+<label class="small"><input type="checkbox" id="manualCb"> Include these unverified contracts in the simulation</label>
+</div>
 <button id="btnQuote" class="primary">Simulate</button>
 </div>
 <div id="quoteOut" class="out">
@@ -154,5 +163,5 @@
 </footer>
 </main>
 <script src="/assets/ethers.min.js" integrity="sha384-KFwRTLOjI5Dog4WciwSIbBrTqUp4Vm/9/yBF5Yt1z/eWZO382zoD8B3/1EYSCXfv"></script>
-<script src="/assets/app.js" integrity="sha384-2A4MxWLXPDvMIRzLrkWSQrao+FUgXbJgUZbpUyWQ7tExajCWwYs+vP5peORIMW1x"></script>
+<script src="/assets/app.js" integrity="sha384-eUoFdYUv23ErsDkpidSZVWYcVrbKiUb9uQ25HYTGI4SKpnU01vO9OlgWDcR8LCHU"></script>
 </body></html>
