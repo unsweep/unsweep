@@ -6,6 +6,39 @@ Website: https://unsweep.com/ · Free read-only diagnostic: https://unsweep.com/
 
 > UNSWEEP never DMs first and never asks for a seed phrase or private key. Nothing here is a guarantee of success. Funds already moved out of a wallet cannot be recovered.
 
+<!-- UNSWEEP-TRUST-2A -->
+## Symptoms this is for (plain words)
+- "My funds disappear as soon as they arrive in my wallet."
+- "I can't pay for gas because any ETH I send is taken instantly."
+- "My wallet was hacked and I can't get my tokens out."
+
+These usually mean a sweeper bot and/or a malicious EIP-7702 delegation controls the wallet. UNSWEEP rescues the ERC-20 tokens still in it without you sending ETH for gas to that wallet.
+
+## Open source and contract
+- Source code: https://github.com/unsweep/unsweep
+- Rescue contract (same address on Base and Arbitrum): `0x38bcF425bC4d13624734e09376F2fafc799fA8c8`
+- Source verified on Sourcify (exact match): Base https://repo.sourcify.dev/8453/0x38bcF425bC4d13624734e09376F2fafc799fA8c8 · Arbitrum https://repo.sourcify.dev/42161/0x38bcF425bC4d13624734e09376F2fafc799fA8c8
+- Basescan: https://basescan.org/address/0x38bcF425bC4d13624734e09376F2fafc799fA8c8#code
+
+## Your key never leaves your browser
+The rescue transaction is signed 100% locally in your browser. Your private key is never sent to UNSWEEP or to any server. UNSWEEP never asks for a seed phrase.
+
+## We never DM you
+UNSWEEP never contacts anyone by DM, Telegram or Discord. Anyone who contacts you there claiming to be UNSWEEP is a scammer. The only contact is support@unsweep.com, and it only replies to emails you send.
+
+## What it costs and when
+- Free diagnostic. No upfront payment.
+- A success fee is charged only if the rescue transaction executes, in the same transaction, taken from the rescued tokens: 15% below 1,000 USD, 10% from 1,000 to 10,000 USD, 5% above 10,000 USD.
+- The contract has a hard 15% maximum. The exact amounts you receive and the fee are shown in a simulation before you sign.
+
+## What it cannot rescue
+- Funds already taken out of the wallet: they cannot be recovered.
+- NFTs.
+- Anything on Ethereum mainnet (read-only diagnostic only).
+- Tokens outside the verified lists (16 on Base, 12 on Arbitrum) may be detected, but without guarantee.
+- Nothing is a guarantee of success; a 100,000 USD per-rescue eligibility limit applies.
+<!-- /UNSWEEP-TRUST-2A -->
+
 ## Architecture (non-custodial)
 
 1. **Diagnostic (read-only).** The user enters only the public address. The relayer reads balances of the verified token list, the account code (`eth_getCode`, to detect an EIP-7702 delegation `0xef0100…`) and returns what is in scope. No keys, no signatures.

@@ -31,4 +31,17 @@
 <p>No. Funds already moved out cannot be recovered; only tokens still in the wallet may be rescued, without guarantee.</p>
 <p><a href="/">Check your wallet with the free diagnostic &rarr;</a> &middot; <a href="/guides/rescue-tokens-sweeper-bot-base-arbitrum.html">Step-by-step rescue guide</a></p>
 <p class="small">Related guides: <a href="/guides/why-eth-for-gas-gets-stolen-immediately.html">Why ETH sent for gas gets stolen immediately</a> &middot; <a href="/guides/rescue-usdc-weth-hacked-metamask-base.html">Rescue USDC and WETH from a hacked wallet on Base</a> &middot; <a href="/guides/rescue-tokens-hacked-wallet-arbitrum.html">Rescue tokens from a hacked wallet on Arbitrum</a> &middot; <a href="/guides/sweeper-bot-vs-eip-7702-delegation.html">Sweeper bot vs malicious EIP-7702 delegation</a> &middot; <a href="/guides/how-to-check-if-wallet-has-sweeper-bot.html">How to check if a wallet has a sweeper bot</a> &middot; <a href="/guides/sweeper-bot-hacked-wallet.html">Sweeper bot on a hacked wallet</a> &middot; <a href="/guides/eip-7702-malicious-delegation.html">Malicious EIP-7702 delegation</a> &middot; <a href="/guides/rescue-tokens-sweeper-bot-base-arbitrum.html">Step-by-step rescue</a> &middot; <a href="/guides/what-can-and-cannot-be-rescued.html">What can and cannot be rescued</a> <br>MetaMask is a trademark of its owner, referenced descriptively; UNSWEEP is not affiliated with MetaMask or Consensys.</p>
+<!-- UNSWEEP-TRUST-2A -->
+<section class="trust" id="trust">
+<h2>Before you start: trust facts</h2>
+<p><strong>Sounds familiar?</strong> &ldquo;My funds disappear as soon as they arrive&rdquo; &middot; &ldquo;I can&rsquo;t pay for gas because the ETH is taken instantly&rdquo; &middot; &ldquo;My wallet was hacked and I can&rsquo;t get my tokens out&rdquo;.</p>
+<ul>
+<li><strong>Open source:</strong> <a href="https://github.com/unsweep/unsweep">github.com/unsweep/unsweep</a>. Rescue contract <code>0x38bcF425bC4d13624734e09376F2fafc799fA8c8</code>, source verified on Sourcify (exact match): <a href="https://repo.sourcify.dev/8453/0x38bcF425bC4d13624734e09376F2fafc799fA8c8">Base</a> &middot; <a href="https://repo.sourcify.dev/42161/0x38bcF425bC4d13624734e09376F2fafc799fA8c8">Arbitrum</a> &middot; <a href="https://basescan.org/address/0x38bcF425bC4d13624734e09376F2fafc799fA8c8#code">Basescan</a>.</li>
+<li><strong>Local signing:</strong> the rescue is signed 100% in your browser; your private key is never sent to UNSWEEP or any server. We never ask for a seed phrase.</li>
+<li><strong>We never DM you:</strong> UNSWEEP never contacts anyone by DM, Telegram or Discord. Anyone who does is a scammer.</li>
+<li><strong>Cost:</strong> free diagnostic, no upfront payment. Success fee only if the rescue executes, taken from the rescued tokens in the same transaction: 15% (&lt;1,000 USD), 10% (1,000&ndash;10,000 USD), 5% (&gt;10,000 USD); hard 15% maximum in the contract; shown in a simulation before you sign.</li>
+<li><strong>Cannot rescue:</strong> funds already taken, NFTs, anything on Ethereum mainnet (read-only). Tokens outside the verified lists may be detected without guarantee. Nothing is guaranteed.</li>
+</ul>
+</section>
+<!-- /UNSWEEP-TRUST-2A -->
 </main></body></html>
