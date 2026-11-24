@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>UNSWEEP — Security &amp; Transparency Center</title>
+<meta name="description" content="Public contract registry, verification links, non-custodial signing architecture, security boundaries, and vulnerability reporting for UNSWEEP.">
+<meta name="referrer" content="no-referrer">
+<link rel="canonical" href="https://unsweep.com/security/">
+<link rel="stylesheet" href="/assets/style.css" integrity="sha384-ERtfQInvTDaNORwRVGlVhcZYz2cv7NTeXcvp/WoF02hjy0nXEe+tCHx7QG6kkCQX">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<style>
+  .card{border:1px solid #d8dee4;border-radius:8px;padding:16px;margin:14px 0;background:#fafbfc}
+  .warn-box{border-left:4px solid #9a6700;background:#fff8c5;padding:12px 14px;margin:14px 0;border-radius:4px}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:.92rem}
+  th,td{border:1px solid #d8dee4;padding:8px 10px;text-align:left;vertical-align:top;word-break:break-word}
+  th{background:#f3f6f8}
+  code{font-size:.88em}
+</style>
+</head>
+<body>
+<main>
+<p class="small"><a href="/">&larr; Back to UNSWEEP</a></p>
+<h1>Security &amp; Transparency Center</h1>
+<p class="intro">Verifiable facts, contract registry, architecture boundaries, and disclosure status for UNSWEEP.</p>
+
+<div class="warn-box">
+<strong>Audit status disclosure:</strong> UNSWEEP has not yet undergone an independent security audit. Public source code, Foundry tests, and verified contract deployments are available for independent inspection. Nothing on this site is a guarantee of rescue or security.
+</div>
+
+<section class="step">
+<h2>1. Contract &amp; Network Registry</h2>
+<p class="small">Production contracts are deployed deterministically via CREATE2 (<code>0x4e59b44847b379578588920ca78fbf26c0b4956c</code>) using <code>solc v0.8.39+commit.ce47f2c8</code>. There are no experimental or beta rescue contracts deployed in production on these networks.</p>
+<table>
+<thead>
+<tr>
+<th>Network</th>
+<th>Role</th>
+<th>Address</th>
+<th>Deploy Block &amp; Tx</th>
+<th>Verification &amp; Explorer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Base (8453)<br><span class="small muted">Rescue enabled</span></td>
+<td>UnsweepDelegate</td>
+<td><code>0x38bcF425bC4d13624734e09376F2fafc799fA8c8</code></td>
+<td>Block 60270163<br><code>0x3bbb252767a5665d9b6a6236c67c3a4ae0285a293819c0d042919ceb40fe6526</code></td>
+<td><a href="https://repo.sourcify.dev/8453/0x38bcF425bC4d13624734e09376F2fafc799fA8c8" rel="noopener noreferrer">Sourcify</a> · <a href="https://basescan.org/address/0x38bcF425bC4d13624734e09376F2fafc799fA8c8#code" rel="noopener noreferrer">Basescan</a></td>
+</tr>
+<tr>
+<td>Base (8453)<br><span class="small muted">Rescue enabled</span></td>
+<td>UnsweepConfig</td>
+<td><code>0x56a345661e3999F2b20f1E069aAC14097Fa0D118</code></td>
+<td>Block 60270155<br><code>0x7e35d866a5cd0ab206a67baf48b02b0e3d4e40907bb1ee0fbede87c19ad55c7b</code></td>
+<td><a href="https://basescan.org/address/0x56a345661e3999F2b20f1E069aAC14097Fa0D118#code" rel="noopener noreferrer">Basescan</a></td>
+</tr>
+<tr>
+<td>Arbitrum One (42161)<br><span class="small muted">Rescue enabled</span></td>
+<td>UnsweepDelegate</td>
+<td><code>0x38bcF425bC4d13624734e09376F2fafc799fA8c8</code></td>
+<td>Block 526168981<br><code>0xb850c5c96bd728c66b04b0fd6dc0eb73ef0188555de1a52a9c142384abd8b794</code></td>
+<td><a href="https://repo.sourcify.dev/42161/0x38bcF425bC4d13624734e09376F2fafc799fA8c8" rel="noopener noreferrer">Sourcify</a> · <a href="https://arbiscan.io/address/0x38bcF425bC4d13624734e09376F2fafc799fA8c8#code" rel="noopener noreferrer">Arbiscan</a></td>
+</tr>
+<tr>
+<td>Arbitrum One (42161)<br><span class="small muted">Rescue enabled</span></td>
+<td>UnsweepConfig</td>
+<td><code>0x56a345661e3999F2b20f1E069aAC14097Fa0D118</code></td>
+<td>Block 526168978<br><code>0xcfcf9f15eae185284de8f1479b8acefb370c8e6c7221776f6a64e3719a5073bf</code></td>
+<td><a href="https://arbiscan.io/address/0x56a345661e3999F2b20f1E069aAC14097Fa0D118#code" rel="noopener noreferrer">Arbiscan</a></td>
+</tr>
+<tr>
+<td>Ethereum Mainnet (1)<br><span class="small muted">Read-only check only</span></td>
+<td>Diagnostic only</td>
+<td>No rescue contract on chain 1</td>
+<td>N/A</td>
+<td>Read-only scan of delegation, nonce, balances, and approvals</td>
+</tr>
+</tbody>
+</table>
+<p class="small">Source repository: <a href="https://github.com/unsweep/unsweep" rel="noopener noreferrer">github.com/unsweep/unsweep</a> · Deployment manifest: <code>deployments/mainnet.txt</code> (verified 2026-11-21).</p>
+</section>
+
+<section class="step">
+<h2>2. Non-Custodial Signing Architecture</h2>
+<ul class="small list">
+<li><strong>Read-only scan:</strong> Step 1 queries balances, code (<code>eth_getCode</code>), and allowances using only the public address.</li>
+<li><strong>Local signing only:</strong> Step 3 signs the EIP-7702 authorization and EIP-712 rescue intent in memory inside the browser tab using only the private key of the <em>already compromised</em> wallet.</li>
+<li><strong>No key transmission or custody:</strong> The private key is never sent to UNSWEEP servers; only signatures are submitted to the relayer, which sponsors gas and submits the type-4 transaction transferring tokens directly to your safe address.</li>
+<li><strong>Self-verification:</strong> Inspect the signing code in the repository, check DevTools &rarr; Network before signing, and compare served <code>app.js</code> SHA-256 against the repository commit.</li>
+</ul>
+</section>
+
+<section class="step">
+<h2>3. What UNSWEEP Never Asks For</h2>
+<ul class="small list">
+<li>Never your 12/24-word seed phrase or recovery phrase.</li>
+<li>Never the private key of your new safe destination wallet.</li>
+<li>Never upfront payments, deposits, or ETH sent to the compromised wallet.</li>
+<li>UNSWEEP never sends unsolicited direct messages (DMs) on Telegram, Discord, X, or Reddit.</li>
+</ul>
+</section>
+
+<section class="step">
+<h2>4. Unaudited Risks &amp; Known Limitations</h2>
+<ul class="small list">
+<li><strong>No third-party audit yet:</strong> Smart contracts, browser signing logic, and relayer infrastructure have not been certified by an independent security firm or penetration test.</li>
+<li><strong>Execution &amp; front-running risk:</strong> A sweeper bot or competing actor may still race transactions or drain assets if a wallet is actively monitored.</li>
+<li><strong>Scope limits:</strong> Only supported ERC-20 tokens on Base (16) and Arbitrum One (12) are in primary scope; unverified ERC-20s have no guarantee, NFTs are unsupported, and funds already stolen cannot be recovered.</li>
+<li><strong>Full scope details:</strong> See <a href="https://github.com/unsweep/unsweep/blob/main/UNSWEEP_RECOVERY_SCOPE.md" rel="noopener noreferrer">UNSWEEP_RECOVERY_SCOPE.md</a> and <a href="https://github.com/unsweep/unsweep/blob/main/docs/SECURITY_EVIDENCE.md" rel="noopener noreferrer">docs/SECURITY_EVIDENCE.md</a>.</li>
+</ul>
+</section>
+
+<section class="step">
+<h2>5. Responsible Disclosure &amp; Contact</h2>
+<p class="small">To report a security issue or request scope clarification, email <a href="mailto:support@unsweep.com">support@unsweep.com</a>. Include affected network, contract/address, and reproduction steps without sending private keys or seed phrases.</p>
+</section>
+
+<footer>
+<p class="small">Contact: <a href="mailto:support@unsweep.com">support@unsweep.com</a> (never send keys or seed phrases).</p>
+<p class="small muted">Non-custodial software. Use at your own risk. Not yet independently audited.</p>
+</footer>
+</main>
+</body>
+</html>
