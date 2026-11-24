@@ -1,0 +1,222 @@
+$ forge build
+No files changed, compilation skipped
+warning[missing-events-access-control]: `owner` is changed without an event but is used for access control
+   ╭▸ src/UnsweepConfig.sol:58:9
+   │
+58 │         owner = msg.sender;
+   │         ━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/missing-events-access-control
+
+warning[require-revert-in-loop]: `require` or `revert` inside a loop
+   ╭▸ src/UnsweepConfig.sol:31:34
+   │
+31 │             if (t == address(0)) revert BadParam();
+   │                                  ━━━━━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/require-revert-in-loop
+
+warning[block-timestamp]: usage of `block.timestamp` in a comparison may be manipulated by validators
+    ╭▸ src/UnsweepDelegate.sol:141:13
+    │
+141 │         if (block.timestamp > r.deadline) revert Expired();
+    │             ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/block-timestamp
+
+warning[reentrancy-events]: event emitted after an external call; reentrancy can reorder or fabricate logs that off-chain consumers rely on
+    ╭▸ src/UnsweepDelegate.sol:224:28
+    │
+224 │             if (fGot != 0) emit FeePaid(address(t), feeTo, fGot);
+    │                            ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/reentrancy-events
+
+warning[reentrancy-events]: event emitted after an external call; reentrancy can reorder or fabricate logs that off-chain consumers rely on
+    ╭▸ src/UnsweepDelegate.sol:159:9
+    │
+159 │         emit Rescued(address(this), r.safe, r.nonce, items);
+    │         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/reentrancy-events
+
+warning[calls-loop]: external call inside a loop
+    ╭▸ src/UnsweepDelegate.sol:167:63
+    │
+167 │         for (uint256 j; j < r.tokens.length; ++j) before[j] = IERC20Min(r.tokens[j]).balanceOf(address(this));
+    │                                                               ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/calls-loop
+
+warning[calls-loop]: external call inside a loop
+    ╭▸ src/UnsweepDelegate.sol:170:34
+    │
+170 │             if (c.value != 0 || !config.claimTarget(c.target) || c.target == address(this)) {
+    │                                  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/calls-loop
+
+warning[calls-loop]: external call inside a loop
+    ╭▸ src/UnsweepDelegate.sol:175:43
+    │
+175 │             (bool ok, bytes memory ret) = c.target.call(c.data);
+    │                                           ━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/calls-loop
+
+warning[calls-loop]: external call inside a loop
+    ╭▸ src/UnsweepDelegate.sol:180:17
+    │
+180 │             if (IERC721Min(r.nfts[j].token).ownerOf(r.nfts[j].id) != address(this)) {
+    │                 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/calls-loop
+
+warning[calls-loop]: external call inside a loop
+    ╭▸ src/UnsweepDelegate.sol:185:17
+    │
+185 │             if (IERC20Min(r.tokens[j]).balanceOf(address(this)) < before[j]) revert BalanceDropped(r.tokens[j]);
+    │                 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/calls-loop
+
+warning[require-revert-in-loop]: `require` or `revert` inside a loop
+    ╭▸ src/UnsweepDelegate.sol:171:17
+    │
+171 │                 revert ForbiddenCall(i);
+    │                 ━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/require-revert-in-loop
+
+warning[require-revert-in-loop]: `require` or `revert` inside a loop
+    ╭▸ src/UnsweepDelegate.sol:173:84
+    │
+173 │             for (uint256 j; j < r.tokens.length; ++j) if (c.target == r.tokens[j]) revert ForbiddenCall(i);
+    │                                                                                    ━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/require-revert-in-loop
+
+warning[require-revert-in-loop]: `require` or `revert` inside a loop
+    ╭▸ src/UnsweepDelegate.sol:174:86
+    │
+174 │             for (uint256 j; j < r.nfts.length; ++j) if (c.target == r.nfts[j].token) revert ForbiddenCall(i);
+    │                                                                                      ━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/require-revert-in-loop
+
+warning[require-revert-in-loop]: `require` or `revert` inside a loop
+    ╭▸ src/UnsweepDelegate.sol:176:22
+    │
+176 │             if (!ok) revert CallFailed(i, ret);
+    │                      ━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/require-revert-in-loop
+
+warning[require-revert-in-loop]: `require` or `revert` inside a loop
+    ╭▸ src/UnsweepDelegate.sol:181:17
+    │
+181 │                 revert NftMoved(r.nfts[j].token, r.nfts[j].id);
+    │                 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/require-revert-in-loop
+
+warning[require-revert-in-loop]: `require` or `revert` inside a loop
+    ╭▸ src/UnsweepDelegate.sol:185:78
+    │
+185 │             if (IERC20Min(r.tokens[j]).balanceOf(address(this)) < before[j]) revert BalanceDropped(r.tokens[j]);
+    │                                                                              ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/require-revert-in-loop
+
+warning[uninitialized-local]: local variable is read before being initialized
+    ╭▸ src/UnsweepDelegate.sol:223:58
+    │
+223 │             if (fGot > minFee && fGot * 10_000 > (fGot + sGot) * bps + 10_000) revert FeeAboveSigned(address(t));
+    │                                                          ━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/uninitialized-local
+
+warning[uninitialized-local]: local variable is read before being initialized
+    ╭▸ src/UnsweepDelegate.sol:223:17
+    │
+223 │             if (fGot > minFee && fGot * 10_000 > (fGot + sGot) * bps + 10_000) revert FeeAboveSigned(address(t));
+    │                 ━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/uninitialized-local
+
+warning[calls-loop]: external call inside a loop
+    ╭▸ src/UnsweepDelegate.sol:202:27
+    │
+202 │             uint256 bal = t.balanceOf(address(this));
+    │                           ━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/calls-loop
+
+warning[calls-loop]: external call inside a loop
+    ╭▸ src/UnsweepDelegate.sol:210:30
+    │
+210 │                 uint256 f0 = t.balanceOf(feeTo);
+    │                              ━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/calls-loop
+
+warning[calls-loop]: external call inside a loop
+    ╭▸ src/UnsweepDelegate.sol:212:24
+    │
+212 │                 fGot = t.balanceOf(feeTo) - f0;
+    │                        ━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/calls-loop
+
+warning[calls-loop]: external call inside a loop
+    ╭▸ src/UnsweepDelegate.sol:215:28
+    │
+215 │             uint256 rest = t.balanceOf(address(this));
+    │                            ━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/calls-loop
+
+warning[calls-loop]: external call inside a loop
+    ╭▸ src/UnsweepDelegate.sol:217:30
+    │
+217 │                 uint256 s0 = t.balanceOf(r.safe);
+    │                              ━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/calls-loop
+
+warning[calls-loop]: external call inside a loop
+    ╭▸ src/UnsweepDelegate.sol:219:24
+    │
+219 │                 sGot = t.balanceOf(r.safe) - s0;
+    │                        ━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/calls-loop
+
+warning[require-revert-in-loop]: `require` or `revert` inside a loop
+    ╭▸ src/UnsweepDelegate.sol:223:80
+    │
+223 │             if (fGot > minFee && fGot * 10_000 > (fGot + sGot) * bps + 10_000) revert FeeAboveSigned(address(t));
+    │                                                                                ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/require-revert-in-loop
+
+warning[calls-loop]: external call inside a loop
+    ╭▸ src/UnsweepDelegate.sol:231:37
+    │
+231 │         for (uint256 i; i < n; ++i) IERC721Min(r.nfts[i].token).transferFrom(address(this), r.safe, r.nfts[i].id);
+    │                                     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/calls-loop
+
+warning[environment-read-across-mutation]: `block.timestamp` may be reused across `vm.warp`
+   ╭▸ test/Unsweep.t.sol:71:23
+   │
+71 │         r2.deadline = block.timestamp + 10;
+   │                       ━━━━━━━━━━━━━━━
+72 │         vm.warp(block.timestamp + 11);
+   │         ───────────────────────────── `vm.warp` changes this environment here
+   │
+   ├ help: capture it with `vm.getBlockTimestamp()` instead
+   ╰ help: https://getfoundry.sh/forge/linting/environment-read-across-mutation
+
+exit=0

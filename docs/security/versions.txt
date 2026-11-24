@@ -1,0 +1,10 @@
+forge Version: 1.10.0
+Commit SHA: 083e22994195d6a7e3ad3104d0b57f478c9b9062
+Build Timestamp: 2026-11-19T15:37:35.100584945Z (1795102655)
+Build Profile: build
+
+slither 0.11.6
+Version: 0.8.39+commit.ce47f2c8.Linux.g++
+Python 3.12.3
+crytic-compile 0.4.2
+solc-select 1.2.0

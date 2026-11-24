@@ -1,0 +1,117 @@
+$ slither . --filter-paths "lib/|node_modules/|test/|script/"
+'forge clean' running (wd: /opt/aire/workspace/projects/unsweep)
+'forge config --json' running
+'forge build --build-info --deny never --skip ./test/** ./script/** --force' running (wd: /opt/aire/workspace/projects/unsweep)
+INFO:Detectors:
+Detector: reentrancy-balance
+Reentrancy in UnsweepDelegate.rescue(UnsweepDelegate.Rescue,uint8,bytes32,bytes32) (src/UnsweepDelegate.sol#134-161):
+	External call allowing reentrancy:
+	- items += _sweepNfts(r) (src/UnsweepDelegate.sol#156)
+		- IERC721Min(r.nfts[i].token).transferFrom(address(this),r.safe,r.nfts[i].id) (src/UnsweepDelegate.sol#231)
+	Balance read before the call:
+	- items = _sweepTokens(r) (src/UnsweepDelegate.sol#155)
+	Possible stale balance used after the call in a condition:
+	- items == 0 (src/UnsweepDelegate.sol#157)
+		- stale variable `items`
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+INFO:Detectors:
+Detector: incorrect-equality
+UnsweepDelegate._sweepTokens(UnsweepDelegate.Rescue) (src/UnsweepDelegate.sol#195-227) uses a dangerous strict equality:
+	- bal == 0 (src/UnsweepDelegate.sol#203)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+INFO:Detectors:
+Detector: locked-ether
+Contract locking ether found:
+	Contract UnsweepDelegate (src/UnsweepDelegate.sol#21-234) has payable functions:
+	 - UnsweepDelegate.receive() (src/UnsweepDelegate.sol#91)
+	But does not have a function to withdraw the ether
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#contracts-that-lock-ether
+INFO:Detectors:
+Detector: uninitialized-local
+UnsweepDelegate._sweepTokens(UnsweepDelegate.Rescue).sGot (src/UnsweepDelegate.sol#214) is a local variable never initialized
+UnsweepDelegate._sweepTokens(UnsweepDelegate.Rescue).fGot (src/UnsweepDelegate.sol#208) is a local variable never initialized
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-local-variables
+INFO:Detectors:
+Detector: calls-loop
+UnsweepDelegate._runCalls(UnsweepDelegate.Rescue) (src/UnsweepDelegate.sol#163-187) has external calls inside a loop: before[j] = IERC20Min(r.tokens[j]).balanceOf(address(this)) (src/UnsweepDelegate.sol#167)
+	Calls stack containing the loop:
+		UnsweepDelegate.rescue(UnsweepDelegate.Rescue,uint8,bytes32,bytes32)
+UnsweepDelegate._runCalls(UnsweepDelegate.Rescue) (src/UnsweepDelegate.sol#163-187) has external calls inside a loop: c.value != 0 || ! config.claimTarget(c.target) || c.target == address(this) (src/UnsweepDelegate.sol#170)
+	Calls stack containing the loop:
+		UnsweepDelegate.rescue(UnsweepDelegate.Rescue,uint8,bytes32,bytes32)
+UnsweepDelegate._runCalls(UnsweepDelegate.Rescue) (src/UnsweepDelegate.sol#163-187) has external calls inside a loop: (ok,ret) = c.target.call(c.data) (src/UnsweepDelegate.sol#175)
+	Calls stack containing the loop:
+		UnsweepDelegate.rescue(UnsweepDelegate.Rescue,uint8,bytes32,bytes32)
+UnsweepDelegate._runCalls(UnsweepDelegate.Rescue) (src/UnsweepDelegate.sol#163-187) has external calls inside a loop: IERC721Min(r.nfts[j_scope_2].token).ownerOf(r.nfts[j_scope_2].id) != address(this) (src/UnsweepDelegate.sol#180)
+	Calls stack containing the loop:
+		UnsweepDelegate.rescue(UnsweepDelegate.Rescue,uint8,bytes32,bytes32)
+UnsweepDelegate._runCalls(UnsweepDelegate.Rescue) (src/UnsweepDelegate.sol#163-187) has external calls inside a loop: IERC20Min(r.tokens[j_scope_3]).balanceOf(address(this)) < before[j_scope_3] (src/UnsweepDelegate.sol#185)
+	Calls stack containing the loop:
+		UnsweepDelegate.rescue(UnsweepDelegate.Rescue,uint8,bytes32,bytes32)
+UnsweepDelegate._sweepTokens(UnsweepDelegate.Rescue) (src/UnsweepDelegate.sol#195-227) has external calls inside a loop: bal = t.balanceOf(address(this)) (src/UnsweepDelegate.sol#202)
+	Calls stack containing the loop:
+		UnsweepDelegate.rescue(UnsweepDelegate.Rescue,uint8,bytes32,bytes32)
+UnsweepDelegate._sweepTokens(UnsweepDelegate.Rescue) (src/UnsweepDelegate.sol#195-227) has external calls inside a loop: f0 = t.balanceOf(feeTo) (src/UnsweepDelegate.sol#210)
+	Calls stack containing the loop:
+		UnsweepDelegate.rescue(UnsweepDelegate.Rescue,uint8,bytes32,bytes32)
+UnsweepDelegate._sweepTokens(UnsweepDelegate.Rescue) (src/UnsweepDelegate.sol#195-227) has external calls inside a loop: fGot = t.balanceOf(feeTo) - f0 (src/UnsweepDelegate.sol#212)
+	Calls stack containing the loop:
+		UnsweepDelegate.rescue(UnsweepDelegate.Rescue,uint8,bytes32,bytes32)
+UnsweepDelegate._sweepTokens(UnsweepDelegate.Rescue) (src/UnsweepDelegate.sol#195-227) has external calls inside a loop: rest = t.balanceOf(address(this)) (src/UnsweepDelegate.sol#215)
+	Calls stack containing the loop:
+		UnsweepDelegate.rescue(UnsweepDelegate.Rescue,uint8,bytes32,bytes32)
+UnsweepDelegate._sweepTokens(UnsweepDelegate.Rescue) (src/UnsweepDelegate.sol#195-227) has external calls inside a loop: s0 = t.balanceOf(r.safe) (src/UnsweepDelegate.sol#217)
+	Calls stack containing the loop:
+		UnsweepDelegate.rescue(UnsweepDelegate.Rescue,uint8,bytes32,bytes32)
+UnsweepDelegate._sweepTokens(UnsweepDelegate.Rescue) (src/UnsweepDelegate.sol#195-227) has external calls inside a loop: sGot = t.balanceOf(r.safe) - s0 (src/UnsweepDelegate.sol#219)
+	Calls stack containing the loop:
+		UnsweepDelegate.rescue(UnsweepDelegate.Rescue,uint8,bytes32,bytes32)
+UnsweepDelegate._sweepNfts(UnsweepDelegate.Rescue) (src/UnsweepDelegate.sol#229-233) has external calls inside a loop: IERC721Min(r.nfts[i].token).transferFrom(address(this),r.safe,r.nfts[i].id) (src/UnsweepDelegate.sol#231)
+	Calls stack containing the loop:
+		UnsweepDelegate.rescue(UnsweepDelegate.Rescue,uint8,bytes32,bytes32)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+INFO:Detectors:
+Detector: reentrancy-events
+Reentrancy in UnsweepDelegate.rescue(UnsweepDelegate.Rescue,uint8,bytes32,bytes32) (src/UnsweepDelegate.sol#134-161):
+	External calls:
+	- _runCalls(r) (src/UnsweepDelegate.sol#154)
+		- (ok,ret) = c.target.call(c.data) (src/UnsweepDelegate.sol#175)
+	Event emitted after the call(s):
+	- FeePaid(address(t),feeTo,fGot) (src/UnsweepDelegate.sol#224)
+		- items = _sweepTokens(r) (src/UnsweepDelegate.sol#155)
+Reentrancy in UnsweepDelegate.rescue(UnsweepDelegate.Rescue,uint8,bytes32,bytes32) (src/UnsweepDelegate.sol#134-161):
+	External calls:
+	- _runCalls(r) (src/UnsweepDelegate.sol#154)
+		- (ok,ret) = c.target.call(c.data) (src/UnsweepDelegate.sol#175)
+	- items += _sweepNfts(r) (src/UnsweepDelegate.sol#156)
+		- IERC721Min(r.nfts[i].token).transferFrom(address(this),r.safe,r.nfts[i].id) (src/UnsweepDelegate.sol#231)
+	Event emitted after the call(s):
+	- Rescued(address(this),r.safe,r.nonce,items) (src/UnsweepDelegate.sol#159)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+INFO:Detectors:
+Detector: timestamp
+UnsweepDelegate.rescue(UnsweepDelegate.Rescue,uint8,bytes32,bytes32) (src/UnsweepDelegate.sol#134-161) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp > r.deadline (src/UnsweepDelegate.sol#141)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+INFO:Detectors:
+Detector: assembly
+UnsweepDelegate._s() (src/UnsweepDelegate.sol#97-100) uses assembly
+	- INLINE ASM (src/UnsweepDelegate.sol#99)
+UnsweepDelegate.rescue(UnsweepDelegate.Rescue,uint8,bytes32,bytes32) (src/UnsweepDelegate.sol#134-161) uses assembly
+	- INLINE ASM (src/UnsweepDelegate.sol#137)
+	- INLINE ASM (src/UnsweepDelegate.sol#139)
+	- INLINE ASM (src/UnsweepDelegate.sol#160)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+INFO:Detectors:
+Detector: cyclomatic-complexity
+UnsweepDelegate._runCalls(UnsweepDelegate.Rescue) (src/UnsweepDelegate.sol#163-187) has a high cyclomatic complexity (13).
+UnsweepDelegate._sweepTokens(UnsweepDelegate.Rescue) (src/UnsweepDelegate.sol#195-227) has a high cyclomatic complexity (12).
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cyclomatic-complexity
+INFO:Detectors:
+Detector: low-level-calls
+Low level call in UnsweepDelegate._runCalls(UnsweepDelegate.Rescue) (src/UnsweepDelegate.sol#163-187):
+	- (ok,ret) = c.target.call(c.data) (src/UnsweepDelegate.sol#175)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+INFO:Slither:. analyzed (10 contracts with 102 detectors), 25 result(s) found
+exit=255
