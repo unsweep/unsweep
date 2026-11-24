@@ -98,3 +98,15 @@ Tests del relayer (0d7338b, venv local, env limpio): **182 passed, 0 failed** (7
 | #1690 | Arbitrum (UX y extras) | BLOQUEADA | #145 |
 
 No se abren solicitudes nuevas. Producción no se ha tocado en esta sección: sin despliegue ni POST.
+
+## (i) Salvedad 1 de #558: verificación local con discover_extras REAL (2026-11-24)
+
+- Token BRETT 0x532f27101965dd16442E59d40670FaF5eBB142E4. Holder real: pool BRETT/WETH 0xBA3F945812a83471d709BCe9C3CA699A19FB46f7. Base, bloque 61451093.
+- discover_extras se ejecutó de verdad, con Alchemy vía `_extras_rpc`, igual que en producción. La página 1 trae 100 entradas, con pageKey presente, y devuelve 94 extras. **BRETT no se detecta.** Causa: discover_extras solo lee la primera página de alchemy_getTokenBalances. Esto sustituye la HIPOTESIS de (h) y la corrección #1707.
+- Ruta manual (verif_local.py): balanceOf, symbol y decimals por eth_call directo a UNSWEEP_RPC; simulate_extra con límite de gas.
+- Línea manual: unverified=true, value_usd=0, fee_bps=500 (fee = amount×500/10000) y gas simulado 56429 < 120000. Con un límite de 1000 gas, la línea queda excluida.
+- Rechazos: 4 contratos → 400 «maximo 3 contratos». Sin token listado con valor → rechazado.
+- UI (web/assets/app.js): l.46 `b.hidden = !ok` (solo hay bloque manual si listedValueUsd>0); l.150 `man.length > 3` → error.
+- Tests: 182 passed, 0 failed. Nota: si se pasan UNSWEEP_RPC/UNSWEEP_CHAIN_ID a mano, 4 tests de test_approvals_429 fallan porque cambia la ruta de `_ap_providers`. Es un artefacto del entorno de prueba, no del código.
+- No contradice (f) ni #1695: allí el holder era la EOA 0x0E74…, para la que discover_extras SÍ detecta BRETT.
+- Evidencia: `verif_extra_manual.json` (todo_ok=true, 8 checks), reproducible con `verif_extra_manual.py`. Sin producción, sin /api/quote_manual público, sin firmas y sin redespliegue.
