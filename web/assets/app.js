@@ -7,7 +7,7 @@
   function show(el, lines, cls) {
     el.textContent = '';
     el.className = 'out' + (cls ? ' ' + cls : '');
-    for (const l of [].concat(lines)) { const p = document.createElement('div'); p.textContent = l; el.appendChild(p); }
+    for (const l of [].concat(lines)) { const p = document.createElement('div'); p.textContent = l; if (typeof l === 'string' && (l.startsWith('Manual contract rejected:') || l.startsWith('Unverified tokens excluded:'))) p.className = 'out-warn'; el.appendChild(p); }
   }
   // ORDEN #1258: Arbitrum (42161) se sirve en /arb/api/ (unsweep-relayer-arb); Base y Ethereum read-only en /api/.
   const CHAIN_IDS = { base: 8453, arbitrum: 42161 };

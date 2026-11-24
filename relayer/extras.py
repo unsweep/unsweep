@@ -99,7 +99,7 @@ def select_extras(estimate, victim, safe, extras, n_listed, listed_fee_usd, base
                   limit=EXTRA_GAS_LIMIT, max_extras=MAX_EXTRAS):
     """Devuelve (seleccionados, motivo). seleccionados lleva 'gas' por extra."""
     if not n_listed or not extras:
-        return [], ('sin tokens listados: extras no disponibles' if extras else None)
+        return [], ('no listed tokens: extras unavailable' if extras else None)
     ok = []
     for ex in extras:
         if len(ok) >= max_extras:
@@ -108,11 +108,11 @@ def select_extras(estimate, victim, safe, extras, n_listed, listed_fee_usd, base
         if g is not None:
             ok.append({**ex, 'gas': g})
     if not ok:
-        return [], 'ningun extra paso la simulacion'
+        return [], 'no extra token passed simulation'
     total_gas = int(base_gas) + sum(e['gas'] for e in ok)
     gas_usd = total_gas * int(gas_price_wei) / 1e18 * float(eth_usd)
     if float(listed_fee_usd) < gas_usd:
-        return [], 'la comision de los listados no cubre el gas con extras'
+        return [], 'listed token fee does not cover gas with extras'
     return ok, None
 
 

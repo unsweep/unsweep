@@ -44,17 +44,17 @@ def test_parse_1_y_3():
     assert MAN.parse_contracts(' '.join(A[:3])) == A[:3]
 
 def test_parse_4_rechaza():
-    with pytest.raises(MAN.ManualInputError, match='maximo 3'):
+    with pytest.raises(MAN.ManualInputError, match='maximum 3'):
         MAN.parse_contracts(A[:4])
 
 def test_parse_invalida_y_checksum():
-    with pytest.raises(MAN.ManualInputError, match='formato'):
+    with pytest.raises(MAN.ManualInputError, match='format'):
         MAN.parse_contracts(['0x1234'])
     with pytest.raises(MAN.ManualInputError, match='checksum'):
         MAN.parse_contracts([A[0].lower().replace('0x', '0x', 1) if A[0] != A[0].lower() else '0x' + 'aB' * 20])
 
 def test_parse_duplicados():
-    with pytest.raises(MAN.ManualInputError, match='repetida'):
+    with pytest.raises(MAN.ManualInputError, match='duplicate'):
         MAN.parse_contracts([A[0], A[0]])
 
 
@@ -64,8 +64,8 @@ def test_probe_ok_value_usd_0():
     assert why is None and e['value_usd'] == 0 and e['unverified'] and e['symbol'] == 'BRETT' and e['decimals'] == 18
 
 @pytest.mark.parametrize('kw,frag', [({'fail': ('sym',)}, 'symbol'), ({'sym': ''}, 'symbol'),
-                                     ({'fail': ('dec',)}, 'decimals'), ({'bal': 0}, 'saldo 0'),
-                                     ({'code': '0x'}, 'sin codigo'), ({'fail': ('code',)}, 'rpc')])
+                                     ({'fail': ('dec',)}, 'decimals'), ({'bal': 0}, 'zero balance'),
+                                     ({'code': '0x'}, 'no contract code'), ({'fail': ('code',)}, 'RPC')])
 def test_probe_rechazos(kw, frag):
     e, why = MAN.probe(fake_rpc(**kw), HOLDER, A[0])
     assert e is None and frag in why
@@ -73,7 +73,7 @@ def test_probe_rechazos(kw, frag):
 def test_resolve_token_listado_rechazado():
     acc, rej = MAN.resolve(fake_rpc(), HOLDER, [LISTED, A[0]], {LISTED})
     assert [e['address'] for e in acc] == [A[0]]
-    assert rej == [{'address': LISTED, 'reason': 'duplicado de la lista verificada'}]
+    assert rej == [{'address': LISTED, 'reason': 'already in verified token list'}]
 
 def test_add_manual_sin_valor_listado():
     s = {'address': HOLDER, 'tokens': [], 'extras': []}
@@ -136,7 +136,7 @@ def test_endpoint_sin_valor_listado_400(client):
     c, st = client
     st['listed_value'] = False
     r = _post(c, A[:1])
-    assert r.status_code == 400 and 'token listado' in r.text
+    assert r.status_code == 400 and 'listed token' in r.text
 
 def test_endpoint_rate_limit_igual_que_scan():
     import inspect, service
