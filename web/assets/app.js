@@ -18,9 +18,18 @@
     if (!r.ok) throw new Error((j && j.detail) ? String(j.detail) : ('HTTP ' + r.status));
     return j;
   }
+  // #1690: extras block and support hint live inside the scan result box (#scanOut); show() wipes it, so keep refs and re-attach
+  const EXTRAS_BOX = $('extrasBox'), SUPPORT_HINT = $('supportHint');
+  // #1690 (2): hint only when the scan returns no listed token with balance and nothing rescuable
+  function supportVisible(s) { return !!s && !s.rescuable && !((s.tokens || []).some((t) => { try { return BigInt(t.balance || 0) > 0n; } catch (e) { return false; } })); }
+  function attachResultExtras(s) {
+    const outEl = $('scanOut'); if (!outEl) return;
+    if (EXTRAS_BOX) outEl.appendChild(EXTRAS_BOX);
+    if (SUPPORT_HINT) { SUPPORT_HINT.hidden = !supportVisible(s); outEl.appendChild(SUPPORT_HINT); }
+  }
   // #985: unverified extras, unchecked by default; names rendered as text only
   function renderExtras(list) {
-    const box = $('extrasBox'), ul = $('extrasList'); if (!box || !ul) return;
+    const box = EXTRAS_BOX, ul = $('extrasList'); if (!box || !ul) return;
     ul.textContent = '';
     for (const x of list.slice(0, 20)) {
       const a = addr(x.address); if (!a) continue;
@@ -101,6 +110,7 @@
       for (const n of s.nfts) out.push('NFT ' + (n.symbol || n.address) + ' #' + n.id);
       for (const ap of (s.approvals || [])) out.push('Live approval: ' + ap.token + ' -> ' + ap.spender + ' (revoke recommended)');
       show($('scanOut'), out, 'ok');
+      attachResultExtras(s);
       renderExtras(s.extras || []);
       if (s.rescuable) $('btnToStep2').hidden = false;
     } catch (e) { show($('scanOut'), 'Scan failed: ' + e.message, 'err'); }
