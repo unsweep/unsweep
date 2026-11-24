@@ -335,12 +335,19 @@ ERC20_META = [{'name': 'decimals', 'type': 'function', 'stateMutability': 'view'
 
 def scan_extras(addr):
     """#985: ERC-20 fuera de assets -> unverified, value_usd 0. Fail-soft: cualquier error -> []."""
+    pages = [0]
+
+    def _rpc_counted(method, params):
+        pages[0] += 1
+        return _extras_rpc(method, params)
+    t0 = time.monotonic()
     try:
         allowed = O.allowlist(assets())
-        exs = EX.discover_extras(_extras_rpc, addr, allowed)
+        exs = EX.discover_extras(_rpc_counted, addr, allowed)
     except Exception as e:
         log.warning('extras no disponibles: %s', _extras_reason(e))
         return []
+    log.info('extras chain=%s n_extras=%d pages=%d ms=%d', CHAIN_ID, len(exs), pages[0], int((time.monotonic() - t0) * 1000))
     for e in exs[:50]:
         c = w3.eth.contract(address=e['address'], abi=ERC20_META)
         try:
