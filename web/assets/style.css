@@ -63,3 +63,12 @@ button:disabled{opacity:.7;cursor:progress}
 #pkConfirmRow input[type=checkbox]{width:auto;min-width:0;flex:0 0 auto;padding:0;margin:3px 0 0;border:0;background:none}
 #scanOut #extrasBox,#scanOut #supportHint{white-space:normal;margin-top:10px;padding-top:8px;border-top:1px solid #30363d}
 .extrasTitle{margin:0 0 4px;font-size:.95em}
+.extrasNote{margin:6px 0 0;font-size:.78rem;color:#8b949e;font-weight:400}
+details.manual{margin:10px 0;padding:8px 12px;border:1px solid #30363d;border-radius:6px;background:#111823}
+details.manual[hidden]{display:none}
+details.manual summary{cursor:pointer;color:#79c0ff;font-weight:600}
+details.manual .field{margin-top:8px}
+details.manual label{display:block;margin-bottom:4px}
+#manualContracts{display:block;width:100%;min-width:0;font:inherit;font-size:.95rem;padding:10px 12px;border:1px solid #4a5868;border-radius:6px;background:#0b0f14;color:#e6edf3;resize:vertical;color-scheme:dark}
+#manualContracts::placeholder{color:#93a3b3;opacity:1}
+#manualContracts:focus-visible{outline:2px solid #79c0ff;outline-offset:2px}

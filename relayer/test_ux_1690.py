@@ -16,10 +16,10 @@ HINT = "Don't see your token? Email"
 
 def test_index_extras_titulo_advertencia_y_hint():
     i_box = INDEX.index('id="extrasBox" hidden')
-    i_title = INDEX.index("Additional tokens detected - optional")
+    i_title = INDEX.index("Additional tokens detected (optional)")
     i_warn = INDEX.index('id="extrasWarn"')
     i_list = INDEX.index('id="extrasList"')
-    assert i_box < i_title < i_warn < i_list
+    assert i_box < i_title < i_list < i_warn  # #1736: aviso debajo de la lista
     assert "Unverified tokens, no guarantee, may include scam tokens" in INDEX
     assert INDEX.count(HINT) == 1
     assert 'id="supportHint" class="small" hidden' in INDEX

@@ -43,8 +43,23 @@
   }
   // #1690 (3): manual ERC-20 contracts (max 3), only if Step 1 found a listed token with value; unchecked by default
   function listedValueUsd(s) { let v = 0; for (const t of (s && s.tokens) || []) { const x = Number(t.balance) / Math.pow(10, Number(t.decimals || 18)) * Number(t.price_usd || 0); if (isFinite(x)) v += x; } return v; }
-  function renderManual(s) { const b = $('manualBox'); if (!b) return; const ok = listedValueUsd(s) > 0; b.hidden = !ok; $('manualCb').checked = false; if (!ok) $('manualContracts').value = ''; }
-  function manualContracts() { const b = $('manualBox'); if (!b || b.hidden || !$('manualCb').checked) return []; return $('manualContracts').value.split(/[\s,;]+/).map((x) => x.trim()).filter(Boolean); }
+  function renderManual(s) { const b = $('manualBox'); if (!b) return; const ok = listedValueUsd(s) > 0; b.hidden = !ok; if (!ok) { $('manualContracts').value = ''; b.open = false; } }
+  // @@manual-begin #1736: valid manual contracts (1-3) included automatically; empty -> none; >3 or invalid -> error, never silent
+  function parseManualInput(text, norm) {
+    const raw = String(text || '').split(/[\s,;]+/).map((x) => x.trim()).filter(Boolean);
+    if (!raw.length) return { list: [], error: null };
+    if (raw.length > 3) return { list: [], error: 'At most 3 manual contracts (' + raw.length + ' entered). Nothing was simulated.' };
+    const out = [];
+    for (let i = 0; i < raw.length; i++) {
+      const a = /^0x[0-9a-fA-F]{40}$/.test(raw[i]) ? norm(raw[i]) : null;
+      if (!a) return { list: [], error: 'Invalid contract address in the manual list (entry ' + (i + 1) + '). Nothing was simulated.' };
+      if (out.indexOf(a) >= 0) return { list: [], error: 'Duplicate contract address in the manual list (entry ' + (i + 1) + '). Nothing was simulated.' };
+      out.push(a);
+    }
+    return { list: out, error: null };
+  }
+  // @@manual-end
+  function manualContracts() { const b = $('manualBox'); if (!b || b.hidden) return { list: [], error: null }; return parseManualInput($('manualContracts').value, addr); }
   function checkedExtras() { return Array.from(document.querySelectorAll('#extrasList .extraCb')).filter((c) => c.checked).map((c) => c.value); }
   function addr(v) { try { return E.getAddress(String(v).trim()); } catch (e) { return null; } }
   function fmt(amount, dec) { try { return E.formatUnits(BigInt(amount), Number(dec)); } catch (e) { return String(amount); } }
@@ -146,8 +161,8 @@
     show($('quoteOut'), 'Simulating...');
     $('step3').hidden = true; $('btnToStep3').hidden = true;
     try {
-      const man = manualContracts(); st.manual = man;
-      if (man.length > 3) return show($('quoteOut'), 'At most 3 manual contracts.', 'err');
+      const mp = manualContracts(); if (mp.error) { st.manual = []; return show($('quoteOut'), mp.error, 'err'); }
+      const man = mp.list; st.manual = man;
       const r = man.length ? await api('quote_manual', { address: st.scan.address, safe: safe, extras: checkedExtras(), manual: man })
         : await api('quote', { address: st.scan.address, safe: safe, extras: checkedExtras() });
       if (r.manual && r.manual.rejected && r.manual.rejected.length) st.manualRejected = r.manual.rejected;

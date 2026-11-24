@@ -6,10 +6,10 @@ JS = open(os.path.join(W, 'assets', 'app.js')).read()
 
 
 def test_manualbox_oculto_y_checkbox_desmarcado():
-    assert re.search(r'<div id="manualBox" hidden>', IDX)
-    cb = re.search(r'<input type="checkbox" id="manualCb"[^>]*>', IDX).group(0)
-    assert 'checked' not in cb
-    assert IDX.index('id="step2Body"') < IDX.index('id="manualBox"') < IDX.index('id="btnQuote"')
+    # #1736: details secundario fuera del recuadro, sin checkbox (autoinclusion)
+    assert re.search(r'<details id="manualBox" class="manual" hidden>', IDX)
+    assert 'manualCb' not in IDX
+    assert IDX.index('id="step2Body"') < IDX.index('id="btnQuote"') < IDX.index('id="manualBox"')
 
 
 def test_misma_advertencia_no_verificado():
@@ -19,7 +19,7 @@ def test_misma_advertencia_no_verificado():
 
 
 def test_js_visibilidad_y_endpoint():
-    assert 'listedValueUsd(s) > 0' in JS and "$('manualCb').checked = false" in JS
+    assert 'listedValueUsd(s) > 0' in JS and 'manualCb' not in JS
     assert "api('quote_manual'" in JS and 'renderManual(s);' in JS
     # manual no forma parte del mensaje EIP-712 firmado
     assert JS.index('unsweepTyped(E, rescue') < JS.index('{ manual: st.manual }')
