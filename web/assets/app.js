@@ -198,6 +198,7 @@
   }
 
   // ---------- STEP 3: local signing ----------
+  function clearKey() { const el = $('pk'); if (el) el.value = ''; }
   function readKey() {
     const el = $('pk'); const raw = String(el.value || '').trim();
     el.value = ''; // the key never stays in the DOM
@@ -233,10 +234,10 @@
   }
   $('btnRescue').addEventListener('click', async () => {
     const out = $('rescueOut');
-    if (!st.quote || !st.safe) return show(out, 'Run steps 1 and 2 first.', 'err');
+    if (!st.quote || !st.safe) { clearKey(); return show(out, 'Run steps 1 and 2 first.', 'err'); }
     const pkConf = $('pkConfirm');
-    if (pkConf && !pkConf.checked) return show(out, 'Please confirm the compromised wallet key and local browser signing first.', 'err');
-    if (!st.tsToken) return show(out, 'Please complete the anti-bot check.', 'err');
+    if (pkConf && !pkConf.checked) { clearKey(); return show(out, 'Please confirm the compromised wallet key and local browser signing first.', 'err'); }
+    if (!st.tsToken) { clearKey(); return show(out, 'Please complete the anti-bot check.', 'err'); }
     let w = null;
     let out4 = out;
     try {
@@ -296,6 +297,7 @@
   function goStep(n) {
     n = Number(n);
     if (!Number.isInteger(n) || n < 1 || n > MAX_STEP) throw new RangeError('goStep: step out of range 1-' + MAX_STEP);
+    if (n < 4) { const pk = $('pk'); if (pk) pk.value = ''; }
     for (let i = 1; i <= MAX_STEP; i++) {
       const sec = $('step' + i), body = $('step' + i + 'Body'), done = $('step' + i + 'Done');
       if (sec) sec.hidden = i > n;
@@ -327,4 +329,6 @@
     const i = $('pk'), t = $('pkToggle'), vis = i.type === 'password';
     i.type = vis ? 'text' : 'password'; t.textContent = vis ? 'Hide' : 'Show'; t.setAttribute('aria-pressed', vis ? 'true' : 'false');
   });
+  window.addEventListener('pagehide', clearKey);
+  window.addEventListener('beforeunload', clearKey);
 })();

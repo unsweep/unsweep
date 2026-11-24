@@ -45,6 +45,8 @@ def rescue_tuple(safe, calls, tokens, nfts, max_fee_bps, min_fees, nonce, deadli
         raise ValueError("maxFeeBps fuera de (0, 1500]")
     if min_fees and len(min_fees) != len(tokens):
         raise ValueError("minFees debe estar vacio o tener la misma longitud que tokens")
+    if any(int(x) < 0 for x in min_fees):
+        raise ValueError("minFees no puede contener valores negativos")
     return (to_checksum_address(safe),
             [(to_checksum_address(t), int(v), bytes(d)) for t, v, d in calls],
             [to_checksum_address(t) for t in tokens],

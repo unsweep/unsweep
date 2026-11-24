@@ -231,6 +231,11 @@ async def api_rescue(req: Request):
             raise PolicyError(qd['policy_reason'] or 'rechazado por politica')
         if rescue_t[4] > qd['maxFeeBps']:
             raise PolicyError('maxFeeBps firmado superior al cotizado')
+        if rescue_t[5]:
+            q_min = {_cs(l['token']): int(l.get('minFee', 0)) for l in qd.get('lines', [])}
+            for tok, mf in zip(rescue_t[2], rescue_t[5]):
+                if mf < 0 or mf > q_min.get(_cs(tok), 0):
+                    raise PolicyError('minFee firmado superior al cotizado')
         high = CHAIN_ID in P.MAINNETS and P.needs_extra_checks(q.rescued_usd)
         split = None
         if high:  # #927(c): datos para la resimulacion exacta SAFE/fee
