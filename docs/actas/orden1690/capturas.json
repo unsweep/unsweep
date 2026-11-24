@@ -1,0 +1,50 @@
+[
+ {
+  "extrasVisible": true,
+  "extrasInScanOut": true,
+  "extrasCount": 20,
+  "extrasTitle": "Additional tokens detected - optional",
+  "supportVisible": false,
+  "supportText": "Don't see your token? Email support@unsweep.com",
+  "step2Btn": true,
+  "case": "con_valor",
+  "width": 375,
+  "file": "step1_con_valor_375.png"
+ },
+ {
+  "extrasVisible": true,
+  "extrasInScanOut": true,
+  "extrasCount": 20,
+  "extrasTitle": "Additional tokens detected - optional",
+  "supportVisible": false,
+  "supportText": "Don't see your token? Email support@unsweep.com",
+  "step2Btn": true,
+  "case": "con_valor",
+  "width": 1280,
+  "file": "step1_con_valor_1280.png"
+ },
+ {
+  "extrasVisible": false,
+  "extrasInScanOut": true,
+  "extrasCount": 0,
+  "extrasTitle": "Additional tokens detected - optional",
+  "supportVisible": true,
+  "supportText": "Don't see your token? Email support@unsweep.com",
+  "step2Btn": false,
+  "case": "sin_valor",
+  "width": 375,
+  "file": "step1_sin_valor_375.png"
+ },
+ {
+  "extrasVisible": false,
+  "extrasInScanOut": true,
+  "extrasCount": 0,
+  "extrasTitle": "Additional tokens detected - optional",
+  "supportVisible": true,
+  "supportText": "Don't see your token? Email support@unsweep.com",
+  "step2Btn": false,
+  "case": "sin_valor",
+  "width": 1280,
+  "file": "step1_sin_valor_1280.png"
+ }
+]
