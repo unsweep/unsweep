@@ -1,0 +1,142 @@
+{
+ "chainId": 8453,
+ "rpc": "https://mainnet.base.org (publico)",
+ "block": 61448328,
+ "holder": "0xBA3F945812a83471d709BCe9C3CA699A19FB46f7",
+ "manual_contract": "0x532f27101965dd16442E59d40670FaF5eBB142E4",
+ "manual_en_allowlist": false,
+ "listed": [
+  [
+   "WETH",
+   "300858423195219570882"
+  ]
+ ],
+ "listed_value_usd": 513742.78,
+ "manual_enabled": [
+  true,
+  null
+ ],
+ "accepted": [
+  {
+   "address": "0x532f27101965dd16442E59d40670FaF5eBB142E4",
+   "balance": "87496368334419946970996099",
+   "decimals": 18,
+   "symbol": "BRETT",
+   "unverified": true,
+   "value_usd": 0,
+   "price_usd": 0,
+   "manual": true
+  }
+ ],
+ "rejected": [],
+ "quote": {
+  "feeBps": 500,
+  "policy_ok": true,
+  "policy_reason": null,
+  "rescued_usd": 513742.779,
+  "fee_usd": 25687.1389,
+  "manual_line": [
+   {
+    "token": "0x532f27101965dd16442E59d40670FaF5eBB142E4",
+    "symbol": "BRETT",
+    "decimals": 18,
+    "amount": "87496368334419946970996099",
+    "fee": "4374818416720997348549804",
+    "net": "83121549917698949622446295",
+    "unverified": true
+   }
+  ]
+ },
+ "gas_extra": 56429,
+ "gas_limit": 120000,
+ "gas_limit_1000": null,
+ "gas_total_usd": 0.015946453842580192,
+ "listed_fee_usd": 25687.1389,
+ "gas_cubierto": true,
+ "checks": {
+  "unverified": true,
+  "value_usd_0": true,
+  "fee_bps_500": true,
+  "gas_limite": true,
+  "gas_cubierto": true
+ },
+ "rechazos": [
+  {
+   "caso": "0 contratos",
+   "resultado": "HTTP 400 indica entre 1 y 3 contratos",
+   "ok": true
+  },
+  {
+   "caso": "4 contratos",
+   "resultado": "HTTP 400 maximo 3 contratos",
+   "ok": true
+  },
+  {
+   "caso": "direccion invalida",
+   "resultado": "HTTP 400 direccion con formato invalido: 0x1234",
+   "ok": true
+  },
+  {
+   "caso": "checksum invalido",
+   "resultado": "HTTP 400 checksum EIP-55 invalido: 0x532f27101965dd16442e59d40670faf5ebb142e4",
+   "ok": true
+  },
+  {
+   "caso": "contrato sin decimals (Aerodrome PoolFactory)",
+   "resultado": [
+    {
+     "address": "0x420DD381b31aEf6683db6B902084cB0FFECe40Da",
+     "reason": "no es ERC-20 (balanceOf/decimals no responde)"
+    }
+   ],
+   "ok": true
+  },
+  {
+   "caso": "direccion sin codigo",
+   "resultado": [
+    {
+     "address": "0x0000000000000000000000000000000000000001",
+     "reason": "sin codigo en esa direccion"
+    }
+   ],
+   "ok": true
+  },
+  {
+   "caso": "token ya listado",
+   "resultado": [
+    {
+     "address": "0x4200000000000000000000000000000000000006",
+     "reason": "duplicado de la lista verificada"
+    }
+   ],
+   "ok": true
+  },
+  {
+   "caso": "ya detectado por discover_extras",
+   "resultado": [
+    {
+     "address": "0x532f27101965dd16442E59d40670FaF5eBB142E4",
+     "reason": "ya detectado en extras: seleccionalo en Step 1"
+    }
+   ],
+   "ok": true
+  },
+  {
+   "caso": "sin token listado con valor",
+   "resultado": {
+    "manual_enabled": [
+     false,
+     "requiere al menos un token listado con valor en Step 1"
+    ],
+    "rejected": [
+     {
+      "address": "0x532f27101965dd16442E59d40670FaF5eBB142E4",
+      "reason": "requiere al menos un token listado con valor en Step 1"
+     }
+    ]
+   },
+   "ok": true
+  }
+ ],
+ "todo_ok": true
+}
