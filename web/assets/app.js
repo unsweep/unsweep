@@ -313,10 +313,13 @@
     const s = $('step' + n); if (s && s.scrollIntoView) s.scrollIntoView({ block: 'start', behavior: 'smooth' });
   }
   // #2209: explicit list of legitimate EIP-7702 delegates (compared case-insensitively).
-  // Coinbase, Safe, Ambire and OKX delegates: NO_DISPONIBLE (not researched; no addresses invented).
+  // #2211: additional delegates verified against official project sources. Compared case-insensitively.
   const KNOWN_7702_DELEGATES = [
     { address: '0x63c0c19a282a1B52b07dD5a65b58948A07DAE32B', name: 'MetaMask Smart Account (EIP7702StatelessDeleGator)' },
-    { address: '0x38bcF425bC4d13624734e09376F2fafc799fA8c8', name: 'UNSWEEP UnsweepDelegate' }
+    { address: '0x38bcF425bC4d13624734e09376F2fafc799fA8c8', name: 'UNSWEEP UnsweepDelegate' },
+    { address: '0x7702cb554e6bFb442cb743A7dF23154544a7176C', name: 'Coinbase Smart Wallet (EIP7702Proxy)' },
+    { address: '0x5A7FC11397E9a8AD41BF10bf13F22B0a63f96f6d', name: 'Ambire Wallet (EIP-7702 Ambire Account)' },
+    { address: '0x69007702764179f14F51cdce752f4f775d74E139', name: 'Alchemy Modular Account v2 (SemiModularAccount7702)' }
   ];
   // #2209: shared 3-state delegation notice for #scanOut (Ethereum read-only and Base/Arbitrum flows).
   // Returns null when there is no delegation so callers keep the neutral message.
