@@ -4,7 +4,7 @@
 <body>
 <main>
 <h1>UNSWEEP</h1>
-<p class="intro">Is your wallet still being drained? Check for hidden wallet delegations (EIP-7702) and see which tokens can still be rescued — free, read-only, no private key required.</p>
+<p class="intro">Is your wallet still being drained?<br>Detect suspicious wallet delegations and rescue recoverable assets before they disappear.</p>
 <!--gen:top-->
 <p class="notice" id="mainnetNotice"><span id="capLine">Security notice: We will never DM you first or ask for your seed phrase.</span></p>
 <!--/gen:top-->
@@ -23,7 +23,7 @@
 </select>
 </div>
 <div class="field wide">
-<label for="victim">Public wallet address (no private key needed)</label>
+<label for="victim">Wallet address</label>
 <input id="victim" type="text" placeholder="0x... your wallet address" autocomplete="off" spellcheck="false">
 </div>
 <button id="btnScan" class="primary">Check My Wallet</button>
@@ -62,6 +62,10 @@
 </details>
 <div id="quoteOut" class="out">
 </div>
+<!--gen:cap-->
+<p class="small muted" id="capNote">*Eligibility limit per rescue, not a guarantee of recovery. Rescues above $10,000 get automatic extra safety checks (a few seconds more).</p>
+<p class="small muted" id="daggerNote">†Verified tokens: 16 on Base, 12 on Arbitrum. Other ERC-20 tokens in your wallet are detected automatically during the scan so you can select them to attempt rescue (unverified, no guarantee).</p>
+<!--/gen:cap-->
 <button id="btnToStep3" class="primary next" type="button" hidden>Continue to Rescue &rarr;</button>
 </div>
 </section>
@@ -110,10 +114,6 @@
 </section>
 
 <section id="notes" class="notes">
-<!--gen:cap-->
-<p class="small muted" id="capNote">*Eligibility limit per rescue, not a guarantee of recovery. Rescues above $10,000 get automatic extra safety checks (a few seconds more).</p>
-<p class="small muted" id="daggerNote">†Verified tokens: 16 on Base, 12 on Arbitrum. Other ERC-20 tokens in your wallet are detected automatically during the scan so you can select them to attempt rescue (unverified, no guarantee).</p>
-<!--/gen:cap-->
 <details class="info">
 <summary>What does this check?</summary>
 <p class="small">The mainnet check shows: EIP-7702 delegation and its target contract, nonce, native balance, main ERC-20 balances and ERC-20 approvals granted by direct transactions in the last 90 days that are still open. It cannot see approvals granted by off-chain signatures (permits). Results are cached for 10 minutes.</p>

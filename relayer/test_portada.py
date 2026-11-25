@@ -46,8 +46,8 @@ def test_nota_asterisco_bajo_formulario():
             'safety checks (a few seconds more).</p>')
     assert INDEX.count(nota) == 1 and INDEX.count('id="capNote"') == 1
     body = INDEX.split("<body>", 1)[1]
-    # #1194: notas fuera del flujo, debajo de la tarjeta (tras step3, antes de FAQ)
-    assert body.index('id="step3"') < body.index('id="notes"') < body.index('id="capNote"') < body.index('id="faq"')
+    # #2186: notas dentro de #step2 (no en #step1 ni en #notes)
+    assert body.index('id="step2"') < body.index('id="capNote"') < body.index('id="daggerNote"') < body.index('id="step3"')
     assert "10,000 USD get" not in INDEX and "up to $10,000 per rescue" not in INDEX
 
 
@@ -83,7 +83,8 @@ def test_tokens_plegables_desde_assets():
 def test_orden1258_arbitrum():
     # subtitulo literal
     intro = re.search(r'<p class="intro">(.*?)</p>', INDEX, re.S).group(1)
-    assert _texto(intro) == "Rescue tokens left in a hacked wallet, even if a sweeper bot drains every deposit. When every second matters."
+    assert intro == "Is your wallet still being drained?<br>Detect suspicious wallet delegations and rescue recoverable assets before they disappear."  # #2186
+    assert "EIP-7702" not in intro and "private key" not in intro
     # gen:top: Base y Arbitrum operativos, Ethereum solo lectura
     top = INDEX.split("<!--gen:top-->", 1)[1].split("<!--/gen:top-->", 1)[0]
     assert 'id="ethNote"' not in INDEX
