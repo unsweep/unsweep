@@ -12,6 +12,11 @@
     if (c === 'ethereum' || c === 'eth') return 'https://etherscan.io/address/' + address + '#code';
     return null;
   }
+  function recLine(delegate) {
+    const known = delegate && KNOWN_7702_DELEGATES.some((x) => x.address.toLowerCase() === String(delegate).toLowerCase());
+    if (delegate && !known) return 'Recommended: create a new wallet on a clean device and stop using this one.';
+    return 'If funds are disappearing or you suspect a leaked key, create a new wallet on a clean device and stop using this one.';
+  }
   function delegateLine(chain, prefix, delegate) {
     const href = explorerAddressUrl(chain, delegate);
     if (!href) return prefix + String(delegate || 'none');
@@ -127,7 +132,7 @@
         if (d.active === true) out.push.apply(out, delegationNotice(d.delegate) || ['EIP-7702 delegation reported as active but no delegate address was returned.']);
         else if (d.active === false && complete) out.push('No EIP-7702 delegation found. This does NOT rule out a classic sweeper bot or a leaked private key.');
         else out.push('Delegation check incomplete — this is NOT a clean result.');
-        out.push('Recommended: create a new wallet on a clean device and stop using this one.', '');
+        out.push(recLine(d.active === true ? d.delegate : null), '');
         const toks = m.tokens || [];
         if (toks.length === 0 && complete) out.push('No ERC-20 balances found.');
         for (const t of toks) out.push('Token ' + (t.symbol || t.contract || t.address || t.token) + ': ' + (t.balanceFmt || fmt(t.balance || t.balanceRaw || '0', t.decimals == null ? 18 : t.decimals)));
@@ -165,7 +170,7 @@
       const out = ['Address: ' + s.address, 'ETH: ' + E.formatEther(BigInt(s.eth_wei)), 'Nonce: ' + s.nonce, '',
         s.delegation7702 ? delegateLine(chain, 'EIP-7702 delegation: ', s.delegation7702) : 'EIP-7702 delegation: none'];
       out.push.apply(out, delegationNotice(s.delegation7702) || ['No EIP-7702 delegation found. This does NOT rule out a classic sweeper bot or a leaked private key.']);
-      out.push('Recommended: create a new wallet on a clean device and stop using this one.', '');
+      out.push(recLine(s.delegation7702), '');
       if (s.tokens.length === 0 && s.nfts.length === 0) out.push('No rescuable tokens found in our list.');
       for (const t of s.tokens) out.push('Token ' + (t.symbol || t.address) + ': ' + fmt(t.balance, t.decimals));
       for (const n of s.nfts) out.push('NFT ' + (n.symbol || n.address) + ' #' + n.id);
