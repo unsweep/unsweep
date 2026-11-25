@@ -73,3 +73,7 @@ details.manual label{display:block;margin-bottom:4px}
 #manualContracts::placeholder{color:#93a3b3;opacity:1}
 #manualContracts:focus-visible{outline:2px solid #79c0ff;outline-offset:2px}
 .out .out-warn{color:#f2cc60;font-weight:600;border-left:3px solid #d29922;padding-left:8px;margin:4px 0}
+.out>div{line-height:1.5;margin:2px 0}
+.out .out-sep{height:1px;background:#212936;margin:10px 0}
+.out .out-rec{color:#9da7b3;font-size:.92rem;margin-top:6px}
+.out a{word-break:break-all}

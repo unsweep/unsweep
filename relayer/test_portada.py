@@ -83,7 +83,7 @@ def test_tokens_plegables_desde_assets():
 def test_orden1258_arbitrum():
     # subtitulo literal
     intro = re.search(r'<p class="intro">(.*?)</p>', INDEX, re.S).group(1)
-    assert intro == "Is your wallet still being drained?<br>Detect suspicious wallet delegations and rescue recoverable assets before they disappear."  # #2186
+    assert intro == "Is your wallet being drained?<br>Detect suspicious delegations and rescue your tokens before they disappear."  # 2b34c6b
     assert "EIP-7702" not in intro and "private key" not in intro
     # gen:top: Base y Arbitrum operativos, Ethereum solo lectura
     top = INDEX.split("<!--gen:top-->", 1)[1].split("<!--/gen:top-->", 1)[0]

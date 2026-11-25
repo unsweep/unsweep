@@ -4,10 +4,44 @@
   const $ = (id) => document.getElementById(id);
   const st = { cfg: null, scan: null, quote: null, safe: null, tsToken: null, tsLoaded: false };
 
+  function explorerAddressUrl(chain, address) {
+    if (!/^0x[0-9a-fA-F]{40}$/.test(String(address || ''))) return null;
+    const c = String(chain || '').toLowerCase();
+    if (c === 'base') return 'https://basescan.org/address/' + address + '#code';
+    if (c === 'arbitrum') return 'https://arbiscan.io/address/' + address + '#code';
+    if (c === 'ethereum' || c === 'eth') return 'https://etherscan.io/address/' + address + '#code';
+    return null;
+  }
+  function delegateLine(chain, prefix, delegate) {
+    const href = explorerAddressUrl(chain, delegate);
+    if (!href) return prefix + String(delegate || 'none');
+    return { prefix: prefix, linkText: String(delegate), href: href, title: 'View contract code on block explorer' };
+  }
   function show(el, lines, cls) {
     el.textContent = '';
     el.className = 'out' + (cls ? ' ' + cls : '');
-    for (const l of [].concat(lines)) { const p = document.createElement('div'); p.textContent = l; if (typeof l === 'string' && (l.startsWith('Manual contract rejected:') || l.startsWith('Unverified tokens excluded:'))) p.className = 'out-warn'; el.appendChild(p); }
+    for (const l of [].concat(lines)) {
+      const p = document.createElement('div');
+      if (l === '') { p.className = 'out-sep'; el.appendChild(p); continue; }
+      if (l && typeof l === 'object') {
+        if (l.cls) p.className = l.cls;
+        if (l.prefix) p.appendChild(document.createTextNode(l.prefix));
+        if (l.href && l.linkText) {
+          const a = document.createElement('a');
+          a.href = l.href; a.target = '_blank'; a.rel = 'noopener noreferrer';
+          if (l.title) a.title = l.title;
+          a.textContent = l.linkText;
+          p.appendChild(a);
+        }
+        if (l.suffix) p.appendChild(document.createTextNode(l.suffix));
+        else if (l.text) p.textContent = l.text;
+      } else {
+        p.textContent = l;
+        if (typeof l === 'string' && (l.startsWith('Manual contract rejected:') || l.startsWith('Unverified tokens excluded:'))) p.className = 'out-warn';
+        else if (typeof l === 'string' && l.startsWith('Recommended:')) p.className = 'out-rec';
+      }
+      el.appendChild(p);
+    }
   }
   // ORDEN #1258: Arbitrum (42161) se sirve en /arb/api/ (unsweep-relayer-arb); Base y Ethereum read-only en /api/.
   const CHAIN_IDS = { base: 8453, arbitrum: 42161 };
@@ -85,13 +119,15 @@
           for (const r of (m.incompleteReasons || ['the server did not confirm that every query finished'])) out.push('Reason: ' + r);
           out.push('Some data could not be verified. Try again in a minute; do not assume this wallet is safe.');
         }
-        out.push('Network: ' + chain + ' mainnet (read-only, nothing was signed)', 'Address: ' + a, 'Nonce: ' + m.nonce,
-          'EIP-7702 delegation: ' + (d.active ? ('ACTIVE -> ' + d.delegate) : (d.active === false ? 'none' : 'unknown (check failed)')),
-          (nat.symbol || 'ETH') + ': ' + (nat.balanceWei == null ? 'unknown' : fmt(nat.balanceWei, 18)));
+        out.push('Network: ' + chain + ' mainnet (read-only, nothing was signed)', 'Address: ' + a,
+          (nat.symbol || 'ETH') + ': ' + (nat.balanceWei == null ? 'unknown' : fmt(nat.balanceWei, 18)),
+          'Nonce: ' + m.nonce, '');
+        if (d.active) out.push(delegateLine(chain, 'EIP-7702 delegation: ACTIVE -> ', d.delegate));
+        else out.push('EIP-7702 delegation: ' + (d.active === false ? 'none' : 'unknown (check failed)'));
         if (d.active === true) out.push.apply(out, delegationNotice(d.delegate) || ['EIP-7702 delegation reported as active but no delegate address was returned.']);
         else if (d.active === false && complete) out.push('No EIP-7702 delegation found. This does NOT rule out a classic sweeper bot or a leaked private key.');
         else out.push('Delegation check incomplete — this is NOT a clean result.');
-        out.push('Recommended: create a new wallet on a clean device and stop using this one.');
+        out.push('Recommended: create a new wallet on a clean device and stop using this one.', '');
         const toks = m.tokens || [];
         if (toks.length === 0 && complete) out.push('No ERC-20 balances found.');
         for (const t of toks) out.push('Token ' + (t.symbol || t.contract || t.address || t.token) + ': ' + (t.balanceFmt || fmt(t.balance || t.balanceRaw || '0', t.decimals == null ? 18 : t.decimals)));
@@ -126,10 +162,10 @@
       }
       let s; try { s = await api('scan', { address: a }); } finally { scanProg.stop(); }
       st.scan = s;
-      const out = ['Address: ' + s.address, 'ETH: ' + E.formatEther(BigInt(s.eth_wei)), 'Nonce: ' + s.nonce,
-        'EIP-7702 delegation: ' + (s.delegation7702 || 'none')];
+      const out = ['Address: ' + s.address, 'ETH: ' + E.formatEther(BigInt(s.eth_wei)), 'Nonce: ' + s.nonce, '',
+        s.delegation7702 ? delegateLine(chain, 'EIP-7702 delegation: ', s.delegation7702) : 'EIP-7702 delegation: none'];
       out.push.apply(out, delegationNotice(s.delegation7702) || ['No EIP-7702 delegation found. This does NOT rule out a classic sweeper bot or a leaked private key.']);
-      out.push('Recommended: create a new wallet on a clean device and stop using this one.');
+      out.push('Recommended: create a new wallet on a clean device and stop using this one.', '');
       if (s.tokens.length === 0 && s.nfts.length === 0) out.push('No rescuable tokens found in our list.');
       for (const t of s.tokens) out.push('Token ' + (t.symbol || t.address) + ': ' + fmt(t.balance, t.decimals));
       for (const n of s.nfts) out.push('NFT ' + (n.symbol || n.address) + ' #' + n.id);
