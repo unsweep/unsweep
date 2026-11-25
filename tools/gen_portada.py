@@ -84,8 +84,8 @@ def render(html: str) -> str:
                       f'NFTs are not rescued yet.</p></details>')
     html = _replace(html, "tokens", "\n" + "\n".join(blocks) + "\n")
     pairs = faq_pairs(html)
-    if len(pairs) != 11:
-        raise SystemExit(f"gen_portada: se esperaban 11 preguntas FAQ, hay {len(pairs)}")
+    if len(pairs) != 13:
+        raise SystemExit(f"gen_portada: se esperaban 13 preguntas FAQ, hay {len(pairs)}")
     ld = {"@context": "https://schema.org", "@type": "FAQPage",
           "mainEntity": [{"@type": "Question", "name": q,
                           "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in pairs]}

@@ -105,11 +105,11 @@ def test_orden1258_arbitrum():
 
 def test_faq_10_y_jsonld_coherente():
     qs = re.findall(r'<details class="faq"><summary>(.*?)</summary><p>(.*?)</p></details>', INDEX, re.S)
-    assert len(qs) == 11
+    assert len(qs) == 13
     m = re.findall(r'<script type="application/ld\+json" id="faqSchema">(.*?)</script>', INDEX, re.S)
     assert len(m) == 1
     ld = json.loads(m[0])
-    assert ld["@type"] == "FAQPage" and len(ld["mainEntity"]) == 11
+    assert ld["@type"] == "FAQPage" and len(ld["mainEntity"]) == 13
     assert [e["name"] for e in ld["mainEntity"]] == [q for q, _ in qs]
     texto = " ".join(a for _, a in qs)
     for frag in ("15% below 1,000 USD", "10% from 1,000 to 10,000 USD", "5% above 10,000 USD",
