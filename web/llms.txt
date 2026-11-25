@@ -57,3 +57,4 @@ UNSWEEP never contacts anyone by DM, Telegram or Discord. Anyone who contacts yo
 - https://unsweep.com/guides/sweeper-bot-vs-eip-7702-delegation.html
 - https://unsweep.com/guides/how-to-check-if-wallet-has-sweeper-bot.html
 - https://unsweep.com/guides/what-to-do-first-5-minutes-after-wallet-hack.html
+- https://unsweep.com/guides/free-wallet-diagnostic.html
