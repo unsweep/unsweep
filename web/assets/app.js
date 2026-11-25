@@ -86,9 +86,9 @@
           out.push('Some data could not be verified. Try again in a minute; do not assume this wallet is safe.');
         }
         out.push('Network: ' + chain + ' mainnet (read-only, nothing was signed)', 'Address: ' + a, 'Nonce: ' + m.nonce,
-          'EIP-7702 delegation: ' + (d.active ? ('ACTIVE -> ' + d.delegate + ' (verify this contract; an unknown delegate may be a sweeper)') : (d.active === false ? 'none' : 'unknown (check failed)')),
+          'EIP-7702 delegation: ' + (d.active ? ('ACTIVE -> ' + d.delegate) : (d.active === false ? 'none' : 'unknown (check failed)')),
           (nat.symbol || 'ETH') + ': ' + (nat.balanceWei == null ? 'unknown' : fmt(nat.balanceWei, 18)));
-        if (d.active === true) out.push('WARNING: active EIP-7702 delegation. A hidden contract is attached to this address and can drain any funds that arrive. Replacing it does not make a leaked private key safe again.');
+        if (d.active === true) out.push.apply(out, delegationNotice(d.delegate) || ['EIP-7702 delegation reported as active but no delegate address was returned.']);
         else if (d.active === false && complete) out.push('No EIP-7702 delegation found. This does NOT rule out a classic sweeper bot or a leaked private key.');
         else out.push('Delegation check incomplete — this is NOT a clean result.');
         out.push('Recommended: create a new wallet on a clean device and stop using this one.');
@@ -128,7 +128,7 @@
       st.scan = s;
       const out = ['Address: ' + s.address, 'ETH: ' + E.formatEther(BigInt(s.eth_wei)), 'Nonce: ' + s.nonce,
         'EIP-7702 delegation: ' + (s.delegation7702 || 'none')];
-      out.push(s.delegation7702 ? 'WARNING: active EIP-7702 delegation. A hidden contract is attached to this address and can drain any funds that arrive. Replacing it does not make a leaked private key safe again.' : 'No EIP-7702 delegation found. This does NOT rule out a classic sweeper bot or a leaked private key.');
+      out.push.apply(out, delegationNotice(s.delegation7702) || ['No EIP-7702 delegation found. This does NOT rule out a classic sweeper bot or a leaked private key.']);
       out.push('Recommended: create a new wallet on a clean device and stop using this one.');
       if (s.tokens.length === 0 && s.nfts.length === 0) out.push('No rescuable tokens found in our list.');
       for (const t of s.tokens) out.push('Token ' + (t.symbol || t.address) + ': ' + fmt(t.balance, t.decimals));
@@ -311,6 +311,23 @@
       if (done) done.hidden = !(i < n);
     }
     const s = $('step' + n); if (s && s.scrollIntoView) s.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  }
+  // #2209: explicit list of legitimate EIP-7702 delegates (compared case-insensitively).
+  // Coinbase, Safe, Ambire and OKX delegates: NO_DISPONIBLE (not researched; no addresses invented).
+  const KNOWN_7702_DELEGATES = [
+    { address: '0x63c0c19a282a1B52b07dD5a65b58948A07DAE32B', name: 'MetaMask Smart Account (EIP7702StatelessDeleGator)' },
+    { address: '0x38bcF425bC4d13624734e09376F2fafc799fA8c8', name: 'UNSWEEP UnsweepDelegate' }
+  ];
+  // #2209: shared 3-state delegation notice for #scanOut (Ethereum read-only and Base/Arbitrum flows).
+  // Returns null when there is no delegation so callers keep the neutral message.
+  function delegationNotice(delegate) {
+    if (!delegate) return null;
+    const k = String(delegate).toLowerCase();
+    const hit = KNOWN_7702_DELEGATES.find((x) => x.address.toLowerCase() === k);
+    if (hit) return ['Known EIP-7702 delegate: ' + hit.name + '. This is a known Smart Account or tool, not a sweeper by itself.',
+      'If funds keep disappearing, the cause may be a leaked private key or open token approvals.'];
+    return ['WARNING: active EIP-7702 delegation to an unrecognized contract (' + delegate + '). It may be malicious if you did not enable it yourself.',
+      'Verify this contract address in a block explorer. Replacing a delegation does not make a leaked private key safe again.'];
   }
   async function runScan() {
     const b = $('btnScan'); if (b.disabled) return;
