@@ -4,13 +4,13 @@
 <body>
 <main>
 <h1>UNSWEEP</h1>
-<p class="intro">Rescue tokens left in a hacked wallet, even if a sweeper bot drains every deposit. <br><strong>When every second matters.</strong></p>
+<p class="intro">Is your wallet still being drained? Check for hidden wallet delegations (EIP-7702) and see which tokens can still be rescued — free, read-only, no private key required.</p>
 <!--gen:top-->
 <p class="notice" id="mainnetNotice"><span id="capLine">Security notice: We will never DM you first or ask for your seed phrase.</span></p>
 <!--/gen:top-->
 
 <section id="step1" class="step">
-<h2>Step 1 &middot; Check your wallet</h2>
+<h2>Step 1 · Free Wallet Diagnostic</h2>
 <div class="stepDone" id="step1Done" hidden><span class="small" id="step1Sum"></span> <button type="button" class="edit" id="edit1">Edit</button></div>
 <div class="stepBody" id="step1Body">
 <div class="form">
@@ -26,7 +26,7 @@
 <label for="victim">Public wallet address (no private key needed)</label>
 <input id="victim" type="text" placeholder="0x... your wallet address" autocomplete="off" spellcheck="false">
 </div>
-<button id="btnScan" class="primary">Scan</button>
+<button id="btnScan" class="primary">Check My Wallet</button>
 </div>
 <div id="scanOut" class="out">
 </div>
@@ -68,6 +68,7 @@
 
 <section id="step3" class="step" hidden>
 <h2>Step 3 &middot; Sign locally and rescue</h2>
+<p class="small warn" id="delegateNote">During the rescue, the UnsweepDelegate contract <strong>replaces</strong> the current EIP-7702 delegation on the compromised address. This is a replacement, not a reset of the delegation to 0x0000000000000000000000000000000000000000, and it does not make the wallet safe again. A compromised wallet must always be abandoned: move everything to a new wallet created on a clean device.</p>
 <div class="stepDone" id="step3Done" hidden><span class="small" id="step3Sum">Signed locally; rescue submitted.</span> <button type="button" class="edit" id="edit3">Edit</button></div>
 <div class="stepBody" id="step3Body">
 <ul class="small list">
@@ -159,8 +160,9 @@
 <footer>
 <p class="small">Contact: <a href="mailto:support@unsweep.com">support@unsweep.com</a> (never send keys or seed phrases).</p>
 <p class="small muted">Non-custodial software. Use at your own risk.</p>
+<p class="small"><a href="/security/">Security &amp; verification</a></p>
 </footer>
 </main>
 <script src="/assets/ethers.min.js" integrity="sha384-KFwRTLOjI5Dog4WciwSIbBrTqUp4Vm/9/yBF5Yt1z/eWZO382zoD8B3/1EYSCXfv"></script>
-<script src="/assets/app.js" integrity="sha384-4gBDnp8GX02XyIKS7TJO4p914eGEJtfW9Ec87bs8OaxxvI9xmgEDceHOVlolforY"></script>
+<script src="/assets/app.js" integrity="sha384-4lNQ/47JGKFG/bSbwow7SOq1WGkA7aFhsf5TTr2HYE+tdmUtB5hVCpxTUrI4u6ZD"></script>
 </body></html>

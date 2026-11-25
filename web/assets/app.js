@@ -88,6 +88,10 @@
         out.push('Network: ' + chain + ' mainnet (read-only, nothing was signed)', 'Address: ' + a, 'Nonce: ' + m.nonce,
           'EIP-7702 delegation: ' + (d.active ? ('ACTIVE -> ' + d.delegate + ' (verify this contract; an unknown delegate may be a sweeper)') : (d.active === false ? 'none' : 'unknown (check failed)')),
           (nat.symbol || 'ETH') + ': ' + (nat.balanceWei == null ? 'unknown' : fmt(nat.balanceWei, 18)));
+        if (d.active === true) out.push('WARNING: active EIP-7702 delegation. A hidden contract is attached to this address and can drain any funds that arrive. Replacing it does not make a leaked private key safe again.');
+        else if (d.active === false && complete) out.push('No EIP-7702 delegation found. This does NOT rule out a classic sweeper bot or a leaked private key.');
+        else out.push('Delegation check incomplete — this is NOT a clean result.');
+        out.push('Recommended: create a new wallet on a clean device and stop using this one.');
         const toks = m.tokens || [];
         if (toks.length === 0 && complete) out.push('No ERC-20 balances found.');
         for (const t of toks) out.push('Token ' + (t.symbol || t.contract || t.address || t.token) + ': ' + (t.balanceFmt || fmt(t.balance || t.balanceRaw || '0', t.decimals == null ? 18 : t.decimals)));
@@ -108,8 +112,8 @@
       const tick = function () {
         const el = Math.floor((Date.now() - t0) / 1000); let phase;
         if (el < 3) phase = 'Checking balances and delegation';
-        else if (el < 30) phase = 'Scanning approval history on Base';
-        else phase = ['Still scanning (long histories take longer)', 'Reading older approval logs', 'Cross-checking open approvals'][Math.floor(el / 5) % 3];
+        else if (el < 30) phase = 'Reading on-chain wallet data';
+        else phase = ['Still scanning (long histories take longer)', 'Reading older transaction history', 'Cross-checking results'][Math.floor(el / 5) % 3];
         show($('scanOut'), phase + '… ' + el + ' s elapsed');
       };
       tick(); const h = setInterval(tick, 1000);
@@ -124,6 +128,8 @@
       st.scan = s;
       const out = ['Address: ' + s.address, 'ETH: ' + E.formatEther(BigInt(s.eth_wei)), 'Nonce: ' + s.nonce,
         'EIP-7702 delegation: ' + (s.delegation7702 || 'none')];
+      out.push(s.delegation7702 ? 'WARNING: active EIP-7702 delegation. A hidden contract is attached to this address and can drain any funds that arrive. Replacing it does not make a leaked private key safe again.' : 'No EIP-7702 delegation found. This does NOT rule out a classic sweeper bot or a leaked private key.');
+      out.push('Recommended: create a new wallet on a clean device and stop using this one.');
       if (s.tokens.length === 0 && s.nfts.length === 0) out.push('No rescuable tokens found in our list.');
       for (const t of s.tokens) out.push('Token ' + (t.symbol || t.address) + ': ' + fmt(t.balance, t.decimals));
       for (const n of s.nfts) out.push('NFT ' + (n.symbol || n.address) + ' #' + n.id);
