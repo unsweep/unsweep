@@ -49,8 +49,13 @@ def test_op_rescate_deshabilitado():
     assert '10,' not in line and '10}' not in line.replace(' ', '')
 
 
-def test_op_sin_assets_inventados():
-    assert M._listed('optimism') == []  # assets_10.json NO_DISPONIBLE
+def test_op_assets_coinciden_con_assets_10():
+    # fase B: assets_10.json verificado por eth_call; _listed debe reflejarlo exactamente
+    import os
+    a = json.load(open(os.path.join(os.path.dirname(__file__), 'data', 'assets_10.json')))
+    got = [(t['contract'], t['symbol'], t['decimals']) for t in M._listed('optimism')]
+    exp = [(t['address'].lower(), t['symbol'], t['decimals']) for t in a['tokens']]
+    assert got == exp and len(got) == 8
 
 
 def test_op_diagnostico_delegacion_7702(monkeypatch):

@@ -1,0 +1,168 @@
+{
+ "chainId": 10,
+ "eth_usd_feed": {
+  "address": "0x13e3Ee699D1909E989722E753853AE30b17e08c5",
+  "pair": "ETH / USD",
+  "quote": "USD",
+  "heartbeat": 1200,
+  "decimals": 8,
+  "aggregator": "0x16c04812fa9db1d0236c3841dda8e86225bc3f3e"
+ },
+ "tokens": [
+  {
+   "address": "0x0b2c639c533813f4aa9d7837caf62653d097ff85",
+   "symbol": "USDC",
+   "decimals": 6,
+   "fee_on_transfer": false,
+   "feed": {
+    "address": "0x16a9FA2FDa030272Ce99B29CF780dFA30361E0f3",
+    "pair": "USDC / USD",
+    "quote": "USD",
+    "heartbeat": 86400,
+    "decimals": 8,
+    "aggregator": "0xdb5a1d830b72ce47b881c0093dbc9c6321091e78"
+   },
+   "_evidence": {
+    "token": "evidence/chainlink/superchain.tokenlist.json (chainId 10) + eth_call symbol()/decimals()/getCode",
+    "feed": "evidence/chainlink/feeds-ethereum-mainnet-optimism-1.json path=usdc-usd + eth_call decimals()/latestRoundData()/aggregator()"
+   }
+  },
+  {
+   "address": "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58",
+   "symbol": "USDT",
+   "decimals": 6,
+   "fee_on_transfer": false,
+   "feed": {
+    "address": "0xECef79E109e997bCA29c1c0897ec9d7b03647F5E",
+    "pair": "USDT / USD",
+    "quote": "USD",
+    "heartbeat": 86400,
+    "decimals": 8,
+    "aggregator": "0xfd7f8e6ba7b6d36f4b3c9013de5fa527d8347643"
+   },
+   "_evidence": {
+    "token": "evidence/chainlink/superchain.tokenlist.json (chainId 10) + eth_call symbol()/decimals()/getCode",
+    "feed": "evidence/chainlink/feeds-ethereum-mainnet-optimism-1.json path=usdt-usd + eth_call decimals()/latestRoundData()/aggregator()"
+   }
+  },
+  {
+   "address": "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+   "symbol": "DAI",
+   "decimals": 18,
+   "fee_on_transfer": false,
+   "feed": {
+    "address": "0x8dBa75e83DA73cc766A7e5a0ee71F656BAb470d6",
+    "pair": "DAI / USD",
+    "quote": "USD",
+    "heartbeat": 86400,
+    "decimals": 8,
+    "aggregator": "0x0a0edee6d069e93a3077cfa25d799b6e0d4b2919"
+   },
+   "_evidence": {
+    "token": "evidence/chainlink/superchain.tokenlist.json (chainId 10) + eth_call symbol()/decimals()/getCode",
+    "feed": "evidence/chainlink/feeds-ethereum-mainnet-optimism-1.json path=dai-usd + eth_call decimals()/latestRoundData()/aggregator()"
+   }
+  },
+  {
+   "address": "0x4200000000000000000000000000000000000006",
+   "symbol": "WETH",
+   "decimals": 18,
+   "fee_on_transfer": false,
+   "feed": {
+    "address": "0x13e3Ee699D1909E989722E753853AE30b17e08c5",
+    "pair": "ETH / USD",
+    "quote": "USD",
+    "heartbeat": 1200,
+    "decimals": 8,
+    "aggregator": "0x16c04812fa9db1d0236c3841dda8e86225bc3f3e"
+   },
+   "_evidence": {
+    "token": "evidence/chainlink/superchain.tokenlist.json (chainId 10) + eth_call symbol()/decimals()/getCode",
+    "feed": "evidence/chainlink/feeds-ethereum-mainnet-optimism-1.json path=eth-usd + eth_call decimals()/latestRoundData()/aggregator()"
+   }
+  },
+  {
+   "address": "0x4200000000000000000000000000000000000042",
+   "symbol": "OP",
+   "decimals": 18,
+   "fee_on_transfer": false,
+   "feed": {
+    "address": "0x0D276FC14719f9292D5C1eA2198673d1f4269246",
+    "pair": "OP / USD",
+    "quote": "USD",
+    "heartbeat": 1200,
+    "decimals": 8,
+    "aggregator": "0x07c15082440a5e435ba15fe9ab704daead84897a"
+   },
+   "_evidence": {
+    "token": "evidence/chainlink/superchain.tokenlist.json (chainId 10) + eth_call symbol()/decimals()/getCode",
+    "feed": "evidence/chainlink/feeds-ethereum-mainnet-optimism-1.json path=op-usd + eth_call decimals()/latestRoundData()/aggregator()"
+   }
+  },
+  {
+   "address": "0x68f180fcCe6836688e9084f035309E29Bf0A2095",
+   "symbol": "WBTC",
+   "decimals": 8,
+   "fee_on_transfer": false,
+   "feed": {
+    "address": "0x718A5788b89454aAE3A028AE9c111A29Be6c2a6F",
+    "pair": "WBTC / USD",
+    "quote": "USD",
+    "heartbeat": 1200,
+    "decimals": 8,
+    "aggregator": "0x525a27268f0006b237bc21efd2d21499a6d1f729"
+   },
+   "_evidence": {
+    "token": "evidence/chainlink/superchain.tokenlist.json (chainId 10) + eth_call symbol()/decimals()/getCode",
+    "feed": "evidence/chainlink/feeds-ethereum-mainnet-optimism-1.json path=wbtc-usd + eth_call decimals()/latestRoundData()/aggregator()"
+   }
+  },
+  {
+   "address": "0x350a791bfc2c21f9ed5d10980dad2e2638ffa7f6",
+   "symbol": "LINK",
+   "decimals": 18,
+   "fee_on_transfer": false,
+   "feed": {
+    "address": "0xCc232dcFAAE6354cE191Bd574108c1aD03f86450",
+    "pair": "LINK / USD",
+    "quote": "USD",
+    "heartbeat": 1200,
+    "decimals": 8,
+    "aggregator": "0xc08c9c6579b55367b32a026a4f5608ec34b575aa"
+   },
+   "_evidence": {
+    "token": "evidence/chainlink/superchain.tokenlist.json (chainId 10) + eth_call symbol()/decimals()/getCode",
+    "feed": "evidence/chainlink/feeds-ethereum-mainnet-optimism-1.json path=link-usd + eth_call decimals()/latestRoundData()/aggregator()"
+   }
+  },
+  {
+   "address": "0x1F32b1c2345538c0c6f582fCB022739c4A194Ebb",
+   "symbol": "wstETH",
+   "decimals": 18,
+   "fee_on_transfer": false,
+   "feed": {
+    "address": "0x698B585CbC4407e2D54aa898B2600B53C68958f7",
+    "pair": "WSTETH / USD",
+    "quote": "USD",
+    "heartbeat": 86400,
+    "decimals": 8,
+    "aggregator": "0xc9aed1320c0c8698365057c82c44b7e2edf2227c"
+   },
+   "_evidence": {
+    "token": "evidence/chainlink/superchain.tokenlist.json (chainId 10) + eth_call symbol()/decimals()/getCode",
+    "feed": "evidence/chainlink/feeds-ethereum-mainnet-optimism-1.json path=wsteth-usd + eth_call decimals()/latestRoundData()/aggregator()"
+   }
+  }
+ ],
+ "nfts": [],
+ "_verified": {
+  "block": 160020169,
+  "block_ts": 1795639115,
+  "method": "eth_call proxy.aggregator()/decimals()/latestRoundData() + token symbol()/decimals()/getCode",
+  "evidence": "artifacts/m2236/onchain_10.json",
+  "sources": [
+   "evidence/chainlink/superchain.tokenlist.json",
+   "evidence/chainlink/feeds-ethereum-mainnet-optimism-1.json (https://reference-data-directory.vercel.app/feeds-ethereum-mainnet-optimism-1.json, ver feeds-optimism.source)"
+  ]
+ }
+}

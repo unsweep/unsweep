@@ -3,7 +3,8 @@
 El rescate en OP queda DESHABILITADO por bandera mientras no exista UnsweepDelegate
 desplegado y verificado en OP (NO_DISPONIBLE). relayer.ACTIVE_MAINNETS y policy.MAINNETS
 no incluyen 10, asi que cualquier intento de firma/envio en OP sigue rechazado.
-Assets y oraculos de OP: NO_DISPONIBLE (no hay assets_10.json; ver docs/OP_MAINNET_PLAN.md).
+Fase B: assets_10.json con 8 tokens y feeds Chainlink verificados por eth_call (tools/gen_assets_10.py).
+UnsweepDelegate 0x38bcF425... tiene 0 bytes en OP: rescate NO_DISPONIBLE (ver docs/OP_MAINNET_PLAN.md).
 """
 import os
 

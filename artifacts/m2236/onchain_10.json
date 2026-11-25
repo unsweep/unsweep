@@ -1,0 +1,219 @@
+{
+ "chainId": 10,
+ "block": 160020169,
+ "block_ts": 1795639115,
+ "tokens": [
+  {
+   "symbol_expected": "USDC",
+   "address": "0x0b2c639c533813f4aa9d7837caf62653d097ff85",
+   "code_bytes": 1852,
+   "symbol_onchain": "USDC",
+   "decimals_onchain": 6,
+   "decimals_tokenlist": 6
+  },
+  {
+   "symbol_expected": "USDT",
+   "address": "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58",
+   "code_bytes": 6774,
+   "symbol_onchain": "USDT",
+   "decimals_onchain": 6,
+   "decimals_tokenlist": 6
+  },
+  {
+   "symbol_expected": "DAI",
+   "address": "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+   "code_bytes": 4782,
+   "symbol_onchain": "DAI",
+   "decimals_onchain": 18,
+   "decimals_tokenlist": 18
+  },
+  {
+   "symbol_expected": "WETH",
+   "address": "0x4200000000000000000000000000000000000006",
+   "code_bytes": 2041,
+   "symbol_onchain": "WETH",
+   "decimals_onchain": 18,
+   "decimals_tokenlist": 18
+  },
+  {
+   "symbol_expected": "OP",
+   "address": "0x4200000000000000000000000000000000000042",
+   "code_bytes": 16528,
+   "symbol_onchain": "OP",
+   "decimals_onchain": 18,
+   "decimals_tokenlist": 18
+  },
+  {
+   "symbol_expected": "WBTC",
+   "address": "0x68f180fcCe6836688e9084f035309E29Bf0A2095",
+   "code_bytes": 6733,
+   "symbol_onchain": "WBTC",
+   "decimals_onchain": 8,
+   "decimals_tokenlist": 8
+  },
+  {
+   "symbol_expected": "LINK",
+   "address": "0x350a791bfc2c21f9ed5d10980dad2e2638ffa7f6",
+   "code_bytes": 6271,
+   "symbol_onchain": "LINK",
+   "decimals_onchain": 18,
+   "decimals_tokenlist": 18
+  },
+  {
+   "symbol_expected": "wstETH",
+   "address": "0x1F32b1c2345538c0c6f582fCB022739c4A194Ebb",
+   "code_bytes": 3296,
+   "symbol_onchain": "wstETH",
+   "decimals_onchain": 18,
+   "decimals_tokenlist": 18
+  }
+ ],
+ "feeds": [
+  {
+   "path": "eth-usd",
+   "address": "0x13e3Ee699D1909E989722E753853AE30b17e08c5",
+   "pair": "ETH / USD",
+   "code_bytes": 9571,
+   "decimals": 8,
+   "roundId": "36893488147419132593",
+   "answer": "168013444616",
+   "updatedAt": 1795638699,
+   "age_s": 416,
+   "heartbeat": 1200,
+   "aggregator": "0x16c04812fa9db1d0236c3841dda8e86225bc3f3e",
+   "description": "ETH / USD",
+   "ok": true,
+   "problems": []
+  },
+  {
+   "path": "usdc-usd",
+   "address": "0x16a9FA2FDa030272Ce99B29CF780dFA30361E0f3",
+   "pair": "USDC / USD",
+   "code_bytes": 9571,
+   "decimals": 8,
+   "roundId": "55340232221128654963",
+   "answer": "99984620",
+   "updatedAt": 1795636311,
+   "age_s": 2804,
+   "heartbeat": 86400,
+   "aggregator": "0xdb5a1d830b72ce47b881c0093dbc9c6321091e78",
+   "description": "USDC / USD",
+   "ok": true,
+   "problems": []
+  },
+  {
+   "path": "usdt-usd",
+   "address": "0xECef79E109e997bCA29c1c0897ec9d7b03647F5E",
+   "pair": "USDT / USD",
+   "code_bytes": 9571,
+   "decimals": 8,
+   "roundId": "55340232221128654966",
+   "answer": "99881000",
+   "updatedAt": 1795623777,
+   "age_s": 15338,
+   "heartbeat": 86400,
+   "aggregator": "0xfd7f8e6ba7b6d36f4b3c9013de5fa527d8347643",
+   "description": "USDT / USD",
+   "ok": true,
+   "problems": []
+  },
+  {
+   "path": "dai-usd",
+   "address": "0x8dBa75e83DA73cc766A7e5a0ee71F656BAb470d6",
+   "pair": "DAI / USD",
+   "code_bytes": 9571,
+   "decimals": 8,
+   "roundId": "36893488147419103470",
+   "answer": "99990659",
+   "updatedAt": 1795620083,
+   "age_s": 19032,
+   "heartbeat": 86400,
+   "aggregator": "0x0a0edee6d069e93a3077cfa25d799b6e0d4b2919",
+   "description": "DAI / USD",
+   "ok": true,
+   "problems": []
+  },
+  {
+   "path": "op-usd",
+   "address": "0x0D276FC14719f9292D5C1eA2198673d1f4269246",
+   "pair": "OP / USD",
+   "code_bytes": 9571,
+   "decimals": 8,
+   "roundId": "36893488147419150486",
+   "answer": "6879505",
+   "updatedAt": 1795639079,
+   "age_s": 36,
+   "heartbeat": 1200,
+   "aggregator": "0x07c15082440a5e435ba15fe9ab704daead84897a",
+   "description": "OP / USD",
+   "ok": true,
+   "problems": []
+  },
+  {
+   "path": "wbtc-usd",
+   "address": "0x718A5788b89454aAE3A028AE9c111A29Be6c2a6F",
+   "pair": "WBTC / USD",
+   "code_bytes": 9571,
+   "decimals": 8,
+   "roundId": "36893488147419126013",
+   "answer": "5998641241877",
+   "updatedAt": 1795638859,
+   "age_s": 256,
+   "heartbeat": 1200,
+   "aggregator": "0x525a27268f0006b237bc21efd2d21499a6d1f729",
+   "description": "WBTC / USD",
+   "ok": true,
+   "problems": []
+  },
+  {
+   "path": "link-usd",
+   "address": "0xCc232dcFAAE6354cE191Bd574108c1aD03f86450",
+   "pair": "LINK / USD",
+   "code_bytes": 9571,
+   "decimals": 8,
+   "roundId": "36893488147419134082",
+   "answer": "908292308",
+   "updatedAt": 1795638611,
+   "age_s": 504,
+   "heartbeat": 1200,
+   "aggregator": "0xc08c9c6579b55367b32a026a4f5608ec34b575aa",
+   "description": "LINK / USD",
+   "ok": true,
+   "problems": []
+  },
+  {
+   "path": "wsteth-usd",
+   "address": "0x698B585CbC4407e2D54aa898B2600B53C68958f7",
+   "pair": "WSTETH / USD",
+   "code_bytes": 9571,
+   "decimals": 8,
+   "roundId": "36893488147419105895",
+   "answer": "210066892169",
+   "updatedAt": 1795636173,
+   "age_s": 2942,
+   "heartbeat": 86400,
+   "aggregator": "0xc9aed1320c0c8698365057c82c44b7e2edf2227c",
+   "description": "WSTETH / USD",
+   "ok": true,
+   "problems": []
+  }
+ ],
+ "excluded": [
+  {
+   "symbol": "USDC.e",
+   "motivo": "USDC puenteado (0x7F5c...1607); solo USDC nativo, mismo criterio que Arbitrum (#1017)"
+  },
+  {
+   "symbol": "ETH(0xDead...0000)",
+   "motivo": "ETH legacy OVM, no es ERC-20 real"
+  },
+  {
+   "symbol": "TRX/APT/SOL",
+   "motivo": "tokens puenteados; el feed cotiza el activo nativo de otra cadena"
+  },
+  {
+   "symbol": "STETH->wstETH, BTC->WBTC",
+   "motivo": "emparejamiento por simbolo no equivalente; se usan wsteth-usd y wbtc-usd"
+  }
+ ]
+}
