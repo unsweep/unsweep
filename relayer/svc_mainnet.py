@@ -17,6 +17,9 @@ CHAINS = {
              'explorer': 'https://basescan.org/address/'},
     'ethereum': {'env': 'ETH_RPC_URL', 'chain_id': 1, 'block_s': 12, 'native': 'ETH',
                  'explorer': 'https://etherscan.io/address/'},
+    # ORDEN #2236: OP Mainnet SOLO lectura (rescate deshabilitado, ver op_mainnet.py)
+    'optimism': {'env': 'OP_RPC_URL', 'chain_id': 10, 'block_s': 2, 'native': 'ETH',
+                 'explorer': 'https://optimistic.etherscan.io/address/'},
 }
 LOOKBACK_DAYS = 90
 MAX_TX = int(os.environ.get('UNSWEEP_MAINNET_MAX_TX', '200'))
@@ -161,7 +164,8 @@ TOKENS_SHARE = float(os.environ.get('UNSWEEP_MAINNET_TOKENS_SHARE', '0.6'))  # p
 BO_BATCH = 50
 BO_SMALL = 10
 ALT_RPC = {'base': os.environ.get('BASE_RPC_URL_ALT', 'https://mainnet.base.org').strip(),
-           'ethereum': os.environ.get('ETH_RPC_URL_ALT', '').strip()}
+           'ethereum': os.environ.get('ETH_RPC_URL_ALT', '').strip(),
+           'optimism': os.environ.get('OP_RPC_URL_ALT', '').strip()}
 
 
 def _bo_batch(url, addr, contracts, tag, deadline):
