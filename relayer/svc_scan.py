@@ -99,8 +99,9 @@ def _ap_call(fn):
 APPROVAL_LOGS_RPC = {
     8453: 'https://base-rpc.publicnode.com',
     42161: 'https://arbitrum-one-rpc.publicnode.com',  # parametrizado; NO activo (publicnode exige token para 2000 bloques en Arbitrum)
+    10: 'https://optimism-rpc.publicnode.com',  # #168: medido HTTP 200 con 2000 bloques + filtro address, sin token
 }
-APPROVAL_LOGS_ENABLED = {8453}
+APPROVAL_LOGS_ENABLED = {8453, 10}  # #168: OP igual que Base (Alchemy Free limita getLogs a 10 bloques)
 LOGS_ADDR_GROUP = 10  # publicnode: 'A maximum of 10 addresses is allowed' (HTTP 403)
 CHUNK_RETRIES = 1
 CHUNK_BACKOFF_S = 0.5
@@ -275,7 +276,8 @@ class ExtrasError(Exception):
     """#1684: fallo de descubrimiento de extras con motivo concreto (sin URL)."""
 
 
-_ALCHEMY_HOSTS = {8453: 'base-mainnet.g.alchemy.com', 42161: 'arb-mainnet.g.alchemy.com'}
+_ALCHEMY_HOSTS = {8453: 'base-mainnet.g.alchemy.com', 42161: 'arb-mainnet.g.alchemy.com',
+                  10: 'opt-mainnet.g.alchemy.com'}  # #168: OP Mainnet
 EXTRAS_RETRIES = 3
 EXTRAS_BACKOFF = 0.5
 
