@@ -6,7 +6,7 @@ services:
     container_name: unsweep-relayer
     restart: always
     user: "1000:1000"
-    # #89: env MINIMO (TURNSTILE_*, OPS_PK, BASE_RPC_URL, ETH_RPC_URL) generado por tools/gen_env_min.py, 600, fuera del repo
+    # #89: env MINIMO (TURNSTILE_*, OPS_PK, BASE_RPC_URL, ETH_RPC_URL, OP_RPC_URL) generado por tools/gen_env_min.py, 600, fuera del repo
     env_file: /opt/aire/unsweep-relayer.env
     environment:
       UNSWEEP_CHAIN_ID: "8453"

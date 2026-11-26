@@ -16,7 +16,8 @@ import tempfile
 #  TURNSTILE_*  -> svc_core.py (anti-bot)
 #  OPS_PK       -> service.py SPONSOR_KEY (patrocina gas)
 #  BASE_RPC_URL, ETH_RPC_URL -> svc_mainnet.py CHAINS[...]['env']
-ALLOWED = ("TURNSTILE_SECRET", "TURNSTILE_SITEKEY", "OPS_PK", "BASE_RPC_URL", "ETH_RPC_URL")
+#  OP_RPC_URL -> svc_mainnet.py CHAINS['optimism']['env'] (autorizado #161-A, ORDEN #2236)
+ALLOWED = ("TURNSTILE_SECRET", "TURNSTILE_SITEKEY", "OPS_PK", "BASE_RPC_URL", "ETH_RPC_URL", "OP_RPC_URL")
 SRC = os.environ.get("UNSWEEP_ENV_SRC", "/opt/aire/product.env")
 DEST = os.environ.get("UNSWEEP_ENV_DEST", "/opt/aire/unsweep-relayer.env")
 

@@ -17,6 +17,7 @@ FAKE = {
     "TURNSTILE_SITEKEY": "fake-ts-site-BBB",
     "OPS_PK": "0x" + "11" * 32,
     "BASE_RPC_URL": "https://base.example.invalid/k1",
+    "OP_RPC_URL": "https://op.example.invalid/k1",
     "ETH_RPC_URL": "https://eth.example.invalid/k2",
 }
 # Claves que NUNCA deben llegar al contenedor
@@ -58,7 +59,7 @@ def test_solo_claves_permitidas_y_permisos_600(tmp_path, capsys):
 
 
 def test_allowed_es_exactamente_lo_aprobado_89():
-    assert set(gem.ALLOWED) == {"TURNSTILE_SECRET", "TURNSTILE_SITEKEY", "OPS_PK", "BASE_RPC_URL", "ETH_RPC_URL"}
+    assert set(gem.ALLOWED) == {"TURNSTILE_SECRET", "TURNSTILE_SITEKEY", "OPS_PK", "BASE_RPC_URL", "ETH_RPC_URL", "OP_RPC_URL"}
 
 
 def test_falta_clave_no_escribe(tmp_path):
