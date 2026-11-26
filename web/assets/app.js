@@ -50,8 +50,8 @@
     }
   }
   // ORDEN #1258: Arbitrum (42161) se sirve en /arb/api/ (unsweep-relayer-arb); Base y Ethereum read-only en /api/.
-  const CHAIN_IDS = { base: 8453, arbitrum: 42161 };
-  function apiBase() { return ($('chain') && $('chain').value === 'arbitrum') ? '/arb/api/' : '/api/'; }
+  const CHAIN_IDS = { base: 8453, arbitrum: 42161, optimism: 10 };
+  function apiBase() { const c = $('chain') ? $('chain').value : ''; return c === 'arbitrum' ? '/arb/api/' : (c === 'optimism' ? '/op/api/' : '/api/'); }  // ORDEN #2236: OP Mainnet (10) en /op/api/ (unsweep-relayer-op)
   async function api(path, body) {
     const r = await fetch(apiBase() + path, body ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) } : {});
     let j = null; try { j = await r.json(); } catch (e) { /* noop */ }
@@ -111,9 +111,9 @@
     if (!a) return show($('scanOut'), 'Invalid address.', 'err');
     const chain = ($('chain') && $('chain').value) || 'testnet';
     goStep(1); $('btnToStep2').hidden = true;
-    if (chain === 'ethereum' || chain === 'optimism') {
-      st.scan = null; // read-only branch: rescue is not enabled here (OP rescue pending, #167)
-      const netName = chain === 'optimism' ? 'OP Mainnet' : 'Ethereum mainnet';
+    if (chain === 'ethereum') {
+      st.scan = null; // read-only branch: rescue is not enabled on Ethereum mainnet (#2236: OP rescue enabled via /op/api/)
+      const netName = 'Ethereum mainnet';
       show($('scanOut'), 'Read-only check on ' + netName + '...');
       try {
         const m = await api('scan', { address: a, chain: chain });
@@ -144,9 +144,7 @@
         for (const ap of aps) out.push('Open approval: ' + (ap.symbol || ap.token) + ' -> spender ' + ap.spender + (ap.unlimited ? ' (unlimited)' : '') + ' - see /guides/revoke-approvals/');
         const am = m.approvalsMeta || {};
         if (!complete) out.push('Approvals listed above may be partial (' + (am.txScanned || 0) + ' recent transactions checked).');
-        out.push('Ethereum mainnet: read-only check. Rescue is currently live on Base mainnet (16 verified ERC-20 tokens) and Arbitrum mainnet (12 verified ERC-20 tokens).');
-        } else {
-          out.push('OP Mainnet: free diagnostic available (read-only). Rescue on OP Mainnet is pending and not available yet. Approvals are not checked on OP Mainnet: review them in a block explorer (optimistic.etherscan.io).');
+        out.push('Ethereum mainnet: read-only check. Rescue is currently live on Base mainnet (16 verified ERC-20 tokens), Arbitrum mainnet (12 verified ERC-20 tokens) and OP Mainnet (8 verified ERC-20 tokens).');
         }
         show($('scanOut'), out, complete ? 'ok' : 'err');
       } catch (e) { show($('scanOut'), 'Scan failed: ' + e.message, 'err'); }
