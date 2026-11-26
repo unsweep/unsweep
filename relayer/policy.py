@@ -22,7 +22,7 @@ from pathlib import Path
 
 MAX_FEE_BPS = 1500  # igual que el techo inmutable del contrato
 ETH_MAINNET = 1
-MAINNETS = {1, 8453, 42161}
+MAINNETS = {1, 8453, 42161, 10}  # #163-A: 10 (OP)
 CAP_INITIAL_USD = 100_000.0  # #927: tope automatico por rescate
 FIXED_CAP_USD = 10_000.0  # umbral de controles extra (#927) y tope de tokens fuera de HIGH_VALUE
 CAP_RAISED_USD = 100_000.0  # #927: sin tramos por historial; el tope automatico es 100k

@@ -40,13 +40,15 @@ def test_op_config_chain_10():
     assert c['native'] == 'ETH' and OP.CHAIN_HEX == '0xa'
 
 
-def test_op_rescate_deshabilitado():
-    assert OP.RESCUE_ENABLED is False and OP.UNSWEEP_DELEGATE is None
-    assert OP.rescue_enabled() is False
-    assert 10 not in policy.MAINNETS
+def test_op_rescate_habilitado_162():
+    assert OP.RESCUE_ENABLED is True and OP.UNSWEEP_DELEGATE == '0x38bcF425bC4d13624734e09376F2fafc799fA8c8'
+    assert OP.rescue_enabled() is True
+    assert 10 in policy.MAINNETS
+    import ast
     src = open(__file__.replace('test_op_mainnet_2236.py', 'relayer.py')).read()
     line = [l for l in src.splitlines() if l.strip().startswith('ACTIVE_MAINNETS')][0]
-    assert '10,' not in line and '10}' not in line.replace(' ', '')
+    active = ast.literal_eval(line.split('=', 1)[1].split('#', 1)[0].strip())
+    assert active == {8453, 10}  # #163-A: Base + OP; 1 y 42161 siguen fuera
 
 
 def test_op_assets_coinciden_con_assets_10():

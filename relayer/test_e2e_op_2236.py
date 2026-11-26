@@ -43,8 +43,9 @@ def test_op_2_delegate_bytecode_documented():
     has_code = code not in ('0x', '0x0')
     print('UNSWEEP_DELEGATE_OP_CODE_BYTES=%d' % ((len(code) - 2) // 2 if has_code else 0))
     import op_mainnet as OP
-    if not has_code:
-        assert OP.rescue_enabled() is False
+    # #162-A: el rescate OP esta activo, asi que el delegate DEBE tener bytecode en OP
+    assert has_code, 'UnsweepDelegate sin bytecode en OP con RESCUE_ENABLED=True'
+    assert OP.UNSWEEP_DELEGATE.lower() == UNSWEEP_DELEGATE.lower() and OP.rescue_enabled() is True
 
 
 def test_op_3_scan_public_contract_detects_code_not_delegation():

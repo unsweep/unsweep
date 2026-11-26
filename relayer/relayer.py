@@ -19,7 +19,7 @@ except ImportError:
     import policy as P  # noqa
 
 TESTNETS = {31337, 84532, 421614, 11155111}
-ACTIVE_MAINNETS = {8453}  # #81=B: solo Base; 1 (Ethereum) y 42161 (Arbitrum) siguen bloqueadas
+ACTIVE_MAINNETS = {8453, 10}  # #81=B Base; #163-A OP (10); 1 (Ethereum) y 42161 (Arbitrum) siguen bloqueadas
 
 
 PolicyError = P.PolicyError  # una sola clase para relayer y policy

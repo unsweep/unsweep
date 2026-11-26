@@ -61,6 +61,6 @@ def test_exclusiones():
     assert '0xdeaddeaddeaddeaddeaddeaddeaddeaddead0000' not in addrs  # ETH legacy OVM
 
 
-def test_rescate_op_sigue_no_disponible():
-    assert OP.UNSWEEP_DELEGATE is None and OP.rescue_enabled() is False
-    assert 10 not in policy.MAINNETS
+def test_rescate_op_habilitado_162():
+    assert OP.UNSWEEP_DELEGATE == '0x38bcF425bC4d13624734e09376F2fafc799fA8c8' and OP.rescue_enabled() is True
+    assert 10 in policy.MAINNETS
