@@ -27,9 +27,9 @@ POLICY = ROOT / "relayer" / "policy.py"
 TOP_TMPL = ('<p class="notice" id="mainnetNotice"><span id="capLine">Security notice: We will never DM you first or ask for your seed phrase.</span></p>')
 CAP_TMPL = ('<p class="small muted" id="capNote">*Eligibility limit per rescue, not a guarantee of recovery. Rescues above {hv} get automatic extra safety '
             'checks (a few seconds more).</p>\n'
-            '<p class="small muted" id="daggerNote">†Verified tokens: {nb} on Base, {na} on Arbitrum. Other ERC-20 tokens in your wallet '
+            '<p class="small muted" id="daggerNote">†Verified tokens: {nb} on Base, {na} on Arbitrum, {no} on OP Mainnet. Other ERC-20 tokens in your wallet '
             'are detected automatically during the scan so you can select them to attempt rescue (unverified, no guarantee).</p>')
-CHAINS = ((8453, "Base", "tokens"), (42161, "Arbitrum", "tokensArb"))
+CHAINS = ((8453, "Base", "tokens"), (42161, "Arbitrum", "tokensArb"), (10, "OP Mainnet", "tokensOp"))
 
 
 def _const(name: str) -> float:
@@ -73,7 +73,7 @@ def render(html: str) -> str:
     cap, hv = _const("CAP_INITIAL_USD"), _const("HIGH_VALUE_USD")
     toks = {c: _assets(c) for c, _n, _i in CHAINS}
     html = _replace(html, "top", "\n" + TOP_TMPL.format(cap=usd(cap)) + "\n")
-    html = _replace(html, "cap", "\n" + CAP_TMPL.format(hv=usd(hv), nb=len(toks[8453]), na=len(toks[42161])) + "\n")
+    html = _replace(html, "cap", "\n" + CAP_TMPL.format(hv=usd(hv), nb=len(toks[8453]), na=len(toks[42161]), no=len(toks[10])) + "\n")
     blocks = []
     for c, name, did in CHAINS:
         syms = ", ".join(htmlmod.escape(t["symbol"]) for t in toks[c])

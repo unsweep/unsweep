@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-<url><loc>https://unsweep.com/</loc><lastmod>2026-11-21</lastmod></url>
-<url><loc>https://unsweep.com/guides/eip-7702-sweeper/</loc><lastmod>2026-11-21</lastmod></url>
-<url><loc>https://unsweep.com/guides/compromised-wallet-checklist/</loc><lastmod>2026-11-21</lastmod></url>
-<url><loc>https://unsweep.com/guides/revoke-approvals/</loc><lastmod>2026-11-21</lastmod></url>
+<url><loc>https://unsweep.com/</loc><lastmod>2026-11-26</lastmod></url>
+<url><loc>https://unsweep.com/security/</loc><lastmod>2026-11-26</lastmod></url>
+<url><loc>https://unsweep.com/guides/eip-7702-sweeper/</loc><lastmod>2026-11-26</lastmod></url>
+<url><loc>https://unsweep.com/guides/compromised-wallet-checklist/</loc><lastmod>2026-11-26</lastmod></url>
+<url><loc>https://unsweep.com/guides/revoke-approvals/</loc><lastmod>2026-11-26</lastmod></url>
 <url><loc>https://unsweep.com/guides/sweeper-bot-hacked-wallet.html</loc><lastmod>2026-11-22</lastmod></url>
 <url><loc>https://unsweep.com/guides/eip-7702-malicious-delegation.html</loc><lastmod>2026-11-22</lastmod></url>
 <url><loc>https://unsweep.com/guides/rescue-tokens-sweeper-bot-base-arbitrum.html</loc><lastmod>2026-11-22</lastmod></url>

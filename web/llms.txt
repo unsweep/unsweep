@@ -5,6 +5,7 @@
 ## Scope by network
 - Base: rescue of 16 verified tokens.
 - Arbitrum: rescue of 12 verified tokens.
+- OP Mainnet: rescue of 8 verified tokens.
 - Other ERC-20 tokens: may be detected, without guarantee.
 - Ethereum: read-only diagnostic, no rescue.
 - Funds already taken cannot be recovered. NFTs are not rescued.
@@ -20,8 +21,9 @@ These usually mean a sweeper bot and/or a malicious EIP-7702 delegation controls
 
 ## Open source and contract
 - Source code: https://github.com/unsweep/unsweep
-- Rescue contract (same address on Base and Arbitrum): `0x38bcF425bC4d13624734e09376F2fafc799fA8c8`
-- Source verified on Sourcify (exact match): Base https://repo.sourcify.dev/8453/0x38bcF425bC4d13624734e09376F2fafc799fA8c8 · Arbitrum https://repo.sourcify.dev/42161/0x38bcF425bC4d13624734e09376F2fafc799fA8c8
+- Rescue contract (same address on Base, Arbitrum and OP Mainnet): `0x38bcF425bC4d13624734e09376F2fafc799fA8c8`
+- Source verified on Sourcify (exact match): Base https://repo.sourcify.dev/8453/0x38bcF425bC4d13624734e09376F2fafc799fA8c8 · Arbitrum https://repo.sourcify.dev/42161/0x38bcF425bC4d13624734e09376F2fafc799fA8c8 · OP Mainnet https://repo.sourcify.dev/10/0x38bcF425bC4d13624734e09376F2fafc799fA8c8
+- Optimistic Etherscan: https://optimistic.etherscan.io/address/0x38bcF425bC4d13624734e09376F2fafc799fA8c8#code
 - Basescan: https://basescan.org/address/0x38bcF425bC4d13624734e09376F2fafc799fA8c8#code
 
 ## Your key never leaves your browser
@@ -39,12 +41,13 @@ UNSWEEP never contacts anyone by DM, Telegram or Discord. Anyone who contacts yo
 - Funds already taken out of the wallet: they cannot be recovered.
 - NFTs.
 - Anything on Ethereum mainnet (read-only diagnostic only).
-- Tokens outside the verified lists (16 on Base, 12 on Arbitrum) may be detected, but without guarantee.
+- Tokens outside the verified lists (16 on Base, 12 on Arbitrum, 8 on OP Mainnet) may be detected, but without guarantee.
 - Nothing is a guarantee of success; a 100,000 USD per-rescue eligibility limit applies.
 <!-- /UNSWEEP-TRUST-2A -->
 
-## Free diagnostic
+## Free diagnostic & security
 - https://unsweep.com/ : free read-only diagnostic (no keys, no signatures)
+- https://unsweep.com/security/ : contract registry, verification links and security boundaries
 
 ## Guides
 - https://unsweep.com/guides/sweeper-bot-hacked-wallet.html
