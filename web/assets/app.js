@@ -10,6 +10,7 @@
     if (c === 'base') return 'https://basescan.org/address/' + address + '#code';
     if (c === 'arbitrum') return 'https://arbiscan.io/address/' + address + '#code';
     if (c === 'ethereum' || c === 'eth') return 'https://etherscan.io/address/' + address + '#code';
+    if (c === 'optimism' || c === 'op') return 'https://optimistic.etherscan.io/address/' + address + '#code';
     return null;
   }
   function recLine(delegate) {
@@ -110,9 +111,10 @@
     if (!a) return show($('scanOut'), 'Invalid address.', 'err');
     const chain = ($('chain') && $('chain').value) || 'testnet';
     goStep(1); $('btnToStep2').hidden = true;
-    if (chain === 'ethereum') {
-      st.scan = null; // rescue is never enabled on mainnet
-      show($('scanOut'), 'Read-only check on ' + (chain === 'base' ? 'Base' : 'Ethereum') + ' mainnet...');
+    if (chain === 'ethereum' || chain === 'optimism') {
+      st.scan = null; // read-only branch: rescue is not enabled here (OP rescue pending, #167)
+      const netName = chain === 'optimism' ? 'OP Mainnet' : 'Ethereum mainnet';
+      show($('scanOut'), 'Read-only check on ' + netName + '...');
       try {
         const m = await api('scan', { address: a, chain: chain });
         const d = m.delegation7702 || {};
@@ -124,7 +126,7 @@
           for (const r of (m.incompleteReasons || ['the server did not confirm that every query finished'])) out.push('Reason: ' + r);
           out.push('Some data could not be verified. Try again in a minute; do not assume this wallet is safe.');
         }
-        out.push('Network: ' + chain + ' mainnet (read-only, nothing was signed)', 'Address: ' + a,
+        out.push('Network: ' + netName + ' (read-only, nothing was signed)', 'Address: ' + a,
           (nat.symbol || 'ETH') + ': ' + (nat.balanceWei == null ? 'unknown' : fmt(nat.balanceWei, 18)),
           'Nonce: ' + m.nonce, '');
         if (d.active) out.push(delegateLine(chain, 'EIP-7702 delegation: ACTIVE -> ', d.delegate));
@@ -136,12 +138,16 @@
         const toks = m.tokens || [];
         if (toks.length === 0 && complete) out.push('No ERC-20 balances found.');
         for (const t of toks) out.push('Token ' + (t.symbol || t.contract || t.address || t.token) + ': ' + (t.balanceFmt || fmt(t.balance || t.balanceRaw || '0', t.decimals == null ? 18 : t.decimals)));
+        if (chain === 'ethereum') {
         const aps = m.approvals || [];
         if (aps.length === 0 && complete) out.push('No open ERC-20 approvals found from direct approve transactions in the last 90 days.');
         for (const ap of aps) out.push('Open approval: ' + (ap.symbol || ap.token) + ' -> spender ' + ap.spender + (ap.unlimited ? ' (unlimited)' : '') + ' - see /guides/revoke-approvals/');
         const am = m.approvalsMeta || {};
         if (!complete) out.push('Approvals listed above may be partial (' + (am.txScanned || 0) + ' recent transactions checked).');
         out.push('Ethereum mainnet: read-only check. Rescue is currently live on Base mainnet (16 verified ERC-20 tokens) and Arbitrum mainnet (12 verified ERC-20 tokens).');
+        } else {
+          out.push('OP Mainnet: free diagnostic available (read-only). Rescue on OP Mainnet is pending and not available yet. Approvals are not checked on OP Mainnet: review them in a block explorer (optimistic.etherscan.io).');
+        }
         show($('scanOut'), out, complete ? 'ok' : 'err');
       } catch (e) { show($('scanOut'), 'Scan failed: ' + e.message, 'err'); }
       return;
