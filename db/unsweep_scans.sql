@@ -2,7 +2,7 @@
 CREATE TABLE IF NOT EXISTS unsweep_scans (
   id bigserial PRIMARY KEY,
   ts timestamptz NOT NULL DEFAULT now(),
-  chain text NOT NULL CHECK (chain IN ('base','ethereum')),
+  chain text NOT NULL CHECK (chain IN ('base','ethereum','optimism')),
   hallazgo_7702 boolean NOT NULL,
   n_approvals integer NOT NULL,
   ip_hash text NOT NULL,
